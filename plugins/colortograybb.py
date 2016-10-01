@@ -28,8 +28,8 @@ CH_RGB = "RGB"
 CH_HSV = "HSV"
 CH_CHANNELS = "Channels"
 
-SLOT_CHANNEL_COUNT = 40
-SLOT_FIXED_COUNT = 20
+SLOT_CHANNEL_COUNT = 19
+SLOT_FIXED_COUNT = 60
 SLOTS_PER_CHANNEL = 3
 SLOT_CHANNEL_CHOICE = 0
 
@@ -457,3 +457,4 @@ class ColorToGray(cpm.Module):
             setting_values[idx] = self.channel_names[channel_idx]
 
         return setting_values, variable_revision_number, from_matlab
+SLOT_CHANNEL_CHOICE

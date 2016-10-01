@@ -26,7 +26,7 @@ GAUSSIAN_FILTER = 'Gaussian Filter'
 SMOOTH_KEEPING_EDGES = 'Smooth Keeping Edges'
 CIRCULAR_AVERAGE_FILTER = 'Circular Average Filter'
 SM_TO_AVERAGE = "Smooth to Average"
-REMOVE_OUTLIER = 'Remove Single hot pixels'
+REMOVE_OUTLIER = 'Remove single hot pixels'
 
 
 class SmoothMultichannel(cpm.Module):
@@ -141,7 +141,10 @@ class SmoothMultichannel(cpm.Module):
         return result
 
     def run_per_layer(self, image, channel):
-        pixel_data = image.pixel_data[:,:,channel].squeeze()
+        if channel >= 0:
+            pixel_data = image.pixel_data[:,:,channel].squeeze()
+        else:
+            pixel_data = image.pixel_data
         mask = image.mask
         if self.wants_automatic_object_size.value:
             object_size = min(30, max(1, np.mean(pixel_data.shape) / 40))
@@ -193,8 +196,11 @@ class SmoothMultichannel(cpm.Module):
 
         output_pixels =image.pixel_data.copy()
 
-        for i in range(image.pixel_data.shape[2]):
-            output_pixels[:,:,i] = self.run_per_layer(image, i) 
+        if len(image.pixel_data.shape) ==3:
+            for i in range(image.pixel_data.shape[2]):
+                output_pixels[:,:,i] = self.run_per_layer(image, i)
+        else:
+            output_pixels = self.run_per_layer(image, -1)
 
         output_image = cpi.Image(output_pixels, parent_image=image)
         workspace.image_set.add(self.filtered_image_name.value,
