@@ -17,9 +17,9 @@ import re
 import matplotlib.colors
 import numpy as np
 
-import cellprofiler.image  as cpi
-import cellprofiler.module as cpm
-import cellprofiler.setting as cps
+import cellprofiler.cpimage  as cpi
+import cellprofiler.cpmodule as cpm
+import cellprofiler.settings as cps
 
 COMBINE = "Combine"
 SPLIT = "Split"
@@ -34,7 +34,7 @@ SLOTS_PER_CHANNEL = 3
 SLOT_CHANNEL_CHOICE = 0
 
 
-class ColorToGray(cpm.Module):
+class ColorToGray(cpm.CPModule):
     module_name = "ColorToGray bb"
     variable_revision_number = 3
     category = "Image Processing"

@@ -46,16 +46,16 @@ import scipy.ndimage as ndi
 
 
 
-import cellprofiler.image as cpi
-import cellprofiler.module as cpm
-import cellprofiler.measurement as cpmeas
-import cellprofiler.object as cpo
-import cellprofiler.setting as cps
+import cellprofiler.cpimage as cpi
+import cellprofiler.cpmodule as cpm
+import cellprofiler.measurements as cpmeas
+import cellprofiler.objects as cpo
+import cellprofiler.settings as cps
 from cellprofiler.gui.help import RETAINING_OUTLINES_HELP, NAMING_OUTLINES_HELP
 from cellprofiler.modules.identify import add_object_count_measurements
 from cellprofiler.modules.identify import add_object_location_measurements
 from cellprofiler.modules.identify import get_object_measurement_columns
-from cellprofiler.setting import YES, NO
+from cellprofiler.settings import YES, NO
 
 O_UPSCALE = 'Upscale objects with a scaling factor'
 O_DOWNSCALE = 'Downscale objects with a scaling factor'
@@ -63,7 +63,7 @@ O_DOWNSCALE = 'Downscale objects with a scaling factor'
 O_ALL = [O_UPSCALE, O_DOWNSCALE]
 
 
-class ExpandOrShrinkObjects(cpm.Module):
+class ExpandOrShrinkObjects(cpm.CPModule):
     module_name = 'RescaleObjects'
     category = 'Object Processing'
     variable_revision_number = 1

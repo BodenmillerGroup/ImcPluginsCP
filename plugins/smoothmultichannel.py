@@ -12,11 +12,11 @@ from centrosome.smooth import circular_gaussian_kernel
 from centrosome.smooth import fit_polynomial
 from centrosome.smooth import smooth_with_function_and_mask
 
-import cellprofiler.image as cpi
-import cellprofiler.module as cpm
-import cellprofiler.setting as cps
+import cellprofiler.cpimage as cpi
+import cellprofiler.cpmodule as cpm
+import cellprofiler.settings as cps
 from cellprofiler.gui.help import HELP_ON_MEASURING_DISTANCES, HELP_ON_PIXEL_INTENSITIES
-from cellprofiler.setting import YES, NO
+from cellprofiler.settings import YES, NO
 
 from matplotlib.widgets import Slider, Button, RadioButtons
 
@@ -29,7 +29,7 @@ SM_TO_AVERAGE = "Smooth to Average"
 REMOVE_OUTLIER = 'Remove single hot pixels'
 
 
-class SmoothMultichannel(cpm.Module):
+class SmoothMultichannel(cpm.CPModule):
     module_name = 'Smooth Multichannel'
     category = "Image Processing"
     variable_revision_number = 1
