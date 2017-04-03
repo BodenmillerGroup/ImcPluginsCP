@@ -269,10 +269,12 @@ class SaveObjectCrops(cpm.CPModule):
         return [self.image_name,
                 self.objects_name, self.object_extension, 
                 self.file_name_method, self.file_image_name,
+                self.wants_file_name_suffix,
                 self.file_name_suffix, self.file_format,
                 self.pathname, self.bit_depth,
                 self.overwrite, self.when_to_save,
-                self.update_file_names, self.create_subdirectories
+                self.update_file_names, self.create_subdirectories,
+                self.root_dir
                 ]
 
     def visible_settings(self):
@@ -361,9 +363,12 @@ class SaveObjectCrops(cpm.CPModule):
         ext_slices = [lib.extend_slice_touple(sl, object_extension,
                                               [pixels.shape[0], pixels.shape[1]]) for sl in slices]
         out_folder = os.path.dirname(filename)
-        basename = os.path.basename(filename).rstrip('.tiff')
+        basename = os.path.splitext(os.path.basename(filename))[0]
         #  the stack for imctools needs to be cxy, while it is xyc in cp
-        stack = np.rollaxis(pixels,2,0)
+        if len(pixels.shape) == 2:
+            stack = pixels.reshape([1]+list(pixels.shape))
+        else:
+            stack = np.rollaxis(pixels,2,0)
         lib.save_object_stack(out_folder, basename, stack, ext_slices,
                               labels)
         self.save_filename_measurements(workspace)
@@ -599,7 +604,6 @@ class SaveObjectCrops(cpm.CPModule):
             image_path = self.source_path(workspace)
             subdir = os.path.relpath(image_path, self.root_dir.get_absolute_path())
             pathname = os.path.join(pathname, subdir)
-            import pdb; pdb.set_trace()
         if len(pathname) and not os.path.isdir(pathname) and make_dirs:
             try:
                 os.makedirs(pathname)
