@@ -1,15 +1,11 @@
-'''<b>Smooth</b> smooths (i.e., blurs) images
+'''<b>TransformBinary</b> Applys transforms to a binary image.
 <h>
-This module allows you to smooth (blur) images, which can be helpful to remove artifacts of a particular size.
-Note that smoothing can be a time-consuming process.
+This modules allows you to apply distance transforms to the image. This can be
+usefull to quantify the distance of objects to a mask.
 '''
 
 import numpy as np
 import scipy.ndimage as scind
-from centrosome.filter import median_filter, bilateral_filter, circular_average_filter
-from centrosome.smooth import circular_gaussian_kernel
-from centrosome.smooth import fit_polynomial
-from centrosome.smooth import smooth_with_function_and_mask
 
 import cellprofiler.cpimage as cpi
 import cellprofiler.cpmodule as cpm
@@ -21,7 +17,6 @@ import imctools.library as imclib
 
 from matplotlib.widgets import Slider, Button, RadioButtons
 
-REOVE_OUTLIER = 'Remove single hot pixels'
 DISTANCE_BORDER = 'Distance to border'
 
 class TransformBinary(cpm.CPModule):
@@ -43,7 +38,8 @@ class TransformBinary(cpm.CPModule):
             <ul>
             <li><i>%(DISTANCE_BORDER)s</i> Transforms the binary image to an
             eucledian distance transform to the border between the binary
-            regions.</li>
+            regions. The distance to a nonzero pixel will be positive, while
+            the distance to a zero pixel will be negative.</li>
             </ul>""" % globals())
 
 
@@ -63,7 +59,7 @@ class TransformBinary(cpm.CPModule):
         if self.transform_method.value == DISTANCE_BORDER:
             output_pixels = imclib.distance_to_border(pixel_data)
         else:
-            raise ValueError("Unsupported smoothing method: %s" %
+            raise ValueError("Unsupported transformation method: %s" %
 self.transform_method.value)
         return output_pixels
 
