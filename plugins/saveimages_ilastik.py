@@ -113,7 +113,7 @@ OFFSET_BIT_DEPTH_V11 = 12
 
 class SaveImagesBB(cpm.CPModule):
 
-    module_name = "SaveImages CXY"
+    module_name = "SaveImages Ilastik"
     variable_revision_number = 12
     category = "File Processing"
 
@@ -479,8 +479,6 @@ class SaveImagesBB(cpm.CPModule):
             should_save = self.run_movie(workspace)
         elif self.save_image_or_figure == IF_OBJECTS:
             should_save = self.run_objects(workspace)
-        elif self.save_image_or_figure == IF_IMAGECXY:
-            should_save = self.run_imagecxy(workspace)
         else:
             raise NotImplementedError(("Saving a %s is not yet supported"%
                                        (self.save_image_or_figure)))
@@ -614,8 +612,8 @@ class SaveImagesBB(cpm.CPModule):
             else:
                 self.save_image(workspace)
 
-    def do_save_cxy_image(self, filename, pixels):
-        '''Save a cxy tiff image for ilastik
+    def do_save_ilastik_image(self, filename, pixels):
+        '''Save a tiff multicolor image compatible with Ilastik
         filename: filename to use
         pixels: the image to save as xyc image
         '''
@@ -736,7 +734,7 @@ class SaveImagesBB(cpm.CPModule):
         elif self.get_file_format() == FF_BMP:
             save_bmp(filename, pixels)
         else:
-            self.do_save_cxy_image(filename, pixels)
+            self.do_save_ilastik_image(filename, pixels)
             #self.do_save_image(workspace, filename, pixels, pixel_type)
         if self.show_window:
             workspace.display_data.wrote_image = True
