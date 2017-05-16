@@ -31,7 +31,7 @@ S_ADDITIONAL_IMAGE_COUNT = 7
 class Crop(cpm.CPModule):
 
     category = "Image Processing"
-    variable_revision_number = 1
+    variable_revision_number = 2
     module_name = "Crop bb"
 
     def create_settings(self):
@@ -46,23 +46,23 @@ class Crop(cpm.CPModule):
         self.crop_random = cps.Choice(
             'Crop random or specified section?', [C_RANDOM, C_SPECIFIC])
 
-        self.crop_x = cps.Integer(
-            "X of upper left corner",   0, minval=0,  doc = '''
-            X position.''')
+        self.crop_x = cps.Text(
+            "X of upper left corner",  '0',  doc = '''
+            X position.''', metadata=True)
 
 
-        self.crop_y = cps.Integer(
-            "Y of upper left corner",   0, minval=0,  doc = '''
-            Y position.''')
+        self.crop_y = cps.Text(
+            "Y of upper left corner",   '0',  doc = '''
+            Y position.''', metadata=True)
 
 
-        self.crop_w = cps.Integer(
-            "W width",   100, minval=1,  doc = '''
-            Width of cut.''')
+        self.crop_w = cps.Text(
+            "W width",   '100',  doc = '''
+            Width of cut.''', metadata=True)
 
-        self.crop_h = cps.Integer(
-            "H height",   100, minval=0,  doc = '''
-            Height of cut.''')
+        self.crop_h = cps.Text(
+            "H height",   '100',  doc = '''
+            Height of cut.''', metadata=True)
 
 
 
@@ -162,10 +162,11 @@ class Crop(cpm.CPModule):
             x = None
             y = None
         else:
-            x = self.crop_x.value
-            y = self.crop_y.value
+            x = int(self.crop_x.value)
+            y = int(self.crop_y.value)
         crop_slice = imclib.crop_slice(image_pixels.shape[:2],
-                                       w=self.crop_w.value, h=self.crop_h.value,
+                                       w=int(self.crop_w.value),
+                                       h=int(self.crop_h.value),
                                         x=x, y=y, flipped_axis=True
                                       )
 
@@ -240,4 +241,5 @@ class Crop(cpm.CPModule):
 
     def upgrade_settings(self, setting_values, variable_revision_number,
                          module_name, from_matlab):
+
         return setting_values, variable_revision_number, from_matlab
