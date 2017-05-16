@@ -162,11 +162,11 @@ class Crop(cpm.CPModule):
             x = None
             y = None
         else:
-            x = int(self.crop_x.value)
-            y = int(self.crop_y.value)
+            x = int(workspace.measurements.apply_metadata(self.crop_x.value))
+            y = int(workspace.measurements.apply_metadata(self.crop_y.value))
         crop_slice = imclib.crop_slice(image_pixels.shape[:2],
-                                       w=int(self.crop_w.value),
-                                       h=int(self.crop_h.value),
+                                       w=int(workspace.measurements.apply_metadata(self.crop_w.value)),
+                                       h=int(workspace.measurements.apply_metadata(self.crop_h.value)),
                                         x=x, y=y, flipped_axis=True
                                       )
 
