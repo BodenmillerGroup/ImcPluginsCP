@@ -17,6 +17,12 @@ import cellprofiler.cpimage  as cpi
 import cellprofiler.cpmodule as cpm
 import cellprofiler.settings as cps
 
+IF_OBJECTS     = "Objects"
+IF_IMAGE       = "Image"
+
+SEL_PROVIDED = 'provided'
+SEL_MAXAREA = 'maximum area'
+SEL_MID = 'image mid'
 
 class MaskToBinstack(cpm.CPModule):
 
@@ -25,14 +31,38 @@ class MaskToBinstack(cpm.CPModule):
     category = "Object Processing"
 
     def create_settings(self):
+        self.input_type = cps.Choice(
+            "Select the type of input",
+            [IF_IMAGE, IF_OBJECTS], IF_IMAGE)
+
+
+        self.image_name = cps.ImageNameSubscriber(
+            "Select input images", cps.NONE)
+
         self.objects_name = cps.ObjectNameSubscriber(
-                "Select the input object", cps.NONE)
+                "Select the input objects", cps.NONE,
+        )
         
         self.output_name = cps.ImageNameProvider(
                 "Input the output image stack name",
                 "BinStack", doc="""
             Input the output name.
             """ %globals())
+        
+        self.main_object_def = cps.Choice(
+            "How should the main label be determined?",
+                [SEL_MID, SEL_MAXAREA, SEL_PROVIDED],
+                SEL_MID, doc="""
+            The main object can be determined by 3 ways:
+            <ul>
+            <li> %(SEL_PROVIDED)s: Label provided by metadata or
+            manual. <\li>
+            <li> %(SEL_MAXAREA)s: Label with the biggest area is assumed to be
+            the main label. <\li>
+            <li> %(SEL_MID)s: The label closest to the middle of the image is
+            considered the main label. <\li>
+            <\ul>
+            """ % globals())
 
         self.main_object_id = cps.Text(
                 "Indicate the object id",
@@ -44,11 +74,20 @@ class MaskToBinstack(cpm.CPModule):
 
     def visible_settings(self):
         """Return either the "combine" or the "split" settings"""
-        return [self.objects_name, self.output_name, self.main_object_id]
+        results = [self.input_type]
+        if self.input_type == IF_IMAGE:
+            results += [self.image_name]
+        else:
+            results += [self.objects_name]
+        results += [self.output_name]
+        results += [self.main_object_def]
+        if self.main_object_def == SEL_PROVIDED:
+            results += [self.main_object_id]
+        return results
 
     def settings(self):
         """Return all of the settings in a consistent order"""
-        return [self.objects_name,
+        return [self.input_type, self.image_name, self.objects_name,
                 self.main_object_id]
 
 
@@ -61,7 +100,7 @@ class MaskToBinstack(cpm.CPModule):
 
     def run(self, workspace):
         """Run the module
-        :
+         
         pipeline     - instance of CellProfiler.Pipeline for this run
         workspace    - the workspace contains:
             image_set    - the images in the image set being processed
@@ -69,9 +108,28 @@ class MaskToBinstack(cpm.CPModule):
             measurements - the measurements for this run
             frame        - display within this frame (or None to not display)
         """
-        objmask = workspace.object_set.get_objects(self.objects_name.value)
-        main_id = int(workspace.measurements.apply_metadata(
+        if self.input_type == IF_IMAGE:
+            image = workspace.image_set.get_image(
+                self.image_name.value)
+            objmask = np.round(image.pixel_data.copy() * image.scale)
+        else:
+            objmask = workspace.object_set.get_objects(
+                self.objects_name.value).get_segmented()
+        
+        if self.main_object_def == SEL_PROVIDED:
+            main_id = int(workspace.measurements.apply_metadata(
             self.main_object_id.value))
+        elif self.main_object_def == SEL_MAXAREA:
+            main_id = np.argmax(np.bincount(objmask[objmask > 0]))
+        elif self.main_object_def == SEL_MID:
+            idx = np.where(objmask > 0)
+            dists = [(idx[i]-int(objmask.shape[i]/2))**2 for i in range(2)]
+            dists = np.sqrt(dists[0] + dists[1])
+            i = np.argmin(dists)
+            main_id = objmask[idx[0][i], idx[1][i]]
+        else:
+            raise(self.main_object_def + ' not valid')
+
         name = self.output_name.value
         self.run_split(workspace, objmask, main_id, name)
 
@@ -81,7 +139,7 @@ class MaskToBinstack(cpm.CPModule):
     def run_split(self, workspace, objmask, main_id, name):
         """Split image into individual components
         """
-        segmented = objmask.get_segmented()
+        segmented = objmask
         is_main = segmented == main_id
         is_bg = segmented == 0
         is_other = (is_bg == False) & (is_main == False)
