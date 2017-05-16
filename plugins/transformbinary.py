@@ -68,7 +68,7 @@ self.transform_method.value)
                                               must_be_grayscale=False)
 
         output_pixels =image.pixel_data.copy()
-
+        output_pixels = output_pixels.astype(np.float)
         if len(image.pixel_data.shape) ==3:
             for i in range(image.pixel_data.shape[2]):
                 output_pixels[:,:,i] = self.run_per_layer(image, i)
