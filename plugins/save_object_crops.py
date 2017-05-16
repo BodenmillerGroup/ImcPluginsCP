@@ -112,14 +112,21 @@ OFFSET_BIT_DEPTH_V11 = 12
 class SaveObjectCrops(cpm.CPModule):
 
     module_name = "SaveObjectCrops"
-    variable_revision_number = 1
+    variable_revision_number = 2
     category = "File Processing"
 
     def create_settings(self):
+        self.input_type = cps.Choice(
+            "Select the type of input",
+            [IF_IMAGE, IF_OBJECTS], IF_IMAGE)
+
         self.image_name  = cps.ImageNameSubscriber(
             "Select the image to save",cps.NONE, doc = """
             <i>(Used only if "%(IF_IMAGE)s", "%(IF_MASK)s" or "%(IF_CROPPING)s" are selected to save)</i><br>
             Select the image you want to save."""%globals())
+
+        self.input_object_name = cps.ObjectNameSubscriber(
+            "Select the objects to save", cps.NONE)
 
         self.objects_name = cps.ObjectNameSubscriber(
             "Select the objects to crop and save", cps.NONE,doc = """
@@ -266,8 +273,10 @@ class SaveObjectCrops(cpm.CPModule):
 
     def settings(self):
         """Return the settings in the order to use when saving"""
-        return [self.image_name,
-                self.objects_name, self.object_extension, 
+        return [self.input_type,
+                self.input_object_name,
+                self.image_name,
+                self.objects_name, self.object_extension,
                 self.file_name_method, self.file_image_name,
                 self.wants_file_name_suffix,
                 self.file_name_suffix, self.file_format,
@@ -280,8 +289,12 @@ class SaveObjectCrops(cpm.CPModule):
     def visible_settings(self):
         """Return only the settings that should be shown"""
         result = []
+        result.append(self.input_type)
+        if self.input_type.value == IF_IMAGE:
+            result.append(self.image_name)
+        else:
+            result.append(self.input_object_name)
         result.append(self.objects_name)
-        result.append(self.image_name)
         result.append(self.object_extension),
         result.append(self.file_name_method)
         if self.file_name_method == FN_FROM_IMAGE:
@@ -348,9 +361,17 @@ class SaveObjectCrops(cpm.CPModule):
         """ Crops the image by objects """
         objects_name = self.objects_name.value
         objects = workspace.object_set.get_objects(objects_name)
-        image_name = self.image_name.value
-        image = workspace.image_set.get_image(image_name)
-        pixels = image.pixel_data
+        if self.input_type == IF_IMAGE:
+            image_name = self.image_name.value
+            image = workspace.image_set.get_image(image_name)
+            pixels = image.pixel_data
+        elif self.input_type == IF_OBJECTS:
+            obj_name = self.input_object_name.value
+            inp_obj = workspace.object_set.get_objects(obj_name)
+            pixels = inp_obj.get_segmented()
+        else:
+            raise('invalid choice of input')
+
         filename = self.get_filename(workspace)
         object_extension = self.object_extension.value
         if filename is None:  # failed overwrite check
@@ -369,6 +390,13 @@ class SaveObjectCrops(cpm.CPModule):
             stack = pixels.reshape([1]+list(pixels.shape))
         else:
             stack = np.rollaxis(pixels,2,0)
+
+        # fix the dtype
+        if stack.dtype == np.int8:
+            stack = stack.astype(np.uint8)
+        elif stack.dtype == np.int16:
+            stack = stack.astype(np.uint16)
+
         lib.save_object_stack(out_folder, basename, stack, ext_slices,
                               labels)
         self.save_filename_measurements(workspace)
@@ -646,7 +674,8 @@ class SaveObjectCrops(cpm.CPModule):
         """Adjust the setting values to be backwards-compatible with old versions
 
         """
-
+        if variable_revision_number < 2:
+            setting_values = [IF_IMAGE, cps.NONE] + setting_values
         return setting_values, variable_revision_number, from_matlab
 
     def validate_module(self, pipeline):
