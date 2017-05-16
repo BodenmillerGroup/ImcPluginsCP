@@ -18,6 +18,7 @@ import cellprofiler.settings as cps
 from cellprofiler.gui.help import HELP_ON_MEASURING_DISTANCES, HELP_ON_PIXEL_INTENSITIES
 from cellprofiler.settings import YES, NO
 
+import imctools.library as imclib
 from matplotlib.widgets import Slider, Button, RadioButtons
 
 FIT_POLYNOMIAL = 'Fit Polynomial'
@@ -32,7 +33,7 @@ REMOVE_OUTLIER = 'Remove single hot pixels'
 class SmoothMultichannel(cpm.CPModule):
     module_name = 'Smooth Multichannel'
     category = "Image Processing"
-    variable_revision_number = 1
+    variable_revision_number = 2
 
     def create_settings(self):
         self.image_name = cps.ImageNameSubscriber('Select the input image', cps.NONE)
@@ -85,7 +86,7 @@ class SmoothMultichannel(cpm.CPModule):
         self.wants_automatic_object_size = cps.Binary(
                 'Calculate artifact diameter automatically?', True, doc="""
             <i>(Used only if "%(GAUSSIAN_FILTER)s", "%(MEDIAN_FILTER)s", "%(SMOOTH_KEEPING_EDGES)s",
-            "%(CIRCULAR_AVERAGE_FILTER)s" or %(REMOVE_OUTLIER)sis selected)</i><br>
+            "%(CIRCULAR_AVERAGE_FILTER)s" is selected)</i><br>
             Select <i>%(YES)s</i> to choose an artifact diameter based on
             the size of the image. The minimum size it will choose is 30 pixels,
             otherwise the size is 1/40 of the size of the image.
@@ -121,16 +122,35 @@ class SmoothMultichannel(cpm.CPModule):
             <p>Select <i>%(NO)s</i> to
             allow values less than zero and greater than one in the output
             image.</p>""" % globals())
+        
+        self.outlierneighbourhood = cps.Integer(
+            'Outlier neighbourhood', 3, 3, doc="""
+            <i> Used only if %(REMOVE_OUTLIER)s is selected)</i><br>
+            The %(REMOVE_OUTLIER)s module needs a radius that is considered
+            the neightbourhood of a pixel. Note that this needs to be an odd
+            number. If an even number is provided it is rounded up to the next
+            odd number.""" % globals())
+
+        self.treshold = cps.Float(
+                'Outlier Treshold', 50, 0, doc="""
+            <i> (Used only if %(REMOVE_OUTLIER)s is selected)</i><br>
+            The %(REMOVE_OUTLIER)s modules needs a treshold to consider
+            outliers. If the second heightest pixel of the neightbourhood is
+            larger than this threshold, the value is equal to the second
+            highest neightbour.
+            """ % globals())
 
     def settings(self):
         return [self.image_name, self.filtered_image_name,
                 self.smoothing_method, self.wants_automatic_object_size,
-                self.object_size, self.sigma_range, self.clip]
+                self.object_size, self.sigma_range, self.clip,
+                self.outlierneighbourhood, self.treshold]
 
     def visible_settings(self):
         result = [self.image_name, self.filtered_image_name,
                   self.smoothing_method]
-        if self.smoothing_method.value not in [FIT_POLYNOMIAL, SM_TO_AVERAGE]:
+        if self.smoothing_method.value not in [FIT_POLYNOMIAL, SM_TO_AVERAGE,
+                                              REMOVE_OUTLIER]:
             result.append(self.wants_automatic_object_size)
             if not self.wants_automatic_object_size.value:
                 result.append(self.object_size)
@@ -138,6 +158,9 @@ class SmoothMultichannel(cpm.CPModule):
                 result.append(self.sigma_range)
         if self.smoothing_method.value == FIT_POLYNOMIAL:
             result.append(self.clip)
+        if self.smoothing_method.value == REMOVE_OUTLIER:
+            result.append(self.outlierneighbourhood)
+            result.append(self.treshold)
         return result
 
     def run_per_layer(self, image, channel):
@@ -145,7 +168,7 @@ class SmoothMultichannel(cpm.CPModule):
             pixel_data = image.pixel_data[:,:,channel].squeeze()
         else:
             pixel_data = image.pixel_data
-        mask = image.mask
+        #mask = image.mask
         if self.wants_automatic_object_size.value:
             object_size = min(30, max(1, np.mean(pixel_data.shape) / 40))
         else:
@@ -170,20 +193,22 @@ class SmoothMultichannel(cpm.CPModule):
             output_pixels = fit_polynomial(pixel_data, mask,
                                            self.clip.value)
         elif self.smoothing_method.value == CIRCULAR_AVERAGE_FILTER:
-            output_pixels = circular_average_filter(pixel_data, object_size / 2 + 1, mask)
+            output_pixels = circular_average_filter(pixel_data,
+                                                    object_size / 2 + 1, mask)
         elif self.smoothing_method.value == SM_TO_AVERAGE:
             if image.has_mask:
                 mean = np.mean(pixel_data[mask])
             else:
                 mean = np.mean(pixel_data)
-            output_pixels = np.ones(pixel_data.shape, pixel_data.dtype) * mean
+                output_pixels = np.ones(pixel_data.shape, pixel_data.dtype) * mean
 
         elif self.smoothing_method.value == REMOVE_OUTLIER:
-            if image.has_mask:
-                mean = np.mean(pixel_data[mask])
-            else:
-                mean = np.mean(pixel_data)
-            output_pixels = np.ones(pixel_data.shape, pixel_data.dtype) * mean
+            # TODO: implement how this deals with masks.
+            nbhood = self.outlierneighbourhood.value
+            output_pixels = imclib.remove_outlier_pixels(pixel_data,
+                                                         threshold=self.treshold.value,
+                                                         radius=nbhood,
+                                                         mode='max')
         else:
             raise ValueError("Unsupported smoothing method: %s" %
                              self.smoothing_method.value)
@@ -232,5 +257,7 @@ class SmoothMultichannel(cpm.CPModule):
 
     def upgrade_settings(self, setting_values, variable_revision_number,
                          module_name, from_matlab):
-
+        if variable_revision_number < 2:
+            setting_values += [3 , # outlier neighbourhood
+                             20]  # treshold
         return setting_values, variable_revision_number, from_matlab
