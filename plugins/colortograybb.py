@@ -28,8 +28,9 @@ CH_RGB = "RGB"
 CH_HSV = "HSV"
 CH_CHANNELS = "Channels"
 
+MAX_CHANNELS_PER_IMAGE = 60
 SLOT_CHANNEL_COUNT = 19
-SLOT_FIXED_COUNT = 60
+SLOT_FIXED_COUNT = 20
 SLOTS_PER_CHANNEL = 3
 SLOT_CHANNEL_CHOICE = 0
 
@@ -127,7 +128,7 @@ class ColorToGray(cpm.CPModule):
         self.channel_count = cps.HiddenCount(self.channels, "Channel count")
 
     channel_names = (["Red: 1", "Green: 2", "Blue: 3", "Alpha: 4"] +
-                     [str(x) for x in range(5, SLOT_CHANNEL_COUNT+1)])
+                     [str(x) for x in range(5, MAX_CHANNELS_PER_IMAGE+1)])
 
     def add_channel(self, can_remove=True):
         '''Add another channel to the channels list'''
