@@ -67,6 +67,7 @@ OLD_BIT_DEPTH_16 = "16"
 BIT_DEPTH_8 = "8-bit integer"
 BIT_DEPTH_16 = "16-bit integer"
 BIT_DEPTH_FLOAT = "32-bit floating point"
+BIT_DEPTH_32 = '32-bit integer'
 
 FN_FROM_IMAGE  = "From image filename"
 FN_SEQUENTIAL  = "Sequential numbers"
@@ -274,7 +275,7 @@ class SaveImagesBB(cpm.CPModule):
         # TODO:
         self.bit_depth = cps.Choice(
             "Image bit depth",
-            [BIT_DEPTH_8, BIT_DEPTH_16, BIT_DEPTH_FLOAT],doc="""
+            [BIT_DEPTH_8, BIT_DEPTH_16, BIT_DEPTH_FLOAT, BIT_DEPTH_32],doc="""
             <i>(Used only when saving files in a non-MAT format)</i><br>
             Select the bit-depth at which you want to save the images.
             <i>%(BIT_DEPTH_FLOAT)s</i> saves the image as floating-point decimals
@@ -575,7 +576,7 @@ class SaveImagesBB(cpm.CPModule):
 
         elif self.gray_or_color == GC_GRAYSCALE:
             if objects.count > 255:
-                pixel_type = ome.PT_UINT16
+                pixel_type = ome.PT_UINT32
             else:
                 pixel_type = ome.PT_UINT8
             for i, l in enumerate(labels):
@@ -612,7 +613,7 @@ class SaveImagesBB(cpm.CPModule):
             else:
                 self.save_image(workspace)
 
-    def do_save_ilastik_image(self, filename, pixels):
+    def do_save_ilastik_image(self, workspace, filename, pixels, pixel_type):
         '''Save a tiff multicolor image compatible with Ilastik
         filename: filename to use
         pixels: the image to save as xyc image
@@ -666,7 +667,8 @@ class SaveImagesBB(cpm.CPModule):
         image = workspace.image_set.get_image(self.image_name.value)
         if self.save_image_or_figure == IF_IMAGE:
             pixels = image.pixel_data
-            u16hack = (self.get_bit_depth() == BIT_DEPTH_16 and
+            u16hack = (((self.get_bit_depth() == BIT_DEPTH_16) or (
+                self.get_bit_depth() == BIT_DEPTH_32)) and
                        pixels.dtype.kind in ('u', 'i'))
             if self.file_format != FF_MAT:
                 if self.rescale.value:
@@ -712,6 +714,10 @@ class SaveImagesBB(cpm.CPModule):
                     pixel_type = ome.PT_UINT8
                 elif self.get_bit_depth() == BIT_DEPTH_FLOAT:
                     pixel_type = ome.PT_FLOAT
+                elif self.get_bit_depth() == BIT_DEPTH_32:
+                    if not u16hack:
+                        pixels = (pixels*(2**32-1))
+                    pixel_type = ome.PT_UINT32
                 else:
                     if not u16hack:
                         pixels = (pixels*65535)
@@ -734,8 +740,10 @@ class SaveImagesBB(cpm.CPModule):
         elif self.get_file_format() == FF_BMP:
             save_bmp(filename, pixels)
         else:
-            self.do_save_ilastik_image(filename, pixels)
-            #self.do_save_image(workspace, filename, pixels, pixel_type)
+            if self.get_file_format() == FF_TIFF:
+                self.do_save_ilastik_image(workspace, filename, pixels, pixel_type)
+            else:
+                self.do_save_image(workspace, filename, pixels, pixel_type)
         if self.show_window:
             workspace.display_data.wrote_image = True
         if self.when_to_save != WS_LAST_CYCLE:
