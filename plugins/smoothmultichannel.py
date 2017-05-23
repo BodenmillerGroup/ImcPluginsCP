@@ -168,7 +168,7 @@ class SmoothMultichannel(cpm.CPModule):
             pixel_data = image.pixel_data[:,:,channel].squeeze()
         else:
             pixel_data = image.pixel_data
-        #mask = image.mask
+        mask = image.mask
         if self.wants_automatic_object_size.value:
             object_size = min(30, max(1, np.mean(pixel_data.shape) / 40))
         else:
