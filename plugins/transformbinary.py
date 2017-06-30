@@ -13,9 +13,9 @@ import cellprofiler.settings as cps
 from cellprofiler.gui.help import HELP_ON_MEASURING_DISTANCES, HELP_ON_PIXEL_INTENSITIES
 from cellprofiler.settings import YES, NO
 
-import imctools.library as imclib
-
 from matplotlib.widgets import Slider, Button, RadioButtons
+
+from scipy import ndimage as ndi
 
 DISTANCE_BORDER = 'Distance to border'
 
@@ -57,7 +57,7 @@ class TransformBinary(cpm.CPModule):
         else:
             pixel_data = image.pixel_data
         if self.transform_method.value == DISTANCE_BORDER:
-            output_pixels = imclib.distance_to_border(pixel_data)
+            output_pixels = distance_to_border(pixel_data)
         else:
             raise ValueError("Unsupported transformation method: %s" %
 self.transform_method.value)
@@ -107,3 +107,28 @@ self.transform_method.value)
                          module_name, from_matlab):
 
         return setting_values, variable_revision_number, from_matlab
+
+
+# functions
+def distance_to_border(logicarray, maxdist=65535):
+    """
+    Returns the eucledian distance to the border of a binary logical array.
+    Positive distances mean distance to the next negative (false) pixel, negative distance
+    the distance to the next positive (true) pixel.
+    :logicarray a binary array
+    :maxdist the distance that should be assigned to pixels if no single
+    positive pixel is in the logicarry. 
+    :returns an array containing the distance to the next False pixel
+    """
+
+    logicarray = logicarray > 0
+    if np.all(logicarray) | np.all(logicarray == False):
+        shape = logicarray.shape
+        out = np.empty(shape)
+        out[:] = maxdist
+        return out
+    else:
+        out = ndi.morphology.distance_transform_edt(logicarray)
+        fil = out == 0
+        out[fil] = -ndi.morphology.distance_transform_edt(logicarray == False)[fil]
+        return out
