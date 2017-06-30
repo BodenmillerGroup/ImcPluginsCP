@@ -18,8 +18,9 @@ import cellprofiler.settings as cps
 from cellprofiler.gui.help import HELP_ON_MEASURING_DISTANCES, HELP_ON_PIXEL_INTENSITIES
 from cellprofiler.settings import YES, NO
 
-import imctools.library as imclib
 from matplotlib.widgets import Slider, Button, RadioButtons
+
+from scipy import ndimage as ndi
 
 FIT_POLYNOMIAL = 'Fit Polynomial'
 MEDIAN_FILTER = 'Median Filter'
@@ -205,7 +206,7 @@ class SmoothMultichannel(cpm.CPModule):
         elif self.smoothing_method.value == REMOVE_OUTLIER:
             # TODO: implement how this deals with masks.
             nbhood = self.outlierneighbourhood.value
-            output_pixels = imclib.remove_outlier_pixels(pixel_data,
+            output_pixels = remove_outlier_pixels(pixel_data,
                                                          threshold=self.treshold.value,
                                                          radius=nbhood,
                                                          mode='max')
@@ -261,3 +262,31 @@ class SmoothMultichannel(cpm.CPModule):
             setting_values += [3 , # outlier neighbourhood
                              20]  # treshold
         return setting_values, variable_revision_number, from_matlab
+
+
+# function
+def remove_outlier_pixels(img, threshold=50, mode='median', radius=3):
+    """
+
+    >>> a = np.zeros((10, 10))
+    >>> b = a.copy()
+    >>> b[5,5] = 100
+    >>> np.all(a == remove_outlier_pixels(b, threshold=50, mode='max',\
+                                          radius=3))
+    True
+    """
+    if (radius % 2) == 0:
+       radius += 1
+    mask = np.ones((radius, radius))
+    mask[int((radius-1)/2),int((radius-1)/2)] = 0
+
+    if mode == 'max':
+        img_agg = ndi.generic_filter(img, np.max, footprint=mask)
+    elif mode == 'median':
+        img_agg = ndi.generic_filter(img, np.median, footprint=mask)
+    else:
+        raise('Mode must be: max or median')
+    img_out = img.copy()
+    imgfil = (img-img_agg) > threshold
+    img_out[imgfil] = img_agg[imgfil]
+    return img_out
