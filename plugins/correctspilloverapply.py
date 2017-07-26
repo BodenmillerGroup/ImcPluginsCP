@@ -14,7 +14,6 @@ import numpy as np
 import cellprofiler.cpimage  as cpi
 import cellprofiler.cpmodule as cpm
 import cellprofiler.settings as cps
-from cellprofiler.modules.correctilluminationcalculate import IC_BACKGROUND, IC_REGULAR
 
 
 SETTINGS_PER_IMAGE = 3
@@ -22,7 +21,7 @@ SETTINGS_PER_IMAGE = 3
 class CorrectSpilloverApply(cpm.CPModule):
     category = "Image Processing"
     variable_revision_number = 0
-    module_name = "CorrectIlluminationApply"
+    module_name = "CorrectSpilloverApply"
 
     def create_settings(self):
         """Make settings here (and set the module name)"""
@@ -58,15 +57,14 @@ class CorrectSpilloverApply(cpm.CPModule):
         image_settings.append("corrected_image_name", corrected_image_name)
         image_settings.append("spill_correct_function_image_name",
                               spill_correct_function_image_name)
-        image_settings.append("rescale_option",RE_NONE)
 
         if can_delete:
             image_settings.append("remover",
                                   cps.RemoveSettingButton("","Remove this image",
                                                           self.images,
                                                           image_settings))
-            image_settings.append("divider",cps.Divider())
-            self.images.append(image_settings)
+        image_settings.append("divider",cps.Divider())
+        self.images.append(image_settings)
 
     def settings(self):
         """Return the settings to be loaded or saved to/from the pipeline
@@ -81,7 +79,7 @@ class CorrectSpilloverApply(cpm.CPModule):
             result += [image.image_name, image.corrected_image_name,
                        image.spill_correct_function_image_name
                       ]
-            return result
+        return result
 
     def visible_settings(self):
         """Return the list of displayed settings
@@ -97,9 +95,9 @@ class CorrectSpilloverApply(cpm.CPModule):
             remover = getattr(image, "remover", None)
             if remover is not None:
                 result.append(remover)
-                result.append(image.divider)
-                result.append(self.add_image_button)
-                return result
+            result.append(image.divider)
+        result.append(self.add_image_button)
+        return result
 
     def prepare_settings(self, setting_values):
         """Do any sort of adjustment to the settings required for the given values
@@ -152,8 +150,7 @@ class CorrectSpilloverApply(cpm.CPModule):
         # Either divide or subtract the illumination image from the original
         #
         output_pixels = self.compensate_image(orig_image.pixel_data,
-                                              pspillover_mat.pixel_data)
-        #
+                                              spillover_mat.pixel_data)
         # Save the output image in the image set and have it inherit
         # mask & cropping from the original image.
         #
@@ -169,9 +166,7 @@ class CorrectSpilloverApply(cpm.CPModule):
                 workspace.display_data.images[corrected_image_name] = output_pixels
                 workspace.display_data.images[spill_correct_name] = spillover_mat.pixel_data
 
-        return 1
-
-    def compensate_image(sm, img):
+    def compensate_image(self, img, sm):
         """
         Compensate an img with dimensions (x, y, c) with a spillover matrix
         with dimensions (c, c) by first reshaping the matrix to the shape dat=(x*y,
@@ -216,18 +211,17 @@ class CorrectSpilloverApply(cpm.CPModule):
                 else:
                     f = figure.subplot_imshow_color
                     return f(x, y, image, *args, **kwargs)
-
-       imshow(0, j, orig_image,
-              "Original image: %s" % image_name,
+            imshow(0, j, orig_image,
+               "Original image: %s" % image_name,
+               sharexy = figure.subplot(0,0))
+            title = ("Illumination function: %s\nmin=%f, max=%f" %
+                 (spill_correct_function_image_name,
+                  round(illum_image.min(), 4),
+                  round(illum_image.max(), 4)))
+        
+            imshow(1, j, illum_image, title,
               sharexy = figure.subplot(0,0))
-       title = ("Illumination function: %s\nmin=%f, max=%f" %
-                (spill_correct_function_image_name,
-                 round(illum_image.min(), 4),
-                 round(illum_image.max(), 4)))
-
-       imshow(1, j, illum_image, title,
-              sharexy = figure.subplot(0,0))
-       imshow(2, j, corrected_image,
+            imshow(2, j, corrected_image,
               "Final image: %s" %
               corrected_image_name,
               sharexy = figure.subplot(0,0))
