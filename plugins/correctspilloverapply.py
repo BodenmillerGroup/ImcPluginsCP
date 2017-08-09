@@ -188,7 +188,7 @@ class CorrectSpilloverApply(cpm.CPModule):
         x, y ,c = img.shape
         dat = np.ravel(img, order='C')
         dat = np.reshape(dat,(x*y,c), order='C')
-        compdat = np.linalg.solve(sm.T, dat.T)
+        compdat = np.linalg.lstsq(sm.T, dat.T)[0]
         compdat = compdat.T
         compdat = compdat.ravel(order='C')
         comp_img = np.reshape(compdat, (x,y,c), order='C')
