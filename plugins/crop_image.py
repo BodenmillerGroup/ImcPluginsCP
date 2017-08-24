@@ -163,7 +163,7 @@ class Crop(cpm.CPModule):
         else:
             x = int(workspace.measurements.apply_metadata(self.crop_x.value))
             y = int(workspace.measurements.apply_metadata(self.crop_y.value))
-        crop_slice = crop_slice(image_pixels.shape[:2],
+        crop_slice = self.crop_slice(image_pixels.shape[:2],
                                        w=int(workspace.measurements.apply_metadata(self.crop_w.value)),
                                        h=int(workspace.measurements.apply_metadata(self.crop_h.value)),
                                         x=x, y=y, flipped_axis=True
@@ -176,7 +176,7 @@ class Crop(cpm.CPModule):
         image = workspace.image_set.get_image(input_image_name)
         image_pixels = image.pixel_data
         if image_pixels.ndim > 2:
-            crop_slice = add_slice_dimension(crop_slice)
+            crop_slice = self.add_slice_dimension(crop_slice)
         output_image = cpi.Image(image_pixels[crop_slice], parent_image=image)
         workspace.image_set.add(output_image_name, output_image)
 
@@ -243,47 +243,47 @@ class Crop(cpm.CPModule):
 
         return setting_values, variable_revision_number, from_matlab
 
-# functions
+    # functions
+    @staticmethod
+    def crop_slice(origshape, w, h=None, x=None, y=None, random_seed=None,
+                   flipped_axis=False):
+        """
+        Returns a slicer to crop the image provided. If x and y position are not
+        provided, a random slice will be taken.
 
-def crop_slice(origshape, w, h=None, x=None, y=None, random_seed=None,
-               flipped_axis=False):
-    """
-    Returns a slicer to crop the image provided. If x and y position are not
-    provided, a random slice will be taken.
+        """
+        if random_seed is not None:
+            np.random.seed(random_seed)
 
-    """
-    if random_seed is not None:
-        np.random.seed(random_seed)
+        if h is None:
+            h= w
 
-    if h is None:
-        h= w
+        outsize = (w, h)
+        if flipped_axis:
+            outsize = reversed(outsize)
+            x, y = y, x
+        
+        outslices = list()
+        for dmax, dstart, dextend in zip(origshape, (x,y), outsize):
+            if dmax > dextend:
+                if dstart is None:
+                    dstart = np.random.randint(0, dmax-dextend)
+                dstart = min(dstart, dmax-dextend)
+                outslices.append(np.s_[dstart:(dstart+dextend)])
+            else:
+                outslices.append(np.s_[0:dmax])
+        outslices = tuple(outslices)
+        return outslices
+    @staticmethod
+    def add_slice_dimension(sl, append=True):
+        """
+        Appends another dimension to a numpy slice
+        :param sl: a numpy slice
+        :return: a numpy slice extended for 1 dimension
+        """
 
-    outsize = (w, h)
-    if flipped_axis:
-        outsize = reversed(outsize)
-        x, y = y, x
-    
-    outslices = list()
-    for dmax, dstart, dextend in zip(origshape, (x,y), outsize):
-        if dmax > dextend:
-            if dstart is None:
-                dstart = np.random.randint(0, dmax-dextend)
-            dstart = min(dstart, dmax-dextend)
-            outslices.append(np.s_[dstart:(dstart+dextend)])
+        if append:
+            exsl = tuple([s for s in sl] + [np.s_[:]])
         else:
-            outslices.append(np.s_[0:dmax])
-    outslices = tuple(outslices)
-    return outslices
-
-def add_slice_dimension(sl, append=True):
-    """
-    Appends another dimension to a numpy slice
-    :param sl: a numpy slice
-    :return: a numpy slice extended for 1 dimension
-    """
-
-    if append:
-        exsl = tuple([s for s in sl] + [np.s_[:]])
-    else:
-        exsl = tuple([np.s_[:]]+[s for s in sl])
-    return exsl
+            exsl = tuple([np.s_[:]]+[s for s in sl])
+        return exsl
