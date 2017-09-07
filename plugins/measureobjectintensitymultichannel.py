@@ -307,7 +307,10 @@ class MeasureObjectIntensity(cpm.CPModule):
             for channel in range(nchan):
                 for object_name in [obj.name for obj in self.objects]:
                     # Need to refresh image after each iteration...
-                    img = image.pixel_data[:,:,channel].squeeze().copy()
+                    if nchan == 1:
+                        img = image.pixel_data.copy()
+                    else:
+                        img = image.pixel_data[:,:,channel].squeeze().copy()
                     if image.has_mask:
                         masked_image = img.copy()
                         masked_image[~image.mask] = 0
