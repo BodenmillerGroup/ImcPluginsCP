@@ -1,7 +1,6 @@
-imctools
+ImcPluginsCP
 ========================
 
-This repository contains scripts to handle IMC data.
 ImcPluginsCP contains a selection of CellProfiler modules that facilitate
 handling, processing as well as measurement of multiplexed data. It was primarily
 written with imaging mass cytometry (IMC) data for a Ilastik based image segmentation workflow.
