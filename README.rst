@@ -1,7 +1,8 @@
-imctools
+ImcPluginsCP
 ========================
 
-This repository contains scripts to handle IMC data.
+General Information
+-------------------
 ImcPluginsCP contains a selection of CellProfiler modules that facilitate
 handling, processing as well as measurement of multiplexed data. It was primarily
 written with imaging mass cytometry (IMC) data for a Ilastik based image segmentation workflow.
@@ -15,7 +16,9 @@ Note that some plugins (save_object_crops and saveimages_ilastik) directly depen
 Please install the library on the CellProfiler associated python using:
 'pip install tifffile'
  
-## The modules
+The modules
+-------------------
+
 * ColorToGray bb: a slight modification of the 'ColorToGray' CP module to support up to 60 channels per image
 * Crop bb: Crop a specified or random location from the image
 * MaskToBinstack: allows to identify a main object in a mask and generate a stack of binary planes containing: 'is_maninobject', 'is_any_other_object', 'is_background'
