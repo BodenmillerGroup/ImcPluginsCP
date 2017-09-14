@@ -1,5 +1,6 @@
 ImcPluginsCP
 ========================
+For a description of the associated image segmentation pipline, please visit: https://github.com/BodenmillerGroup/ImcSegmentationPipeline
 
 General Information
 -------------------
