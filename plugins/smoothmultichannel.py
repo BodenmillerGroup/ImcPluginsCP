@@ -12,11 +12,10 @@ from centrosome.smooth import circular_gaussian_kernel
 from centrosome.smooth import fit_polynomial
 from centrosome.smooth import smooth_with_function_and_mask
 
-import cellprofiler.cpimage as cpi
-import cellprofiler.cpmodule as cpm
-import cellprofiler.settings as cps
-from cellprofiler.gui.help import HELP_ON_MEASURING_DISTANCES, HELP_ON_PIXEL_INTENSITIES
-from cellprofiler.settings import YES, NO
+import cellprofiler.image as cpi
+import cellprofiler.module as cpm
+import cellprofiler.setting as cps
+from cellprofiler.setting import YES, NO
 
 from matplotlib.widgets import Slider, Button, RadioButtons
 
@@ -30,8 +29,11 @@ CIRCULAR_AVERAGE_FILTER = 'Circular Average Filter'
 SM_TO_AVERAGE = "Smooth to Average"
 REMOVE_OUTLIER = 'Remove single hot pixels'
 
+NOTDEFINEDYET = 'Helptext Not Defined Yet'
+HELP_ON_MEASURING_DISTANCES = NOTDEFINEDYET
+HELP_ON_PIXEL_INTENSITIES = NOTDEFINEDYET
 
-class SmoothMultichannel(cpm.CPModule):
+class SmoothMultichannel(cpm.Module):
     module_name = 'Smooth Multichannel'
     category = "Image Processing"
     variable_revision_number = 2
@@ -236,11 +238,18 @@ class SmoothMultichannel(cpm.CPModule):
 
     def display(self, workspace, figure):
         figure.set_subplots((2, 1))
-        ax1 = figure.subplot_imshow_grayscale(0, 0,
+
+        img_orig = workspace.display_data.pixel_data
+        img_filt = workspace.display_data.output_pixels
+        #if len(img_orig.shape) > 2:
+        #    img_orig = img_orig[:,:,0]
+        #    img_filt = img_filt[:,:,0]
+
+        ax1 = figure.subplot_imshow_color(0, 0,
                                         workspace.display_data.pixel_data,
                                         "Original: %s" %
                                         self.image_name.value)
-        ax2 = figure.subplot_imshow_grayscale(1, 0,
+        ax2 = figure.subplot_imshow_color(1, 0,
                                         workspace.display_data.output_pixels,
                                         "Filtered: %s" %
                                         self.filtered_image_name.value,

@@ -9,7 +9,7 @@ handling, processing as well as measurement of multiplexed data. It was primaril
 written with imaging mass cytometry (IMC) data for a Ilastik based image segmentation workflow.
 Many modules are slightly modified versions of CellProfiler modules (https://github.com/CellProfiler/CellProfiler).
  
-The modules were tested with CellProfiler 2.2.0
+The modules were tested with CellProfiler 3, however they are still to be considered BETA versions.
  
 For installation copy the folder to a local directry and modify the CellProfiler preferences to the plugin folder.
  

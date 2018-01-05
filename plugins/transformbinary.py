@@ -7,19 +7,21 @@ usefull to quantify the distance of objects to a mask.
 import numpy as np
 import scipy.ndimage as scind
 
-import cellprofiler.cpimage as cpi
-import cellprofiler.cpmodule as cpm
-import cellprofiler.settings as cps
-from cellprofiler.gui.help import HELP_ON_MEASURING_DISTANCES, HELP_ON_PIXEL_INTENSITIES
-from cellprofiler.settings import YES, NO
+import cellprofiler.image as cpi
+import cellprofiler.module as cpm
+import cellprofiler.setting as cps
+from cellprofiler.setting import YES, NO
 
 from matplotlib.widgets import Slider, Button, RadioButtons
 
 from scipy import ndimage as ndi
 
 DISTANCE_BORDER = 'Distance to border'
+NOTDEFINEDYET = 'Helptext Not Defined Yet'
+HELP_ON_MEASURING_DISTANCES = NOTDEFINEDYET
+HELP_ON_PIXEL_INTENSITIES = NOTDEFINEDYET
 
-class TransformBinary(cpm.CPModule):
+class TransformBinary(cpm.Module):
     module_name = 'Transform Binary'
     category = "Image Processing"
     variable_revision_number = 1
@@ -83,11 +85,11 @@ self.transform_method.value)
 
     def display(self, workspace, figure):
         figure.set_subplots((2, 1))
-        ax1 = figure.subplot_imshow_grayscale(0, 0,
+        ax1 = figure.subplot_imshow_color(0, 0,
                                         workspace.display_data.pixel_data,
                                         "Original: %s" %
                                         self.image_name.value)
-        ax2 = figure.subplot_imshow_grayscale(1, 0,
+        ax2 = figure.subplot_imshow_color(1, 0,
                                         workspace.display_data.output_pixels,
                                         "Filtered: %s" %
                                         self.transformed_image_name.value,
