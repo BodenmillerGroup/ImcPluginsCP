@@ -13,10 +13,10 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
-import cellprofiler.cpmodule as cpm
-import cellprofiler.cpimage as cpi
-import cellprofiler.settings as cps
-import cellprofiler.measurements as cpmeas
+import cellprofiler.module as cpm
+import cellprofiler.image as cpi
+import cellprofiler.setting as cps
+import cellprofiler.measurement as cpmeas
 C_RANDOM = 'Crop random sections of the image'
 C_SPECIFIC = 'Crop specific image section'
 C_X = 'X position of upper left corner of section'
@@ -27,7 +27,7 @@ C_W = 'Width of cropped section'
 '''The index of the additional image count setting'''
 S_ADDITIONAL_IMAGE_COUNT = 7
 
-class Crop(cpm.CPModule):
+class Crop(cpm.Module):
 
     category = "Image Processing"
     variable_revision_number = 2
@@ -225,9 +225,9 @@ class Crop(cpm.CPModule):
                 figure.subplot_imshow_bw(1, i, output_image_pixels,
                                          title=output_image_name)
             else:
-                figure.subplot_imshow(0, i, input_image_pixels,
+                figure.subplot_imshow_color(0, i, input_image_pixels,
                                       title=input_image_name)
-                figure.subplot_imshow(1, i, output_image_pixels,
+                figure.subplot_imshow_color(1, i, output_image_pixels,
                                       title=output_image_name)
 
     def get_measurement_columns(self, pipeline):
@@ -274,6 +274,7 @@ class Crop(cpm.CPModule):
                 outslices.append(np.s_[0:dmax])
         outslices = tuple(outslices)
         return outslices
+
     @staticmethod
     def add_slice_dimension(sl, append=True):
         """

@@ -1,47 +1,61 @@
-'''<b>Measure Image Intensity</b> measures the total intensity in an image 
-by summing all of the pixel intensities (excluding masked pixels).
-<hr>
-This module will sum all pixel values to measure the total image
-intensity. The user can measure all pixels in the image or can restrict
-the measurement to pixels within objects. If the image has a mask, only
-unmasked pixels will be measured.
-
-<p>Note that for publication purposes, the units of
-intensity from microscopy images are usually described as "Intensity
-units" or "Arbitrary intensity units" since microscopes are not
-calibrated to an absolute scale. Also, it is important to note whether
-you are reporting either the mean or the integrated intensity, so specify
-"Mean intensity units" or "Integrated intensity units" accordingly.</p>
-
-<p>Keep in mind that the default behavior in CellProfiler is to rescale the
-image intensity from 0 to 1 by dividing all pixels in the image by the
-maximum possible intensity value. This "maximum possible" value
-is defined by the "Set intensity range from" setting in <b>NamesAndTypes</b>;
-see the help for that setting for more details.</p>
-
-<h4>Available measurements</h4>
-<ul>
-<li><i>TotalIntensity:</i> Sum of all pixel intensity values.</li>
-<li><i>MeanIntensity, MedianIntensity:</i> Mean and median of pixel intensity values.</li>
-<li><i>StdIntensity, MADIntensity:</i> Standard deviation and median absolute deviation
-(MAD) of pixel intensity values. The MAD is defined as the median(|x<sub>i</sub> - median(x)|).</li>
-<li><i>MinIntensity, MaxIntensity:</i> Minimum and maximum of pixel intensity values.</li>
-<li><i>LowerQuartileIntensity:</i> The intensity value of the pixel for which 25%
-of the pixels in the object have lower values.</li>
-<li><i>UpperQuartileIntensity:</i> The intensity value of the pixel for which 75%
-of the pixels in the object have lower values.</li>
-<li><i>TotalArea:</i> Number of pixels measured, e.g., the area of the image.</li>
-</ul>
-
-See also <b>MeasureObjectIntensity</b>, <b>MaskImage</b>.
-'''
+# coding=utf-8
 
 import numpy as np
 
-import cellprofiler.cpmodule as cpm
-import cellprofiler.measurements as cpmeas
-import cellprofiler.settings as cps
-from cellprofiler.settings import YES, NO
+import cellprofiler.module as cpm
+import cellprofiler.measurement as cpmeas
+import cellprofiler.setting as cps
+from cellprofiler.setting import YES, NO
+from cellprofiler.modules import _help
+
+__doc__ = """
+MeasureImageIntensity
+=====================
+
+**MeasureImageIntensity** measures several intensity features across an
+entire image (excluding masked pixels).
+
+For example, this module will sum all pixel values to measure the total image
+intensity. You can choose to measure all pixels in the image or restrict
+the measurement to pixels within objects that were identified in a prior
+module. If the image has a mask, only unmasked pixels will be measured.
+
+{HELP_ON_MEASURING_INTENSITIES}
+
+|
+
+============ ============ ===============
+Supports 2D? Supports 3D? Respects masks?
+============ ============ ===============
+YES          YES          YES 
+============ ============ ===============
+
+See also
+^^^^^^^^
+
+See also **MeasureObjectIntensity**, **MaskImage**.
+
+Measurements made by this module
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+-  *TotalIntensity:* Sum of all pixel intensity values.
+-  *MeanIntensity, MedianIntensity:* Mean and median of pixel intensity
+   values.
+-  *StdIntensity, MADIntensity:* Standard deviation and median absolute
+   deviation (MAD) of pixel intensity values. The MAD is defined as the
+   median(\|x\ :sub:`i` - median(x)\|).
+-  *MinIntensity, MaxIntensity:* Minimum and maximum of pixel intensity
+   values.
+-  *LowerQuartileIntensity:* The intensity value of the pixel for which
+   25% of the pixels in the object have lower values.
+-  *UpperQuartileIntensity:* The intensity value of the pixel for which
+   75% of the pixels in the object have lower values.
+-  *TotalArea:* Number of pixels measured, e.g., the area of the image
+   excluding masked regions.
+
+""".format(**{
+    "HELP_ON_MEASURING_INTENSITIES": _help.HELP_ON_MEASURING_INTENSITIES
+})
 
 '''Number of settings saved/loaded per image measured'''
 SETTINGS_PER_IMAGE = 4
@@ -78,12 +92,12 @@ F_UPPER_QUARTILE = 'Intensity_UpperQuartileIntensity_%s'
 F_LOWER_QUARTILE = 'Intensity_LowerQuartileIntensity_%s'
 
 ALL_MEASUREMENTS = ["TotalIntensity", "MeanIntensity", "StdIntensity", "MADIntensity", "MedianIntensity",
-                    "MinIntensity",  "MaxIntensity", "TotalArea", "PercentMaximal",
-                    "LowerQuartileIntensity","UpperQuartileIntensity"]
+                    "MinIntensity", "MaxIntensity", "TotalArea", "PercentMaximal",
+                    "LowerQuartileIntensity", "UpperQuartileIntensity"]
 
-class MeasureImageIntensityMultichannel(cpm.CPModule):
 
-    module_name = 'MeasureImageIntensityMultichannel'
+class MeasureImageIntensity(cpm.Module):
+    module_name = 'MeasureImageIntensity Multichannel'
     category = "Measurement"
     variable_revision_number = 0
 
@@ -91,39 +105,48 @@ class MeasureImageIntensityMultichannel(cpm.CPModule):
         '''Create the settings & name the module'''
         self.divider_top = cps.Divider(line=False)
         self.images = []
-        self.add_image_measurement(can_remove = False)
+        self.add_image_measurement(can_remove=False)
         self.add_button = cps.DoSomething("", "Add another image",
                                           self.add_image_measurement)
         self.divider_bottom = cps.Divider(line=False)
 
-    def add_image_measurement(self, can_remove = True):
+    def add_image_measurement(self, can_remove=True):
         group = cps.SettingsGroup()
         if can_remove:
             group.append("divider", cps.Divider())
 
         group.append("image_name", cps.ImageNameSubscriber(
-            "Select the image to measure",
-            cps.NONE, doc = '''
-            Choose an image name from the drop-down menu to calculate intensity for that
-            image. Use the <i>Add another image</i> button below to add additional images which will be
-            measured. You can add the same image multiple times if you want to measure
-            the intensity within several different objects.'''))
+                "Select the image to measure",
+                cps.NONE, doc="""\
+Choose an image name from the drop-down menu to calculate intensity for
+that image. Use the *Add another image* button below to add additional
+images to be measured. You can add the same image multiple times
+if you want to measure the intensity within several different
+objects."""))
+
         group.append("nchannels", cps.Integer(
             "How many channels does the image have?", 1, doc="""
             Indicate how many planes this image have. This is needed as
             the cellprofiler pipeline needs to be independent of the actuall
             image data.
             """))
-        group.append("wants_objects", cps.Binary(
-            "Measure the intensity only from areas enclosed by objects?",
-            False, doc = """
-            Select <i>%(YES)s</i> to measure only those pixels within an object of choice."""%globals()))
 
-        group.append("object_name",cps.ObjectNameSubscriber(
-            "Select the input objects",cps.NONE, doc = '''
-            <i>(Used only when measuring intensity from area enclosed by objects)</i><br>
-            Select the objects that the intensity will be aggregated within. The intensity measurement will be
-            restricted to the pixels within these objects.'''))
+        group.append("wants_objects", cps.Binary(
+                "Measure the intensity only from areas enclosed by objects?",
+                False, doc="""\
+Select *%(YES)s* to measure only those pixels within an object type you
+choose, identified by a prior module. Note that this module will
+aggregate intensities across all objects in the image: to measure each
+object individually, see **MeasureObjectIntensity** instead.
+""" % globals()))
+
+        group.append("object_name", cps.ObjectNameSubscriber(
+                "Select the input objects", cps.NONE, doc="""\
+*(Used only when measuring intensity from area occupied by objects)*
+
+Select the objects that the intensity will be aggregated within. The
+intensity measurement will be restricted to the pixels within these
+objects."""))
 
         if can_remove:
             group.append("remover", cps.RemoveSettingButton("",
@@ -137,12 +160,12 @@ class MeasureImageIntensityMultichannel(cpm.CPModule):
             if (group.image_name.value, group.wants_objects.value, group.object_name.value) in settings:
                 if not group.wants_objects.value:
                     raise cps.ValidationError(
-                        "%s has already been selected" %group.image_name.value,
-                        group.image_name)
+                            "%s has already been selected" % group.image_name.value,
+                            group.image_name)
                 else:
                     raise cps.ValidationError(
-                        "%s has already been selected with %s" %(group.object_name.value, group.image_name.value),
-                        group.object_name)
+                            "%s has already been selected with %s" % (group.object_name.value, group.image_name.value),
+                            group.object_name)
             settings[(group.image_name.value, group.wants_objects.value, group.object_name.value)] = True
 
     def settings(self):
@@ -194,7 +217,7 @@ class MeasureImageIntensityMultichannel(cpm.CPModule):
         figure.set_subplots((1, 1))
         figure.subplot_table(0, 0,
                              workspace.display_data.statistics,
-                             col_labels = workspace.display_data.col_labels)
+                             col_labels=workspace.display_data.col_labels)
 
     def measure(self, im, workspace):
         '''Perform measurements according to the image measurement in im
@@ -239,11 +262,11 @@ class MeasureImageIntensityMultichannel(cpm.CPModule):
                 pixel_upper_qrt = 0
             else:
                 pixels = pixels.flatten()
-                pixels = pixels[np.nonzero(np.isfinite(pixels))[0]] # Ignore NaNs, Infs
+                pixels = pixels[np.nonzero(np.isfinite(pixels))[0]]  # Ignore NaNs, Infs
                 pixel_count = np.product(pixels.shape)
 
                 pixel_sum = np.sum(pixels)
-                pixel_mean = pixel_sum/float(pixel_count)
+                pixel_mean = pixel_sum / float(pixel_count)
                 pixel_std = np.std(pixels)
                 pixel_median = np.median(pixels)
                 pixel_mad = np.median(np.abs(pixels - pixel_median))
@@ -252,22 +275,22 @@ class MeasureImageIntensityMultichannel(cpm.CPModule):
                 pixel_pct_max = (100.0 * float(np.sum(pixels == pixel_max)) /
                                  float(pixel_count))
                 sorted_pixel_data = sorted(pixels)
-                pixel_lower_qrt = sorted_pixel_data[int(len(sorted_pixel_data)* 0.25)]
-                pixel_upper_qrt = sorted_pixel_data[int(len(sorted_pixel_data)* 0.75)]
+                pixel_lower_qrt = sorted_pixel_data[int(len(sorted_pixel_data) * 0.25)]
+                pixel_upper_qrt = sorted_pixel_data[int(len(sorted_pixel_data) * 0.75)]
 
-            m = workspace.measurements
-            m.add_image_measurement(F_TOTAL_INTENSITY%(measurement_name), pixel_sum)
-            m.add_image_measurement(F_MEAN_INTENSITY%(measurement_name), pixel_mean)
-            m.add_image_measurement(F_MEDIAN_INTENSITY%(measurement_name), pixel_median)
-            m.add_image_measurement(F_STD_INTENSITY%(measurement_name), pixel_std)
-            m.add_image_measurement(F_MAD_INTENSITY%(measurement_name), pixel_mad)
-            m.add_image_measurement(F_MAX_INTENSITY%(measurement_name), pixel_max)
-            m.add_image_measurement(F_MIN_INTENSITY%(measurement_name), pixel_min)
-            m.add_image_measurement(F_TOTAL_AREA%(measurement_name), pixel_count)
-            m.add_image_measurement(F_PERCENT_MAXIMAL % (measurement_name), pixel_pct_max)
-            m.add_image_measurement(F_LOWER_QUARTILE % (measurement_name), pixel_lower_qrt)
-            m.add_image_measurement(F_UPPER_QUARTILE % (measurement_name), pixel_upper_qrt)
-            statistics += [[im.image_name.value,
+                m = workspace.measurements
+                m.add_image_measurement(F_TOTAL_INTENSITY % measurement_name, pixel_sum)
+                m.add_image_measurement(F_MEAN_INTENSITY % measurement_name, pixel_mean)
+                m.add_image_measurement(F_MEDIAN_INTENSITY % measurement_name, pixel_median)
+                m.add_image_measurement(F_STD_INTENSITY % measurement_name, pixel_std)
+                m.add_image_measurement(F_MAD_INTENSITY % measurement_name, pixel_mad)
+                m.add_image_measurement(F_MAX_INTENSITY % measurement_name, pixel_max)
+                m.add_image_measurement(F_MIN_INTENSITY % measurement_name, pixel_min)
+                m.add_image_measurement(F_TOTAL_AREA % measurement_name, pixel_count)
+                m.add_image_measurement(F_PERCENT_MAXIMAL % measurement_name, pixel_pct_max)
+                m.add_image_measurement(F_LOWER_QUARTILE % measurement_name, pixel_lower_qrt)
+                m.add_image_measurement(F_UPPER_QUARTILE % measurement_name, pixel_upper_qrt)
+                statistics += [[im.image_name.value,
                  str(channel),
                  im.object_name.value if im.wants_objects.value else "",
                  feature_name, str(value)]
@@ -301,8 +324,8 @@ class MeasureImageIntensityMultichannel(cpm.CPModule):
                                          (F_LOWER_QUARTILE, cpmeas.COLTYPE_FLOAT),
                                          (F_UPPER_QUARTILE, cpmeas.COLTYPE_FLOAT)):
                     measurement_name = im.image_name.value + (
-                        ("_" + im.object_name.value) if im.wants_objects.value
-                        else "")  + '_c'+str(channel)
+                        ("_" + im.object_name.value) if im.wants_objects.value else ""
+                    ) + '_c'+str(channel)
                     columns.append((cpmeas.IMAGE, feature % measurement_name, coltype))
         return columns
 
@@ -314,15 +337,15 @@ class MeasureImageIntensityMultichannel(cpm.CPModule):
 
     def get_measurements(self, pipeline, object_name, category):
         if (object_name == cpmeas.IMAGE and
-            category == "Intensity"):
+                    category == "Intensity"):
             return ALL_MEASUREMENTS
         return []
 
     def get_measurement_images(self, pipeline, object_name,
                                category, measurement):
         if (object_name == cpmeas.IMAGE and
-            category == "Intensity" and
-            measurement in ALL_MEASUREMENTS):
+                    category == "Intensity" and
+                    measurement in ALL_MEASUREMENTS):
             result = []
             for im in self.images:
                 image_name = im.image_name.value
@@ -341,3 +364,6 @@ class MeasureImageIntensityMultichannel(cpm.CPModule):
         because it was generally unused. The first setting is the image name.
         '''
         return setting_values, variable_revision_number, from_matlab
+
+    def volumetric(self):
+        return True
