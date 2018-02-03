@@ -119,7 +119,7 @@ class SaveObjectCrops(cpm.Module):
     def create_settings(self):
         self.input_type = cps.Choice(
             "Select the type of input",
-            [IF_IMAGE, IF_OBJECTS], IF_IMAGE)
+            [IF_IMAGE], IF_IMAGE)
 
         self.image_name  = cps.ImageNameSubscriber(
             "Select the image to save",cps.NONE, doc = """
@@ -370,7 +370,7 @@ class SaveObjectCrops(cpm.Module):
         x_start = max(sl.start-extent,dim_min)
         x_end = min(sl.stop+ extent, dim_max)
         return np.s_[x_start:x_end]
-    
+
     def _extend_slice_touple(self, slice_touple, extent, max_dim ,min_dim =(0,0)):
         """
         Helper for save_crops
@@ -382,11 +382,11 @@ class SaveObjectCrops(cpm.Module):
         :return: an extended numpy slice
 
         """
-        new_slice = tuple(_extend_slice(s,extent, d_max, d_min) for s, d_max, d_min in
+        new_slice = tuple(self._extend_slice(s,extent, d_max, d_min) for s, d_max, d_min in
               zip(slice_touple, max_dim, min_dim))
 
         return new_slice
-    
+
     def _save_object_stack(self, folder, basename, img_stack, slices, labels=None):
         """
         Saves slices from an image stack as.
@@ -451,6 +451,10 @@ class SaveObjectCrops(cpm.Module):
         if stack.dtype == np.int8:
             stack = stack.astype(np.uint8)
         elif stack.dtype == np.int16:
+            stack = stack.astype(np.uint16)
+        elif stack.dtype == np.float:
+            stack = stack.astype(np.float32)
+        elif stack.dtype == np.int32:
             stack = stack.astype(np.uint16)
 
         self._save_object_stack(out_folder, basename, stack, ext_slices,
@@ -643,7 +647,7 @@ class SaveObjectCrops(cpm.Module):
 
         # Make sure metadata tags exist
         pass
-        
+
 class SaveImagesDirectoryPath(cps.DirectoryPath):
     '''A specialized version of DirectoryPath to handle saving in the image dir'''
 

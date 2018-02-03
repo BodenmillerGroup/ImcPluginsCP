@@ -104,7 +104,7 @@ class Crop(cpm.Module):
                   self.crop_x,
                   self.crop_y,
                 self.additional_image_count]
-        
+
         for additional in self.additional_images:
             result += [additional.input_image_name, additional.output_image_name]
 
@@ -214,7 +214,7 @@ class Crop(cpm.Module):
         output_images = workspace.display_data.output_images
         input_image_names = workspace.display_data.input_image_names
         output_image_names = workspace.display_data.output_image_names
-        
+
         figure.set_subplots((2, len(input_images)))
 
         for i, (input_image_pixels, output_image_pixels, input_image_name, output_image_name) in \
@@ -262,7 +262,7 @@ class Crop(cpm.Module):
         if flipped_axis:
             outsize = reversed(outsize)
             x, y = y, x
-        
+
         outslices = list()
         for dmax, dstart, dextend in zip(origshape, (x,y), outsize):
             if dmax > dextend:
