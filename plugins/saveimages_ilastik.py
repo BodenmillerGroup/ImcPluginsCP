@@ -599,7 +599,7 @@ store images in the subfolder, "*date*\/*plate-name*".""")
                                             c=c, z=z, t=t,
                                             size_c=size_c, size_z=size_z, size_t=size_t,
                                             channel_names=channel_names)
-        
+
     def write_ilastik_image(self, filename, pixels):
         '''Save a tiff multicolor image compatible with Ilastik
         filename: filename to use
@@ -609,7 +609,7 @@ store images in the subfolder, "*date*\/*plate-name*".""")
         if len(pixels.shape) == 2:
             stack = pixels.reshape([1]+list(pixels.shape))
         else:
-            stack = np.rollaxis(pixels,2,0)
+            stack = numpy.rollaxis(pixels,2,0)
 
         with tifffile.TiffWriter(filename, imagej=True) as tif:
             for chan in range(stack.shape[0]):
@@ -707,25 +707,25 @@ store images in the subfolder, "*date*\/*plate-name*".""")
 
     @property
     def file_name_feature(self):
-        return '_'.join((cellprofiler.modules.loadimages.C_FILE_NAME, self.image_name.value))
+        return '_'.join((cellprofiler.measurement.C_FILE_NAME, self.image_name.value))
 
     @property
     def path_name_feature(self):
-        return '_'.join((cellprofiler.modules.loadimages.C_PATH_NAME, self.image_name.value))
+        return '_'.join((cellprofiler.measurement.C_PATH_NAME, self.image_name.value))
 
     @property
     def url_feature(self):
-        return '_'.join((cellprofiler.modules.loadimages.C_URL, self.image_name.value))
+        return '_'.join((cellprofiler.measurement.C_URL, self.image_name.value))
 
     @property
     def source_file_name_feature(self):
         '''The file name measurement for the exemplar disk image'''
-        return '_'.join((cellprofiler.modules.loadimages.C_FILE_NAME, self.file_image_name.value))
+        return '_'.join((cellprofiler.measurement.C_FILE_NAME, self.file_image_name.value))
 
     def source_path(self, workspace):
         '''The path for the image data, or its first parent with a path'''
         if self.file_name_method.value == FN_FROM_IMAGE:
-            path_feature = '%s_%s' % (cellprofiler.modules.loadimages.C_PATH_NAME, self.file_image_name.value)
+            path_feature = '%s_%s' % (cellprofiler.measurement.C_PATH_NAME, self.file_image_name.value)
             assert workspace.measurements.has_feature(cellprofiler.measurement.IMAGE, path_feature), \
                 "Image %s does not have a path!" % self.file_image_name.value
             return workspace.measurements.get_current_image_measurement(path_feature)
