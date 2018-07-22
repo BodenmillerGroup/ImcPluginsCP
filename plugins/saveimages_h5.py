@@ -113,12 +113,13 @@ OFFSET_DIRECTORY_PATH = 11
 '''Offset to the bit depth setting in version 11'''
 OFFSET_BIT_DEPTH_V11 = 12
 
-H5_XYC_AXISTAG = '''{\n  "axes": [\n    {\n      "key": "x",\n      "typeFlags": 2,\n
-      "resolution": 0,\n      "description": ""\n    },\n    {\n
-            "key": "y",\n      "typeFlags": 2,\n      "resolution": 0,\n
-                  "description": ""\n    },\n    {\n      "key": "c",\n
-                       "typeFlags": 1,\n      "resolution": 0,\n
-                             "description": ""\n    }\n  ]\n}'''
+H5_YXC_AXISTAG = '''{\n  "axes": [\n    {\n      "key": "y",\n      "typeFlags": 2,\n
+"resolution": 0,\n      "description": ""\n    },\n    {\n
+"key": "x",\n      "typeFlags": 2,\n      "resolution": 0,\n
+"description": ""\n    },\n    {\n      "key": "c",\n
+"typeFlags": 1,\n      "resolution": 0,\n
+"description": ""\n    }\n  ]\n}'''
+
 class SaveImagesH5(cpm.CPModule):
     module_name = "SaveImages H5"
     variable_revision_number = 1
@@ -998,13 +999,10 @@ def save_h5(path, pixels, pixel_type):
         pixels = pixels.reshape(list(pixels.shape)+[1])
     pixels = pixels.astype(pixel_type)
 
-    #xy is swapped in ilastik
-    pixels = pixels.swapaxes(0, 1)
-
     with h5py.File(path, 'w') as f:
         dset = f.create_dataset('stacked_channels',
 			shape=pixels.shape, dtype=pixels.dtype, chunks=True)
-        dset.attrs['axistags'] = H5_XYC_AXISTAG
+        dset.attrs['axistags'] = H5_YXC_AXISTAG
         dset[:,:,:] = pixels
 
 
