@@ -13,7 +13,7 @@ import scipy.optimize as spo
 import cellprofiler.image  as cpi
 import cellprofiler.module as cpm
 import cellprofiler.setting as cps
-import cellprofiler.measurements as cpmeas
+import cellprofiler.measurement as cpmeas
 
 
 SETTINGS_PER_IMAGE = 5
