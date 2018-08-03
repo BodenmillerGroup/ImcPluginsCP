@@ -85,7 +85,7 @@ class MeasureImageIntensityMultichannel(cpm.CPModule):
 
     module_name = 'MeasureImageIntensityMultichannel'
     category = "Measurement"
-    variable_revision_number = 0
+    variable_revision_number = 1
 
     def create_settings(self):
         '''Create the settings & name the module'''
