@@ -988,7 +988,7 @@ class SaveImagesDirectoryPath(cps.DirectoryPath):
         return cps.DirectoryPath.static_join_string(dir_choice, custom_path)
 
 def save_h5(path, pixels, pixel_type):
-    ''' Saves an image to an hdf5 with xyc axistag
+    ''' Saves an image to an hdf5 with yxc axistag
     This format should be good for ilastik pixel classification for multiplexed images
 
     path - path to file image
