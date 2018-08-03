@@ -27,7 +27,7 @@ module. If the image has a mask, only unmasked pixels will be measured.
 ============ ============ ===============
 Supports 2D? Supports 3D? Respects masks?
 ============ ============ ===============
-YES          YES          YES 
+YES          YES          YES
 ============ ============ ===============
 
 See also
@@ -99,7 +99,7 @@ ALL_MEASUREMENTS = ["TotalIntensity", "MeanIntensity", "StdIntensity", "MADInten
 class MeasureImageIntensity(cpm.Module):
     module_name = 'MeasureImageIntensity Multichannel'
     category = "Measurement"
-    variable_revision_number = 0
+    variable_revision_number = 1
 
     def create_settings(self):
         '''Create the settings & name the module'''
@@ -245,8 +245,8 @@ objects."""))
                     pixels = pixels[objects.segmented != 0]
             elif image.has_mask:
                 pixels = pixels[image.mask]
-             
-            measurement_name += '_c' + str(channel)
+
+            measurement_name += '_c' + str(channel+1)
 
             pixel_count = np.product(pixels.shape)
             if pixel_count == 0:
@@ -325,7 +325,7 @@ objects."""))
                                          (F_UPPER_QUARTILE, cpmeas.COLTYPE_FLOAT)):
                     measurement_name = im.image_name.value + (
                         ("_" + im.object_name.value) if im.wants_objects.value else ""
-                    ) + '_c'+str(channel)
+                    ) + '_c'+str(channel+1)
                     columns.append((cpmeas.IMAGE, feature % measurement_name, coltype))
         return columns
 
