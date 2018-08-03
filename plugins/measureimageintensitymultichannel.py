@@ -1,4 +1,4 @@
-'''<b>Measure Image Intensity</b> measures the total intensity in an image 
+'''<b>Measure Image Intensity</b> measures the total intensity in an image
 by summing all of the pixel intensities (excluding masked pixels).
 <hr>
 This module will sum all pixel values to measure the total image
@@ -222,8 +222,8 @@ class MeasureImageIntensityMultichannel(cpm.CPModule):
                     pixels = pixels[objects.segmented != 0]
             elif image.has_mask:
                 pixels = pixels[image.mask]
-             
-            measurement_name += '_c' + str(channel)
+
+            measurement_name += '_c' + str(channel+1)
 
             pixel_count = np.product(pixels.shape)
             if pixel_count == 0:
@@ -302,7 +302,7 @@ class MeasureImageIntensityMultichannel(cpm.CPModule):
                                          (F_UPPER_QUARTILE, cpmeas.COLTYPE_FLOAT)):
                     measurement_name = im.image_name.value + (
                         ("_" + im.object_name.value) if im.wants_objects.value
-                        else "")  + '_c'+str(channel)
+                        else "")  + '_c'+str(channel+1)
                     columns.append((cpmeas.IMAGE, feature % measurement_name, coltype))
         return columns
 
