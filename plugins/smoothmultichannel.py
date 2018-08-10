@@ -36,7 +36,7 @@ HELP_ON_PIXEL_INTENSITIES = NOTDEFINEDYET
 class SmoothMultichannel(cpm.Module):
     module_name = 'Smooth Multichannel'
     category = "Image Processing"
-    variable_revision_number = 2
+    variable_revision_number = 4
 
     def create_settings(self):
         self.image_name = cps.ImageNameSubscriber('Select the input image', cps.NONE)
@@ -125,7 +125,7 @@ class SmoothMultichannel(cpm.Module):
             <p>Select <i>%(NO)s</i> to
             allow values less than zero and greater than one in the output
             image.</p>""" % globals())
-        
+
         self.outlierneighbourhood = cps.Integer(
             'Outlier neighbourhood', 3, 3, doc="""
             <i> Used only if %(REMOVE_OUTLIER)s is selected)</i><br>
@@ -134,20 +134,34 @@ class SmoothMultichannel(cpm.Module):
             number. If an even number is provided it is rounded up to the next
             odd number.""" % globals())
 
-        self.treshold = cps.Float(
+        self.threshold = cps.Float(
                 'Outlier Treshold', 50, 0, doc="""
             <i> (Used only if %(REMOVE_OUTLIER)s is selected)</i><br>
-            The %(REMOVE_OUTLIER)s modules needs a treshold to consider
+            The %(REMOVE_OUTLIER)s modules needs a threshold to consider
             outliers. If the second heightest pixel of the neightbourhood is
             larger than this threshold, the value is equal to the second
             highest neightbour.
+            """ % globals())
+
+        self.scale_threshold = cps.Binary(
+                'Scale Treshold to image scale?', True, doc="""
+            <i> (Used only if %(REMOVE_OUTLIER)s is selected)</i><br>
+            Should the threshold selected for %(REMOVE_OUTLIER)s be scaled
+            by the image scaling or be taken as-is?
+            In CellProfiler usually the image values are rescaled to 0-1.
+            Thus if the threshold should be selected based on the raw data values,
+            it needs to be scaled.
+            For example: If the image was Uint16 it is rescaled. Thus all values
+            are now divided by 2^16. If one wants now to set a threshold of 100 counts,
+            with scaling %(NO)s would need to set a threshold of 100/2^16=0.0015. With scaling
+            %(YES)s one would just set a threshold of 100.
             """ % globals())
 
     def settings(self):
         return [self.image_name, self.filtered_image_name,
                 self.smoothing_method, self.wants_automatic_object_size,
                 self.object_size, self.sigma_range, self.clip,
-                self.outlierneighbourhood, self.treshold]
+                self.outlierneighbourhood, self.threshold, self.scale_threshold]
 
     def visible_settings(self):
         result = [self.image_name, self.filtered_image_name,
@@ -163,7 +177,8 @@ class SmoothMultichannel(cpm.Module):
             result.append(self.clip)
         if self.smoothing_method.value == REMOVE_OUTLIER:
             result.append(self.outlierneighbourhood)
-            result.append(self.treshold)
+            result.append(self.threshold)
+            result.append(self.scale_threshold)
         return result
 
     def run_per_layer(self, image, channel):
@@ -208,8 +223,11 @@ class SmoothMultichannel(cpm.Module):
         elif self.smoothing_method.value == REMOVE_OUTLIER:
             # TODO: implement how this deals with masks.
             nbhood = self.outlierneighbourhood.value
+            threshold = self.threshold.value
+            if self.scale_threshold.value:
+                threshold= threshold / image.scale
             output_pixels = self.remove_outlier_pixels(pixel_data,
-                                                         threshold=self.treshold.value,
+                                                         threshold=threshold,
                                                          radius=nbhood,
                                                          mode='max')
         else:
@@ -269,7 +287,9 @@ class SmoothMultichannel(cpm.Module):
                          module_name, from_matlab):
         if variable_revision_number < 2:
             setting_values += [3 , # outlier neighbourhood
-                             20]  # treshold
+                             20]  # threshold
+        if variable_revision_number < 4:
+            setting_values += [cps.NO]
         return setting_values, variable_revision_number, from_matlab
 
 
