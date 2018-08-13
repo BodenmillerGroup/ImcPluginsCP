@@ -245,7 +245,7 @@ example, if one wants to set a threshold of 100 counts, a value of either
             else:
                 output_pixels = image.pixel_data.copy()
                 for channel in range(image.pixel_data.shape[2]):
-                    output_pixels[:, :, i] = self.run_grayscale(image.pixel_data[:, :, i], image)
+                    output_pixels[:, :, channel] = self.run_grayscale(image.pixel_data[:, :, channel], image)
         else:
             if self.smoothing_method.value == CLIP_HOT_PIXELS:
                 # TODO support masks
