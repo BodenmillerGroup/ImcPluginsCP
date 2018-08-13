@@ -211,7 +211,7 @@ example, if one wants to set a threshold of 100 counts, a value of either
         if variable_revision_number < 2:
             setting_values += [3 , 20]  # hp_filter_size, hp_threshold
         if variable_revision_number < 4:
-            setting_values.append(cps.NO)  # scale_hp_threshold 
+            setting_values.append(cps.NO)  # scale_hp_threshold
         return setting_values, variable_revision_number, from_matlab
 
     def visible_settings(self):
@@ -245,21 +245,20 @@ example, if one wants to set a threshold of 100 counts, a value of either
             else:
                 output_pixels = image.pixel_data.copy()
                 for channel in range(image.pixel_data.shape[2]):
-                    output_pixels[:, :, i] = self.run_grayscale(image.pixel_data[:, :, i])
+                    output_pixels[:, :, i] = self.run_grayscale(image.pixel_data[:, :, i], image)
         else:
             if self.smoothing_method.value == CLIP_HOT_PIXELS:
                 # TODO support masks
                 hp_filter_shape = (self.hp_filter_size.value, self.hp_filter_size.value)
                 output_pixels = SmoothMultichannel.clip_hot_pixels(image.pixel_data, hp_filter_shape, hp_threshold)
             else:
-                output_pixels = self.run_grayscale(image.pixel_data)
+                output_pixels = self.run_grayscale(image.pixel_data, image)
         output_image = cpi.Image(output_pixels, parent_image=image)
         workspace.image_set.add(self.filtered_image_name.value, output_image)
         workspace.display_data.pixel_data = image.pixel_data
         workspace.display_data.output_pixels = output_pixels
 
-    def run_grayscale(self, image):
-        pixel_data = image.pixel_data
+    def run_grayscale(self, pixel_data, image):
         if self.wants_automatic_object_size.value:
             object_size = min(30, max(1, np.mean(pixel_data.shape) / 40))
         else:
