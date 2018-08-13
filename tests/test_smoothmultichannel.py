@@ -221,6 +221,23 @@ SmoothMultichannel:[module_num:1|svn_version:\'Unknown\'|variable_revision_numbe
         self.assertFalse(result is None)
         np.testing.assert_almost_equal(result.pixel_data, expected)
 
+    def test_04_02_median_multichannel(self):
+        '''test the smooth module with median filtering'''
+        object_size = 100.0 / 40.0
+        np.random.seed(0)
+        image_plane = np.random.uniform(size=(100, 100)).astype(np.float32)
+        image = np.repeat(image_plane[:,:,np.newaxis], 3, axis=2)
+        mask = np.ones(image.shape[:2], bool)
+        mask[40:60, 45:65] = False
+        expected_plane = median_filter(image_plane, mask, object_size / 2 + 1)
+        expected = np.repeat(expected_plane[:,:,np.newaxis], 3, axis=2)
+        workspace, module = self.make_workspace(image, mask)
+        module.smoothing_method.value = S.MEDIAN_FILTER
+        module.run(workspace)
+        result = workspace.image_set.get_image(OUTPUT_IMAGE_NAME)
+        self.assertFalse(result is None)
+        np.testing.assert_almost_equal(result.pixel_data, expected)
+
     def test_05_01_bilateral(self):
         '''test the smooth module with bilateral filtering'''
         sigma = 16.0
@@ -254,6 +271,26 @@ SmoothMultichannel:[module_num:1|svn_version:\'Unknown\'|variable_revision_numbe
         image[5,5] = 1
 
         mask = np.ones(img_shape)
+        expected_image = np.zeros(img_shape)
+
+        workspace, module = self.make_workspace(image, mask)
+        module.smoothing_method.value = S.CLIP_HOT_PIXELS
+        module.hp_threshold.value=0.1
+        module.hp_filter_size.value=3
+        module.scale_hp_threshold.value = False
+        module.run(workspace)
+        result = workspace.image_set.get_image(OUTPUT_IMAGE_NAME)
+        np.testing.assert_almost_equal(result.pixel_data, expected_image)
+
+    def test_06_01_remove_outlier(self):
+        ''' Test the smooth module for outlier filtering
+            Test if a singe outlier pixel will be detected in a multichannel image.
+        '''
+        img_shape = (10, 10,5)
+        image = np.zeros(img_shape)
+        image[5,5,:] = 1
+
+        mask = np.ones(img_shape[:2])
         expected_image = np.zeros(img_shape)
 
         workspace, module = self.make_workspace(image, mask)
