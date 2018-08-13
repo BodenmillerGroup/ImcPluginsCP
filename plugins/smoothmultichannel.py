@@ -45,13 +45,13 @@ GAUSSIAN_FILTER = 'Gaussian Filter'
 SMOOTH_KEEPING_EDGES = 'Smooth Keeping Edges'
 CIRCULAR_AVERAGE_FILTER = 'Circular Average Filter'
 SM_TO_AVERAGE = "Smooth to Average"
-CLIP_HOT_PIXELS = "Clip hot pixels"
+CLIP_HOT_PIXELS = "Remove single hot pixels"
 
 
 class SmoothMultichannel(cpm.Module):
     module_name = 'SmoothMultichannel'
     category = "Image Processing"
-    variable_revision_number = 3
+    variable_revision_number = 5
 
     def create_settings(self):
         self.image_name = cps.ImageNameSubscriber('Select the input image', cps.NONE, doc="""Select the image to be smoothed.""")
@@ -210,8 +210,8 @@ example, if one wants to set a threshold of 100 counts, a value of either
                          module_name, from_matlab):
         if variable_revision_number < 2:
             setting_values += [3 , 20]  # hp_filter_size, hp_threshold
-        if variable_revision_number < 3:
-            setting_values.append(False)  # scale_hp_threshold
+        if variable_revision_number < 4:
+            setting_values.append(cps.NO)  # scale_hp_threshold 
         return setting_values, variable_revision_number, from_matlab
 
     def visible_settings(self):
