@@ -407,7 +407,7 @@ class SaveObjectCrops(cpm.Module):
 
             fn = os.path.join(folder, basename + '_l' + str(lab + 1) + '_x' + str(x) + '_y' + str(y)+'.tiff')
             timg = img_stack[exsl]
-            skimage.io.imsave(fn, timg)
+            skimage.io.imsave(fn, timg, plugin='tifffile', imagej=True)
 
     def save_crops(self, workspace):
         """ Crops the image by objects """
