@@ -25,6 +25,8 @@ import numpy as np
 import scipy.io.matlab.mio
 import scipy.ndimage as ndi
 logger = logging.getLogger(__name__)
+import skimage.io
+import skimage.util
 
 import cellprofiler.module as cpm
 import cellprofiler.measurement as cpmeas
@@ -37,15 +39,11 @@ from cellprofiler.preferences import \
      DEFAULT_INPUT_SUBFOLDER_NAME, DEFAULT_OUTPUT_SUBFOLDER_NAME, \
      get_default_image_directory
 #from cellprofiler.utilities.relpath import relpath
-from cellprofiler.modules.loadimages import C_FILE_NAME, C_PATH_NAME, C_URL
-from cellprofiler.modules.loadimages import \
+from cellprofiler.measurement import C_FILE_NAME, C_PATH_NAME, C_URL
+from cellprofiler.measurement import \
      C_OBJECTS_FILE_NAME, C_OBJECTS_PATH_NAME, C_OBJECTS_URL
 from cellprofiler.modules.loadimages import pathname2url
 from centrosome.cpmorphology import distance_color_labels
-from bioformats.formatwriter import write_image
-import bioformats.omexml as ome
-
-import tifffile
 
 NOTDEFINEDYET = 'Helptext Not Defined Yet'
 USING_METADATA_TAGS_REF = NOTDEFINEDYET
@@ -113,7 +111,7 @@ OFFSET_BIT_DEPTH_V11 = 12
 class SaveObjectCrops(cpm.Module):
 
     module_name = "SaveObjectCrops"
-    variable_revision_number = 2
+    variable_revision_number = 3
     category = "File Processing"
 
     def create_settings(self):
@@ -305,6 +303,7 @@ class SaveObjectCrops(cpm.Module):
         else:
             raise NotImplementedError("Unhandled file name method: %s"%(self.file_name_method))
         result.append(self.file_format)
+        result.append(self.bit_depth)
         result.append(self.pathname)
         result.append(self.overwrite)
         result.append(self.update_file_names)
@@ -407,16 +406,14 @@ class SaveObjectCrops(cpm.Module):
             exsl = tuple([np.s_[:]]+[s for s in sl])
 
             fn = os.path.join(folder, basename + '_l' + str(lab + 1) + '_x' + str(x) + '_y' + str(y)+'.tiff')
-
-            with tifffile.TiffWriter(fn, imagej=True) as tif:
-                timg = img_stack[exsl]
-                for chan in range(timg.shape[0]):
-                    tif.save(timg[chan, :, :].squeeze())
+            timg = img_stack[exsl]
+            skimage.io.imsave(fn, timg)
 
     def save_crops(self, workspace):
         """ Crops the image by objects """
         objects_name = self.objects_name.value
         objects = workspace.object_set.get_objects(objects_name)
+        bit_depth = self.bit_depth.value
         if self.input_type == IF_IMAGE:
             image_name = self.image_name.value
             image = workspace.image_set.get_image(image_name)
@@ -448,14 +445,12 @@ class SaveObjectCrops(cpm.Module):
             stack = np.rollaxis(pixels,2,0)
 
         # fix the dtype
-        if stack.dtype == np.int8:
-            stack = stack.astype(np.uint8)
-        elif stack.dtype == np.int16:
-            stack = stack.astype(np.uint16)
-        elif stack.dtype == np.float:
-            stack = stack.astype(np.float32)
-        elif stack.dtype == np.int32:
-            stack = stack.astype(np.uint16)
+        if bit_depth == BIT_DEPTH_8:
+            stack = skimage.util.img_as_ubyte(stack)
+        elif bit_depth == BIT_DEPTH_16:
+            stack = skimage.util.img_as_uint(stack)
+        elif bit_depth == BIT_DEPTH_FLOAT:
+            stack = skimage.util.img_as_float(stack).astype(np.float32)
 
         self._save_object_stack(out_folder, basename, stack, ext_slices,
                               labels)
@@ -623,6 +618,8 @@ class SaveObjectCrops(cpm.Module):
         """
         if variable_revision_number < 2:
             setting_values = [IF_IMAGE, cps.NONE] + setting_values
+        if variable_revision_number < 3:
+            setting_values[11] = BIT_DEPTH_FLOAT
         return setting_values, variable_revision_number, from_matlab
 
     def validate_module(self, pipeline):
