@@ -49,7 +49,7 @@ CLIP_HOT_PIXELS = "Remove single hot pixels"
 
 
 class SmoothMultichannel(cpm.Module):
-    module_name = 'SmoothMultichannel'
+    module_name = 'Smooth Multichannel'
     category = "Image Processing"
     variable_revision_number = 5
 
