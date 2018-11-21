@@ -26,17 +26,15 @@ import scipy.io.matlab.mio
 import scipy.ndimage as ndi
 logger = logging.getLogger(__name__)
 
-import cellprofiler.cpmodule as cpm
-import cellprofiler.measurements as cpmeas
-import cellprofiler.settings as cps
-from cellprofiler.settings import YES, NO
+import cellprofiler.module as cpm
+import cellprofiler.measurement as cpmeas
+import cellprofiler.setting as cps
+from cellprofiler.setting import YES, NO
 import cellprofiler.preferences as cpp
-from cellprofiler.gui.help import USING_METADATA_TAGS_REF, USING_METADATA_HELP_REF
 from cellprofiler.preferences import \
      standardize_default_folder_names, DEFAULT_INPUT_FOLDER_NAME, \
      DEFAULT_OUTPUT_FOLDER_NAME, ABSOLUTE_FOLDER_NAME, \
      DEFAULT_INPUT_SUBFOLDER_NAME, DEFAULT_OUTPUT_SUBFOLDER_NAME, \
-     IO_FOLDER_CHOICE_HELP_TEXT, IO_WITH_METADATA_HELP_TEXT, \
      get_default_image_directory
 #from cellprofiler.utilities.relpath import relpath
 from cellprofiler.modules.loadimages import C_FILE_NAME, C_PATH_NAME, C_URL
@@ -44,13 +42,16 @@ from cellprofiler.modules.loadimages import \
      C_OBJECTS_FILE_NAME, C_OBJECTS_PATH_NAME, C_OBJECTS_URL
 from cellprofiler.modules.loadimages import pathname2url
 from centrosome.cpmorphology import distance_color_labels
-from cellprofiler.utilities.version import get_version
 from bioformats.formatwriter import write_image
 import bioformats.omexml as ome
 
+import tifffile
 
-import imctools.scripts.cropobjects as cropobjects
-import imctools.library as lib
+NOTDEFINEDYET = 'Helptext Not Defined Yet'
+USING_METADATA_TAGS_REF = NOTDEFINEDYET
+USING_METADATA_HELP_REF = NOTDEFINEDYET
+IO_FOLDER_CHOICE_HELP_TEXT = NOTDEFINEDYET
+IO_WITH_METADATA_HELP_TEXT = NOTDEFINEDYET
 
 IF_IMAGE       = "Image"
 IF_MASK        = "Mask"
@@ -109,7 +110,7 @@ OFFSET_DIRECTORY_PATH = 11
 '''Offset to the bit depth setting in version 11'''
 OFFSET_BIT_DEPTH_V11 = 12
 
-class SaveObjectCrops(cpm.CPModule):
+class SaveObjectCrops(cpm.Module):
 
     module_name = "SaveObjectCrops"
     variable_revision_number = 2
@@ -118,7 +119,7 @@ class SaveObjectCrops(cpm.CPModule):
     def create_settings(self):
         self.input_type = cps.Choice(
             "Select the type of input",
-            [IF_IMAGE, IF_OBJECTS], IF_IMAGE)
+            [IF_IMAGE], IF_IMAGE)
 
         self.image_name  = cps.ImageNameSubscriber(
             "Select the image to save",cps.NONE, doc = """
@@ -356,6 +357,61 @@ class SaveObjectCrops(cpm.CPModule):
         self.save_crops(workspace)
         return True
 
+    def _extend_slice(self, sl, extent, dim_max, dim_min=0):
+        """
+        helper function to extend single slices
+        :param sl: numpy slice
+        :param extent: how many pixels should be extended
+        :param dim_max: maximum coordinate in dimension
+        :param dim_min: minimum coordinate in dimension, e.g. 0
+        :return: the new extended slice
+        """
+
+        x_start = max(sl.start-extent,dim_min)
+        x_end = min(sl.stop+ extent, dim_max)
+        return np.s_[x_start:x_end]
+
+    def _extend_slice_touple(self, slice_touple, extent, max_dim ,min_dim =(0,0)):
+        """
+        Helper for save_crops
+        Extends a numpy slice touple, e.g. corresponding to a bounding box
+        :param slice_touple: a numpy slice
+        :param extent: amount of extension in pixels
+        :param max_dim: maximum image coordinates (e.g. from img.shape)
+        :param min_dim: minimum image coordinates, usually (0,0)
+        :return: an extended numpy slice
+
+        """
+        new_slice = tuple(self._extend_slice(s,extent, d_max, d_min) for s, d_max, d_min in
+              zip(slice_touple, max_dim, min_dim))
+
+        return new_slice
+
+    def _save_object_stack(self, folder, basename, img_stack, slices, labels=None):
+        """
+        Saves slices from an image stack as.
+        :param folder: The folder to save it in
+        :param basename: The filename
+        :param img_stack: the image stack. should be CXY
+        :param slices: a list of numpy slices sphecifying the regions to be saved
+        :return:
+        """
+        if labels is None:
+            labels = range(slices)
+        for lab, sl in zip(labels, slices):
+            if sl is None:
+                pass
+            x = sl[0].start
+            y = sl[1].start
+
+            exsl = tuple([np.s_[:]]+[s for s in sl])
+
+            fn = os.path.join(folder, basename + '_l' + str(lab + 1) + '_x' + str(x) + '_y' + str(y)+'.tiff')
+
+            with tifffile.TiffWriter(fn, imagej=True) as tif:
+                timg = img_stack[exsl]
+                for chan in range(timg.shape[0]):
+                    tif.save(timg[chan, :, :].squeeze())
 
     def save_crops(self, workspace):
         """ Crops the image by objects """
@@ -381,7 +437,7 @@ class SaveObjectCrops(cpm.CPModule):
         slices, labels = zip(*[(s, label) for label, s  in
                                enumerate(slices) if s is not None])
 
-        ext_slices = [lib.extend_slice_touple(sl, object_extension,
+        ext_slices = [self._extend_slice_touple(sl, object_extension,
                                               [pixels.shape[0], pixels.shape[1]]) for sl in slices]
         out_folder = os.path.dirname(filename)
         basename = os.path.splitext(os.path.basename(filename))[0]
@@ -396,8 +452,12 @@ class SaveObjectCrops(cpm.CPModule):
             stack = stack.astype(np.uint8)
         elif stack.dtype == np.int16:
             stack = stack.astype(np.uint16)
+        elif stack.dtype == np.float:
+            stack = stack.astype(np.float32)
+        elif stack.dtype == np.int32:
+            stack = stack.astype(np.uint16)
 
-        lib.save_object_stack(out_folder, basename, stack, ext_slices,
+        self._save_object_stack(out_folder, basename, stack, ext_slices,
                               labels)
         self.save_filename_measurements(workspace)
         if self.show_window:
@@ -405,119 +465,6 @@ class SaveObjectCrops(cpm.CPModule):
 
     def post_group(self, workspace, *args):
         pass
-
-    def do_save_image(self, workspace, filename, pixels, pixel_type,
-                   c = 0, z = 0, t = 0,
-                   size_c = 1, size_z = 1, size_t = 1,
-                   channel_names = None):
-        '''Save image using bioformats
-
-        workspace - the current workspace
-
-        filename - save to this filename
-
-        pixels - the image to save
-
-        pixel_type - save using this pixel type
-
-        c - the image's channel index
-
-        z - the image's z index
-
-        t - the image's t index
-
-        sizeC - # of channels in the stack
-
-        sizeZ - # of z stacks
-
-        sizeT - # of timepoints in the stack
-
-        channel_names - names of the channels (make up names if not present
-        '''
-        write_image(filename, pixels, pixel_type,
-                    c = c, z = z, t = t,
-                    size_c = size_c, size_z = size_z, size_t = size_t,
-                    channel_names = channel_names)
-
-    def save_image(self, workspace):
-        if self.show_window:
-            workspace.display_data.wrote_image = False
-        image = workspace.image_set.get_image(self.image_name.value)
-        if self.save_image_or_figure == IF_IMAGE:
-            pixels = image.pixel_data
-            u16hack = (self.get_bit_depth() == BIT_DEPTH_16 and
-                       pixels.dtype.kind in ('u', 'i'))
-            if self.file_format != FF_MAT:
-                if self.rescale.value:
-                    pixels = pixels.copy()
-                    # Normalize intensities for each channel
-                    if pixels.ndim == 3:
-                        # RGB
-                        for i in range(3):
-                            img_min = np.min(pixels[:,:,i])
-                            img_max = np.max(pixels[:,:,i])
-                            if img_max > img_min:
-                                pixels[:,:,i] = (pixels[:,:,i] - img_min) / (img_max - img_min)
-                    else:
-                        # Grayscale
-                        img_min = np.min(pixels)
-                        img_max = np.max(pixels)
-                        if img_max > img_min:
-                            pixels = (pixels - img_min) / (img_max - img_min)
-                elif not (u16hack or self.get_bit_depth() == BIT_DEPTH_FLOAT):
-                    # Clip at 0 and 1
-                    if np.max(pixels) > 1 or np.min(pixels) < 0:
-                        sys.stderr.write(
-                            "Warning, clipping image %s before output. Some intensities are outside of range 0-1" %
-                            self.image_name.value)
-                        pixels = pixels.copy()
-                        pixels[pixels < 0] = 0
-                        pixels[pixels > 1] = 1
-
-                if pixels.ndim == 2 and self.colormap != CM_GRAY and\
-                   self.get_bit_depth() == BIT_DEPTH_8:
-                    # Convert grayscale image to rgb for writing
-                    if self.colormap == cps.DEFAULT:
-                        colormap = cpp.get_default_colormap()
-                    else:
-                        colormap = self.colormap.value
-                    cm = matplotlib.cm.get_cmap(colormap)
-
-                    mapper = matplotlib.cm.ScalarMappable(cmap=cm)
-                    pixels = mapper.to_rgba(pixels, bytes=True)
-                    pixel_type = ome.PT_UINT8
-                elif self.get_bit_depth() == BIT_DEPTH_8:
-                    pixels = (pixels*255).astype(np.uint8)
-                    pixel_type = ome.PT_UINT8
-                elif self.get_bit_depth() == BIT_DEPTH_FLOAT:
-                    pixel_type = ome.PT_FLOAT
-                else:
-                    if not u16hack:
-                        pixels = (pixels*65535)
-                    pixel_type = ome.PT_UINT16
-
-        elif self.save_image_or_figure == IF_MASK:
-            pixels = image.mask.astype(np.uint8) * 255
-            pixel_type = ome.PT_UINT8
-
-        elif self.save_image_or_figure == IF_CROPPING:
-            pixels = image.crop_mask.astype(np.uint8) * 255
-            pixel_type = ome.PT_UINT8
-
-        filename = self.get_filename(workspace)
-        if filename is None:  # failed overwrite check
-            return
-
-        if self.get_file_format() == FF_MAT:
-            scipy.io.matlab.mio.savemat(filename,{"Image":pixels},format='5')
-        elif self.get_file_format() == FF_BMP:
-            save_bmp(filename, pixels)
-        else:
-            self.do_save_image(workspace, filename, pixels, pixel_type)
-        if self.show_window:
-            workspace.display_data.wrote_image = True
-        if self.when_to_save != WS_LAST_CYCLE:
-            self.save_filename_measurements(workspace)
 
     def check_overwrite(self, filename, workspace):
         '''Check to see if it's legal to overwrite a file
@@ -700,7 +647,7 @@ class SaveObjectCrops(cpm.CPModule):
 
         # Make sure metadata tags exist
         pass
-        
+
 class SaveImagesDirectoryPath(cps.DirectoryPath):
     '''A specialized version of DirectoryPath to handle saving in the image dir'''
 

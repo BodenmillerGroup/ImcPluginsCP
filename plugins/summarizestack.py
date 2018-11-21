@@ -14,9 +14,9 @@ import matplotlib.colors
 import numpy as np
 import functools
 
-import cellprofiler.cpimage as cpi
-import cellprofiler.cpmodule as cpm
-import cellprofiler.settings as cps
+import cellprofiler.image as cpi
+import cellprofiler.module as cpm
+import cellprofiler.setting as cps
 
 CH_CHANNELS = "Channels"
 MEAN = 'Mean'
@@ -28,7 +28,7 @@ SLOTS_PER_CHANNEL = 3
 SLOT_CHANNEL_CHOICE = 0
 
 
-class ColorToGray(cpm.CPModule):
+class ColorToGray(cpm.Module):
     module_name = "Summarize Stack"
     variable_revision_number = 0
     category = "Image Processing"
@@ -119,8 +119,10 @@ class ColorToGray(cpm.CPModule):
 
         input_image = workspace.display_data.input_image
         output_image = workspace.display_data.output_image
+        #if len(input_image.shape) > 2:
+        #    input_image = input_image[:,:,0]
         figure.set_subplots((1, 2))
-        figure.subplot_imshow(0, 0, input_image,
+        figure.subplot_imshow_color(0, 0, input_image,
                               title="Original image: %s" % self.image_name)
         figure.subplot_imshow(0, 1, output_image,
                               title="Grayscale image: %s" % self.grayscale_name,

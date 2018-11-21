@@ -13,9 +13,9 @@ import re
 import matplotlib.colors
 import numpy as np
 
-import cellprofiler.cpimage  as cpi
-import cellprofiler.cpmodule as cpm
-import cellprofiler.settings as cps
+import cellprofiler.image  as cpi
+import cellprofiler.module as cpm
+import cellprofiler.setting as cps
 
 IF_OBJECTS     = "Objects"
 IF_IMAGE       = "Image"
@@ -24,7 +24,7 @@ SEL_PROVIDED = 'provided'
 SEL_MAXAREA = 'maximum area'
 SEL_MID = 'image mid'
 
-class MaskToBinstack(cpm.CPModule):
+class MaskToBinstack(cpm.Module):
 
     module_name = "MaskToBinstack"
     variable_revision_number = 1

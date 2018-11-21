@@ -1,7 +1,7 @@
 # coding=utf-8
 
 """
-SaveImages
+SaveImages h5
 ==========
 
 **SaveImages** saves image or movie files.
@@ -17,16 +17,13 @@ This allows you to use the module as a file format converter, by loading
 files in their original format and then saving them in an alternate
 format.
 
-This module has been modified to
-a) save images with float values > 1 as float
-b) save stacks (e.g. multicolor images) as cxy images in the standard imagej format
-   This is required for ilastik to read the images correctly.
-|
+This module has been modified to save images to hdf5 files for ilastik pixel
+classification.
 
 ============ ============ ===============
 Supports 2D? Supports 3D? Respects masks?
 ============ ============ ===============
-YES          YES          YES
+YES          NO          YES
 ============ ============ ===============
 
 See also
@@ -41,10 +38,10 @@ import sys
 
 import bioformats.formatwriter
 import bioformats.omexml
+import h5py
 import numpy
 import skimage.io
 import skimage.util
-import tifffile
 
 import cellprofiler.measurement
 import cellprofiler.module
@@ -75,6 +72,7 @@ FF_JPEG = "jpeg"
 FF_NPY = "npy"
 FF_PNG = "png"
 FF_TIFF = "tiff"
+FF_H5 = "h5"
 
 PC_WITH_IMAGE = "Same folder as image"
 
@@ -82,11 +80,17 @@ WS_EVERY_CYCLE = "Every cycle"
 WS_FIRST_CYCLE = "First cycle"
 WS_LAST_CYCLE = "Last cycle"
 
+H5_YXC_AXISTAG = '''{\n  "axes": [\n    {\n      "key": "y",\n      "typeFlags": 2,\n
+"resolution": 0,\n      "description": ""\n    },\n    {\n
+"key": "x",\n      "typeFlags": 2,\n      "resolution": 0,\n
+"description": ""\n    },\n    {\n      "key": "c",\n
+"typeFlags": 1,\n      "resolution": 0,\n
+"description": ""\n    }\n  ]\n}'''
 
-class SaveImagesBB(cellprofiler.module.Module):
-    module_name = "SaveImages Ilastik"
+class SaveImagesH5(cellprofiler.module.Module):
+    module_name = "SaveImages H5"
 
-    variable_revision_number = 13
+    variable_revision_number = 1
 
     category = "File Processing"
 
@@ -252,12 +256,9 @@ automatically.
         self.file_format = cellprofiler.setting.Choice(
             "Saved file format",
             [
-                FF_JPEG,
-                FF_NPY,
-                FF_PNG,
-                FF_TIFF
+                FF_H5
             ],
-            value=FF_TIFF,
+            value=FF_H5,
             doc="""\
 *(Used only when saving non-movie files)*
 
@@ -453,7 +454,7 @@ store images in the subfolder, "*date*\/*plate-name*".""")
             raise NotImplementedError("Unhandled file name method: %s" % self.file_name_method)
         if self.save_image_or_figure != IF_MOVIE:
             result.append(self.file_format)
-        supports_16_bit = (self.file_format == FF_TIFF and self.save_image_or_figure == IF_IMAGE) or \
+        supports_16_bit = (self.file_format == FF_H5 and self.save_image_or_figure == IF_IMAGE) or \
                           self.save_image_or_figure == IF_MOVIE
         if supports_16_bit:
             # TIFF supports 8 & 16-bit, all others are written 8-bit
@@ -600,21 +601,6 @@ store images in the subfolder, "*date*\/*plate-name*".""")
                                             size_c=size_c, size_z=size_z, size_t=size_t,
                                             channel_names=channel_names)
 
-    def write_ilastik_image(self, filename, pixels):
-        '''Save a tiff multicolor image compatible with Ilastik
-        filename: filename to use
-        pixels: the image to save as xyc image
-        '''
-
-        if len(pixels.shape) == 2:
-            stack = pixels.reshape([1]+list(pixels.shape))
-        else:
-            stack = numpy.rollaxis(pixels,2,0)
-
-        with tifffile.TiffWriter(filename, imagej=True) as tif:
-            for chan in range(stack.shape[0]):
-                tif.save(stack[chan, :, :])
-
     def save_image(self, workspace):
         if self.show_window:
             workspace.display_data.wrote_image = False
@@ -653,7 +639,7 @@ store images in the subfolder, "*date*\/*plate-name*".""")
                 # like this it also works for images outside -1, 1
                 pixels = pixels.astype(numpy.float32)
 
-            self.write_ilastik_image(filename, pixels)
+            save_h5(filename, pixels)
 
         if self.show_window:
             workspace.display_data.wrote_image = True
@@ -811,44 +797,12 @@ store images in the subfolder, "*date*\/*plate-name*".""")
         return self.file_format.value
 
     def get_bit_depth(self):
-        if (self.save_image_or_figure == IF_IMAGE and self.get_file_format() == FF_TIFF):
+        if (self.save_image_or_figure == IF_IMAGE and self.get_file_format() == FF_H5):
             return self.bit_depth.value
         else:
             return BIT_DEPTH_8
 
     def upgrade_settings(self, setting_values, variable_revision_number, module_name, from_matlab):
-        if variable_revision_number == 11:
-            if setting_values[0] == "Objects":
-                raise NotImplementedError(
-                    "Unsupported image type: Objects. Use <i>ConvertObjectsToImage</i> to create an image."
-                )
-
-            if setting_values[10] in ("bmp", "mat"):
-                raise NotImplementedError("Unsupported file format: {}".format(setting_values[10]))
-            elif setting_values[10] == "tif":
-                setting_values[10] = FF_TIFF
-            elif setting_values[10] == "jpg":
-                setting_values[10] = FF_JPEG
-
-            new_setting_values = setting_values[:2]
-            new_setting_values += setting_values[4:15]
-            new_setting_values += setting_values[18:-1]
-
-            setting_values = new_setting_values
-
-            if setting_values[10] == "8":
-                setting_values[10] = BIT_DEPTH_8
-            elif setting_values[10] == "16":
-                setting_values[10] = BIT_DEPTH_16
-
-            variable_revision_number = 12
-
-        if variable_revision_number == 12:
-            if setting_values[10] == "64-bit floating point":
-                setting_values[10] = BIT_DEPTH_FLOAT
-
-            variable_revision_number = 13
-
         return setting_values, variable_revision_number, False
 
     def validate_module(self, pipeline):
@@ -914,3 +868,19 @@ class SaveImagesDirectoryPath(cellprofiler.setting.DirectoryPath):
         if self.dir_choice not in self.dir_choices:
             raise cellprofiler.setting.ValidationError("%s is not a valid directory option" %
                                                        self.dir_choice, self)
+
+def save_h5(path, pixels):
+    ''' Saves an image to an hdf5 with yxc axistag
+    This format should be good for ilastik pixel classification for multiplexed images
+
+    path - path to file image
+    pixels - the pixel data
+    pixel_dtype - the output pixel dtype
+    '''
+    if len(pixels.shape) == 2:
+        pixels = pixels.reshape(list(pixels.shape)+[1])
+    with h5py.File(path, 'w') as f:
+        dset = f.create_dataset('stacked_channels',
+			shape=pixels.shape, dtype=pixels.dtype, chunks=True)
+        dset.attrs['axistags'] = H5_YXC_AXISTAG
+        dset[:,:,:] = pixels

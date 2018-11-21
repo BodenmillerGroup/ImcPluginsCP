@@ -12,16 +12,16 @@ This module corrects each image in the pipeline using the function specified.
 import numpy as np
 import scipy.optimize as spo
 
-import cellprofiler.cpimage  as cpi
-import cellprofiler.cpmodule as cpm
-import cellprofiler.settings as cps
+import cellprofiler.image  as cpi
+import cellprofiler.module as cpm
+import cellprofiler.setting as cps
 
 
 SETTINGS_PER_IMAGE = 4
 METHOD_LS = 'LeastSquares'
 METHOD_NNLS = 'NonNegativeLeastSquares'
 
-class CorrectSpilloverApply(cpm.CPModule):
+class CorrectSpilloverApply(cpm.Module):
     category = "Image Processing"
     variable_revision_number = 1
     module_name = "CorrectSpilloverApply"
