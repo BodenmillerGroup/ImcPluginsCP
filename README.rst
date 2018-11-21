@@ -2,6 +2,10 @@ ImcPluginsCP
 ========================
 For a description of the associated image segmentation pipline, please visit: https://github.com/BodenmillerGroup/ImcSegmentationPipeline
 
+Changenotes:
+-----------
+The modueles have been updated to work with *CellProfiler 3* instead of *CellProfiler 2*! The CP2 modules are still available at the branch: https://github.com/BodenmillerGroup/ImcPluginsCP/tree/master-cp2
+
 General Information
 -------------------
 ImcPluginsCP contains a selection of CellProfiler modules that facilitate
