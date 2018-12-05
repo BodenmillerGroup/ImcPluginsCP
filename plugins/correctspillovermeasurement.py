@@ -274,13 +274,27 @@ class CorrectSpilloverMeasurements(cpm.Module):
             comp * sm = dat -> comp = dat * inv(sm)
 
         """
+        # only compensate cells with all finite measurements
+        fil = np.all(np.isfinite(dat), 1)
+        compdat = dat.copy()
         if method == METHOD_LS:
-            compdat = np.linalg.lstsq(sm.T, dat.T)[0]
-            compdat = compdat.T
+            compdat[fil, :] = self.compensate_ls(dat[fil, :], sm)
         if method == METHOD_NNLS:
-            nnls = lambda x: spo.nnls(sm.T, x)[0]
-            compdat = np.apply_along_axis(nnls,1, dat)
+            compdat[fil, :] = self.compensate_nnls(dat[fil, :], sm)
+        # columns with any not finite value are set to np.nan
+        compdat[~fil, :] = np.nan
         return compdat
+    @staticmethod
+    def compensate_ls(dat, sm):
+        compdat = np.linalg.lstsq(sm.T, dat.T)[0]
+        return compdat.T
+
+    @staticmethod
+    def compensate_nnls(dat, sm):
+        def nnls(x):
+            return spo.nnls(sm.T, x, rcond=None)[0]
+        return np.apply_along_axis(nnls,1, dat)
+
 
     def display(self, workspace, figure):
         ''' Display one row of orig / illum / output per image setting group'''
