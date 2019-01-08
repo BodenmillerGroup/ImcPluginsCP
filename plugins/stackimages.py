@@ -24,7 +24,7 @@ import cellprofiler.image as cpi
 import cellprofiler.module as cpm
 import cellprofiler.setting as cps
 
-SCHEME_COMPOSITE = "Composite"
+OFF_STACK_CHANNEL_COUNT = 1
 
 class StackImages(cpm.Module):
     module_name = 'StackImages'
@@ -70,10 +70,9 @@ Select the input image to add to the stacked image.
         return result
 
     def prepare_settings(self, setting_values):
-        try:
-            num_stack_images = int(setting_values[OFF_STACK_CHANNEL_COUNT])
-        except ValueError:
-            num_stack_images = 1
+        num_stack_images = int(setting_values[OFF_STACK_CHANNEL_COUNT])
+        # Why is the following needed? Taken over from graytocolor but
+        # I do not see that this would be actually needed...
         del self.stack_channels[num_stack_images:]
         while len(self.stack_channels) < num_stack_images:
             self.add_stack_channel_cb()
