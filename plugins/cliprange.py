@@ -219,13 +219,46 @@ that is made available by a prior module.
     # The "gradient_image" function is inherently 2D, and we've noted this
     # in the documentation for the module. Explicitly return False here
     # to indicate that 3D images are not supported.
+# The first parameter must be the input image data. The remaining parameters are
     #
     def volumetric(self):
         return False
 
-#
+
+    def display(self, workspace, figure, cmap=["gray", "gray"]):
+        """
+        Per default the display is grayscale. If the image is color, set it to color mode.
+
+        """
+        if len(workspace.display_data.x_data.shape) > 2:
+            layout = (2, 1)
+
+            figure.set_subplots(
+                dimensions=workspace.display_data.dimensions,
+                subplots=layout
+            )
+
+            figure.subplot_imshow_color(
+                image=workspace.display_data.x_data,
+                title=self.x_name.value,
+                normalize=True,
+                x=0,
+                y=0
+            )
+
+            figure.subplot_imshow_color(
+                image=workspace.display_data.y_data,
+                sharexy=figure.subplot(0, 0),
+                title=self.y_name.value,
+                normalize=True,
+                x=1,
+                y=0
+            )
+        else:
+            super(ClipRange, self).display(workspace, figure, cmap)
+
+
 # This is the function that gets called during "run" to create the output image.
-# The first parameter must be the input image data. The remaining parameters are
 # the additional settings defined in "settings", in the order they are returned.
 #
 # This function must return the output image data (as a numpy array).
@@ -243,3 +276,4 @@ def clip_percentile(pixels, outlier_percentile):
 def _clip_percentile_plane(img, percentile):
     tresh = np.percentile(img[:],percentile*100)
     return np.clip(img, a_min=None, a_max=tresh)
+
