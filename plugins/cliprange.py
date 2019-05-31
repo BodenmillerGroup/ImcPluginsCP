@@ -274,6 +274,6 @@ def clip_percentile(pixels, outlier_percentile):
     return output_pixels
 
 def _clip_percentile_plane(img, percentile):
-    tresh = np.percentile(img[:],percentile*100)
+    tresh = np.percentile(img[:],percentile*100, interpolation='nearest')
     return np.clip(img, a_min=None, a_max=tresh)
 
