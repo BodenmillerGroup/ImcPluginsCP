@@ -276,6 +276,9 @@ class CorrectSpilloverMeasurements(cpm.Module):
         """
         # only compensate cells with all finite measurements
         fil = np.all(np.isfinite(dat), 1)
+        if np.sum(fil) == 0:
+            # Dont compensate if there are now valid rows!
+            return compdat
         compdat = dat.copy()
         if method == METHOD_LS:
             compdat[fil, :] = self.compensate_ls(dat[fil, :], sm)
