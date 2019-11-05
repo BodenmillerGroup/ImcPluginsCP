@@ -28,7 +28,7 @@ class PatchedMeasurementSetting(cps.Measurement):
 
 class CorrectSpilloverMeasurements(cpm.Module):
     category = "Measurement"
-    variable_revision_number = 2
+    variable_revision_number = 3
     module_name = "CorrectSpilloverMeasurements"
 
     def create_settings(self):
@@ -274,13 +274,30 @@ class CorrectSpilloverMeasurements(cpm.Module):
             comp * sm = dat -> comp = dat * inv(sm)
 
         """
+        # only compensate cells with all finite measurements
+        fil = np.all(np.isfinite(dat), 1)
+        if np.sum(fil) == 0:
+            # Dont compensate if there are now valid rows!
+            return dat
+        compdat = dat.copy()
         if method == METHOD_LS:
-            compdat = np.linalg.lstsq(sm.T, dat.T)[0]
-            compdat = compdat.T
+            compdat[fil, :] = self.compensate_ls(dat[fil, :], sm)
         if method == METHOD_NNLS:
-            nnls = lambda x: spo.nnls(sm.T, x)[0]
-            compdat = np.apply_along_axis(nnls,1, dat)
+            compdat[fil, :] = self.compensate_nnls(dat[fil, :], sm)
+        # columns with any not finite value are set to np.nan
+        compdat[~fil, :] = np.nan
         return compdat
+    @staticmethod
+    def compensate_ls(dat, sm):
+        compdat = np.linalg.lstsq(sm.T, dat.T)[0]
+        return compdat.T
+
+    @staticmethod
+    def compensate_nnls(dat, sm):
+        def nnls(x):
+            return spo.nnls(sm.T, x)[0]
+        return np.apply_along_axis(nnls,1, dat)
+
 
     def display(self, workspace, figure):
         ''' Display one row of orig / illum / output per image setting group'''
