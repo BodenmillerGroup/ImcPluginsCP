@@ -28,7 +28,7 @@ class PatchedMeasurementSetting(cps.Measurement):
 
 class CorrectSpilloverMeasurements(cpm.Module):
     category = "Measurement"
-    variable_revision_number = 2
+    variable_revision_number = 3
     module_name = "CorrectSpilloverMeasurements"
 
     def create_settings(self):
