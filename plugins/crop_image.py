@@ -5,7 +5,6 @@ crops of a given size.
 """
 
 import logging
-import traceback
 
 import numpy as np
 
@@ -17,6 +16,7 @@ import cellprofiler.setting as cps
 import cellprofiler.measurement as cpmeas
 
 import hashlib
+
 C_RANDOM = 'Crop random sections of the image'
 C_SPECIFIC = 'Crop specific image section'
 C_SEED_METADATA = 'Crop random section based on metadata.'
@@ -28,40 +28,38 @@ C_W = 'Width of cropped section'
 '''The index of the additional image count setting'''
 S_ADDITIONAL_IMAGE_COUNT = 8
 
-class Crop(cpm.Module):
 
+class Crop(cpm.Module):
     category = "Image Processing"
     variable_revision_number = 3
     module_name = "Crop bb"
 
     def create_settings(self):
         self.image_name = cps.ImageNameSubscriber(
-            "Select the input image", cps.NONE, doc = '''
+            "Select the input image", cps.NONE, doc='''
             Select the image to be resized.''')
 
         self.cropped_image_name = cps.ImageNameProvider(
-            "Name the output image", "CroppedImage", doc = '''
+            "Name the output image", "CroppedImage", doc='''
             Enter the name of the cropped image.''')
 
         self.crop_random = cps.Choice(
             'Crop random or specified section?', [C_RANDOM, C_SPECIFIC, C_SEED_METADATA])
 
         self.crop_x = cps.Text(
-            "X of upper left corner",  '0',  doc = '''
+            "X of upper left corner", '0', doc='''
             X position.''', metadata=True)
 
-
         self.crop_y = cps.Text(
-            "Y of upper left corner",   '0',  doc = '''
+            "Y of upper left corner", '0', doc='''
             Y position.''', metadata=True)
 
-
         self.crop_w = cps.Text(
-            "W width",   '100',  doc = '''
+            "W width", '100', doc='''
             Width of cut.''', metadata=True)
 
         self.crop_h = cps.Text(
-            "H height",   '100',  doc = '''
+            "H height", '100', doc='''
             Height of cut.''', metadata=True)
 
         self.seed_metadata = cps.Text(
@@ -81,7 +79,7 @@ class Crop(cpm.Module):
         self.add_button = cps.DoSomething("", "Add another image",
                                           self.add_image)
 
-    def add_image(self, can_remove = True):
+    def add_image(self, can_remove=True):
         '''Add an image + associated questions and buttons'''
         group = cps.SettingsGroup()
         if can_remove:
@@ -90,12 +88,12 @@ class Crop(cpm.Module):
         group.append("input_image_name",
                      cps.ImageNameSubscriber(
                          "Select the additional image?",
-                                            cps.NONE,doc="""
+                         cps.NONE, doc="""
                                             What is the name of the additional image to resize? This image will be
                                             resized with the same settings as the first image."""))
         group.append("output_image_name",
                      cps.ImageNameProvider("Name the output image",
-                                            "CroppedImage2", doc="""
+                                           "CroppedImage2", doc="""
                                             What is the name of the additional resized image?"""))
         if can_remove:
             group.append("remover", cps.RemoveSettingButton("", "Remove above image", self.additional_images, group))
@@ -104,13 +102,13 @@ class Crop(cpm.Module):
     def settings(self):
         result = [self.image_name,
                   self.cropped_image_name,
-                self.crop_w,
+                  self.crop_w,
                   self.crop_h,
                   self.crop_random,
                   self.crop_x,
                   self.crop_y,
                   self.seed_metadata,
-                self.additional_image_count]
+                  self.additional_image_count]
 
         for additional in self.additional_images:
             result += [additional.input_image_name, additional.output_image_name]
@@ -119,7 +117,7 @@ class Crop(cpm.Module):
 
     def visible_settings(self):
         result = [self.image_name, self.cropped_image_name, self.crop_w,
-                 self.crop_h, self.crop_random]
+                  self.crop_h, self.crop_random]
         if self.crop_random == C_SPECIFIC:
             result.append(self.crop_x)
             result.append(self.crop_y)
@@ -162,7 +160,7 @@ class Crop(cpm.Module):
             self.apply_crop(workspace, additional.input_image_name.value,
                             additional.output_image_name.value, crop_slice)
             self.save_crop_coordinates(workspace, crop_slice,
-                                   additional.output_image_name.value)
+                                       additional.output_image_name.value)
 
     def get_crop(self, workspace, input_image_name, output_image_name):
         image = workspace.image_set.get_image(input_image_name)
@@ -177,11 +175,11 @@ class Crop(cpm.Module):
             random_seed = None
         else:
             random_seed = hashlib.md5(self.seed_metadata.value.encode())
-            random_seed = int(random_seed.hexdigest(), 16) % 2**32
+            random_seed = int(random_seed.hexdigest(), 16) % 2 ** 32
         crop_slice = self.crop_slice(image_pixels.shape[:2],
-                                       w=int(workspace.measurements.apply_metadata(self.crop_w.value)),
-                                       h=int(workspace.measurements.apply_metadata(self.crop_h.value)),
-                                       x=x, y=y, flipped_axis=True, random_seed=random_seed)
+                                     w=int(workspace.measurements.apply_metadata(self.crop_w.value)),
+                                     h=int(workspace.measurements.apply_metadata(self.crop_h.value)),
+                                     x=x, y=y, flipped_axis=True, random_seed=random_seed)
 
         return crop_slice
 
@@ -207,14 +205,15 @@ class Crop(cpm.Module):
                 workspace.display_data.output_image_names += [output_image_name]
 
     def save_crop_coordinates(self, workspace, crop_slice, output_image_name):
-        yh, xw = [[c.start, c.stop-c.start] for c in crop_slice]
+        yh, xw = [[c.start, c.stop - c.start] for c in crop_slice]
         m = workspace.measurements
-        for name_feature, val in zip(['x', 'w', 'y', 'h'],xw+yh):
+        for name_feature, val in zip(['x', 'w', 'y', 'h'], xw + yh):
             cur_featurename = '_'.join(['Crop', output_image_name,
                                         name_feature])
-            m.add_image_measurement('%s_%s' %  (cpmeas.C_METADATA,
-                                                cur_featurename),
-                                                val)
+            m.add_image_measurement('%s_%s' % (cpmeas.C_METADATA,
+                                               cur_featurename),
+                                    val)
+
     def display(self, workspace, figure):
         '''Display the resized image
 
@@ -240,15 +239,15 @@ class Crop(cpm.Module):
                                          title=output_image_name)
             else:
                 figure.subplot_imshow_color(0, i, input_image_pixels,
-                                      title=input_image_name)
+                                            title=input_image_name)
                 figure.subplot_imshow_color(1, i, output_image_pixels,
-                                      title=output_image_name)
+                                            title=output_image_name)
 
     def get_measurement_columns(self, pipeline):
         meas = []
         for f in ['x', 'w', 'y', 'h']:
             meas.append((cpmeas.IMAGE, '_'.join([cpmeas.C_METADATA, 'Crop',
-                         self.cropped_image_name.value, f]),
+                                                 self.cropped_image_name.value, f]),
                          cpmeas.COLTYPE_INTEGER))
         return meas
 
@@ -273,7 +272,7 @@ class Crop(cpm.Module):
             np.random.seed(random_seed)
 
         if h is None:
-            h= w
+            h = w
 
         outsize = (w, h)
         if flipped_axis:
@@ -281,12 +280,12 @@ class Crop(cpm.Module):
             x, y = y, x
 
         outslices = list()
-        for dmax, dstart, dextend in zip(origshape, (x,y), outsize):
+        for dmax, dstart, dextend in zip(origshape, (x, y), outsize):
             if dmax > dextend:
                 if dstart is None:
-                    dstart = np.random.randint(0, dmax-dextend)
-                dstart = min(dstart, dmax-dextend)
-                outslices.append(np.s_[dstart:(dstart+dextend)])
+                    dstart = np.random.randint(0, dmax - dextend)
+                dstart = min(dstart, dmax - dextend)
+                outslices.append(np.s_[dstart:(dstart + dextend)])
             else:
                 outslices.append(np.s_[0:dmax])
         outslices = tuple(outslices)
@@ -303,5 +302,5 @@ class Crop(cpm.Module):
         if append:
             exsl = tuple([s for s in sl] + [np.s_[:]])
         else:
-            exsl = tuple([np.s_[:]]+[s for s in sl])
+            exsl = tuple([np.s_[:]] + [s for s in sl])
         return exsl
