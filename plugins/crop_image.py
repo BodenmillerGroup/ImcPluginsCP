@@ -1,9 +1,7 @@
 """<b>Crop</b> crops an imag.
 <hr>
-Images are resized (made smaller or larger) based on user input. You
-can resize an image by applying a resizing factor or by specifying the
-desired dimensions, in pixels. You can also select which interpolation
-method to use.
+Allows cropping of sections of images, either by providing coordinates or by randomly choosing
+crops of a given size.
 """
 
 import logging
@@ -17,33 +15,36 @@ import cellprofiler.module as cpm
 import cellprofiler.image as cpi
 import cellprofiler.setting as cps
 import cellprofiler.measurement as cpmeas
+
+import hashlib
 C_RANDOM = 'Crop random sections of the image'
 C_SPECIFIC = 'Crop specific image section'
+C_SEED_METADATA = 'Crop random section based on metadata.'
 C_X = 'X position of upper left corner of section'
 C_Y = 'Y position of upper left corner of section'
 C_H = 'Height of cropped section'
 C_W = 'Width of cropped section'
 
 '''The index of the additional image count setting'''
-S_ADDITIONAL_IMAGE_COUNT = 7
+S_ADDITIONAL_IMAGE_COUNT = 8
 
 class Crop(cpm.Module):
 
     category = "Image Processing"
-    variable_revision_number = 2
+    variable_revision_number = 3
     module_name = "Crop bb"
 
     def create_settings(self):
         self.image_name = cps.ImageNameSubscriber(
-            "Select the input image",cps.NONE, doc = '''
+            "Select the input image", cps.NONE, doc = '''
             Select the image to be resized.''')
 
         self.cropped_image_name = cps.ImageNameProvider(
-            "Name the output image", "croppedImage", doc = '''
+            "Name the output image", "CroppedImage", doc = '''
             Enter the name of the cropped image.''')
 
         self.crop_random = cps.Choice(
-            'Crop random or specified section?', [C_RANDOM, C_SPECIFIC])
+            'Crop random or specified section?', [C_RANDOM, C_SPECIFIC, C_SEED_METADATA])
 
         self.crop_x = cps.Text(
             "X of upper left corner",  '0',  doc = '''
@@ -63,7 +64,12 @@ class Crop(cpm.Module):
             "H height",   '100',  doc = '''
             Height of cut.''', metadata=True)
 
-
+        self.seed_metadata = cps.Text(
+            "Optional Random Seed", '', doc='''
+            Sets the seed based on this string.
+            Use the `Metadata` module to generate metadata and right click into the
+            field to select metadata.''', metadata=True
+        )
 
         self.separator = cps.Divider(line=False)
 
@@ -89,7 +95,7 @@ class Crop(cpm.Module):
                                             resized with the same settings as the first image."""))
         group.append("output_image_name",
                      cps.ImageNameProvider("Name the output image",
-                                            "ResizedBlue",doc="""
+                                            "CroppedImage2", doc="""
                                             What is the name of the additional resized image?"""))
         if can_remove:
             group.append("remover", cps.RemoveSettingButton("", "Remove above image", self.additional_images, group))
@@ -103,6 +109,7 @@ class Crop(cpm.Module):
                   self.crop_random,
                   self.crop_x,
                   self.crop_y,
+                  self.seed_metadata,
                 self.additional_image_count]
 
         for additional in self.additional_images:
@@ -116,6 +123,9 @@ class Crop(cpm.Module):
         if self.crop_random == C_SPECIFIC:
             result.append(self.crop_x)
             result.append(self.crop_y)
+
+        if self.crop_random == C_SEED_METADATA:
+            result.append(self.seed_metadata)
 
         for additional in self.additional_images:
             result += additional.visible_settings()
@@ -163,11 +173,15 @@ class Crop(cpm.Module):
         else:
             x = int(workspace.measurements.apply_metadata(self.crop_x.value))
             y = int(workspace.measurements.apply_metadata(self.crop_y.value))
+        if (self.crop_random == C_RANDOM) | (self.seed_metadata.value == ''):
+            random_seed = None
+        else:
+            random_seed = hashlib.md5(self.seed_metadata.value.encode())
+            random_seed = int(random_seed.hexdigest(), 16) % 2**32
         crop_slice = self.crop_slice(image_pixels.shape[:2],
                                        w=int(workspace.measurements.apply_metadata(self.crop_w.value)),
                                        h=int(workspace.measurements.apply_metadata(self.crop_h.value)),
-                                        x=x, y=y, flipped_axis=True
-                                      )
+                                       x=x, y=y, flipped_axis=True, random_seed=random_seed)
 
         return crop_slice
 
@@ -193,7 +207,7 @@ class Crop(cpm.Module):
                 workspace.display_data.output_image_names += [output_image_name]
 
     def save_crop_coordinates(self, workspace, crop_slice, output_image_name):
-        yh, xw =  [[c.start, c.stop-c.start] for c in crop_slice]
+        yh, xw = [[c.start, c.stop-c.start] for c in crop_slice]
         m = workspace.measurements
         for name_feature, val in zip(['x', 'w', 'y', 'h'],xw+yh):
             cur_featurename = '_'.join(['Crop', output_image_name,
@@ -240,6 +254,9 @@ class Crop(cpm.Module):
 
     def upgrade_settings(self, setting_values, variable_revision_number,
                          module_name, from_matlab):
+        if variable_revision_number < 3:
+            setting_values = setting_values[:7] + [''] + setting_values[7:]
+            variable_revision_number = 3
 
         return setting_values, variable_revision_number, from_matlab
 
