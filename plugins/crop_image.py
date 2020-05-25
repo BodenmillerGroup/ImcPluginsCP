@@ -165,17 +165,19 @@ class Crop(cpm.Module):
     def get_crop(self, workspace, input_image_name, output_image_name):
         image = workspace.image_set.get_image(input_image_name)
         image_pixels = image.pixel_data
-        if self.crop_random == C_RANDOM:
-            x = None
-            y = None
-        else:
+        if self.crop_random == C_SPECIFIC:
             x = int(workspace.measurements.apply_metadata(self.crop_x.value))
             y = int(workspace.measurements.apply_metadata(self.crop_y.value))
-        if (self.crop_random == C_RANDOM) | (self.seed_metadata.value == ''):
+        else:
+            x = None
+            y = None
+
+        if self.crop_random == C_RANDOM:
             random_seed = None
         else:
             random_seed = hashlib.md5(self.seed_metadata.value.encode())
             random_seed = int(random_seed.hexdigest(), 16) % 2 ** 32
+
         crop_slice = self.crop_slice(image_pixels.shape[:2],
                                      w=int(workspace.measurements.apply_metadata(self.crop_w.value)),
                                      h=int(workspace.measurements.apply_metadata(self.crop_h.value)),
