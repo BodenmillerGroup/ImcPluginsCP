@@ -1,3 +1,5 @@
+.. image:: https://zenodo.org/badge/69028464.svg
+   :target: https://zenodo.org/badge/latestdoi/69028464
 ImcPluginsCP
 ========================
 For a description of the associated image segmentation pipline, please visit: https://github.com/BodenmillerGroup/ImcSegmentationPipeline
