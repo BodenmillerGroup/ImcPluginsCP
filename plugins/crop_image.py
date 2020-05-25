@@ -31,7 +31,7 @@ S_ADDITIONAL_IMAGE_COUNT = 8
 
 class Crop(cpm.Module):
     category = "Image Processing"
-    variable_revision_number = 3
+    variable_revision_number = 4
     module_name = "Crop bb"
 
     def create_settings(self):
@@ -175,7 +175,8 @@ class Crop(cpm.Module):
         if self.crop_random == C_RANDOM:
             random_seed = None
         else:
-            random_seed = hashlib.md5(self.seed_metadata.value.encode())
+            val = workspace.measurements.apply_metadata(self.seed_metadata.value)
+            random_seed = hashlib.md5(val.encode())
             random_seed = int(random_seed.hexdigest(), 16) % 2 ** 32
 
         crop_slice = self.crop_slice(image_pixels.shape[:2],
