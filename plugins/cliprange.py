@@ -7,7 +7,6 @@
 #################################
 
 import numpy as np
-import scipy.ndimage
 
 #################################
 #
@@ -15,9 +14,9 @@ import scipy.ndimage
 #
 ##################################
 
-import cellprofiler.image
-import cellprofiler.module
-import cellprofiler.setting
+import cellprofiler_core.image
+import cellprofiler_core.module
+import cellprofiler_core.setting
 
 __doc__ = """\
 ClipRange
@@ -71,26 +70,26 @@ References
 #
 # The module class.
 #
-# Your module should "inherit" from cellprofiler.module.Module, or a
-# subclass of cellprofiler.module.Module. This module inherits from
-# cellprofiler.module.ImageProcessing, which is the base class for
+# Your module should "inherit" from cellprofiler_core.module.Module, or a
+# subclass of cellprofiler_core.module.Module. This module inherits from
+# cellprofiler_core.module.ImageProcessing, which is the base class for
 # image processing modules. Image processing modules take an image as
 # input and output an image.
 #
-# This module will use the methods from cellprofiler.module.ImageProcessing
-# unless you re-implement them. You can let cellprofiler.module.ImageProcessing
+# This module will use the methods from cellprofiler_core.module.ImageProcessing
+# unless you re-implement them. You can let cellprofiler_core.module.ImageProcessing
 # do most of the work and implement only what you need.
 #
 # Other classes you can inherit from are:
 #
-# -  cellprofiler.module.ImageSegmentation: modules which take an image
+# -  cellprofiler_core.module.ImageSegmentation: modules which take an image
 #    as input and output a segmentation (objects) should inherit from this
 #    class.
-# -  cellprofiler.module.ObjectProcessing: modules which operate on objects
+# -  cellprofiler_core.module.ObjectProcessing: modules which operate on objects
 #    should inherit from this class. These are modules that take objects as
 #    input and output new objects.
 #
-class ClipRange(cellprofiler.module.ImageProcessing):
+class ClipRange(cellprofiler_core.module.ImageProcessing):
     #
     # The module starts by declaring the name that's used for display,
     # the category under which it is stored and the variable revision
@@ -108,12 +107,12 @@ class ClipRange(cellprofiler.module.ImageProcessing):
     # "create_settings" is where you declare the user interface elements
     # (the "settings") which the user will use to customize your module.
     #
-    # You can look at other modules and in cellprofiler.settings for
+    # You can look at other modules and in cellprofiler_core.settings for
     # settings you can use.
     #
     def create_settings(self):
         #
-        # The superclass (cellprofiler.module.ImageProcessing) defines two
+        # The superclass (cellprofiler_core.module.ImageProcessing) defines two
         # settings for image input and output:
         #
         # -  x_name: an ImageNameSubscriber which "subscribes" to all
@@ -140,7 +139,7 @@ that is made available by a prior module.
 **ClipRange** will clip the range of this image.
 """
         #
-        self.outlier_percentile = cellprofiler.setting.Float(
+        self.outlier_percentile = cellprofiler_core.setting.text.Float(
             text="Outlier Percentile",
             value=0.999,  # The default value is 1 - a short-range scale
             minval=0,  # We don't let the user type in really small values
