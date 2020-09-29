@@ -12,10 +12,11 @@ This module corrects each image in the pipeline using the function specified.
 import numpy as np
 import scipy.optimize as spo
 
-import cellprofiler.image  as cpi
-import cellprofiler.module as cpm
-import cellprofiler.setting as cps
+import cellprofiler_core.image as cpi
+import cellprofiler_core.module as cpm
+import cellprofiler_core.setting as cps
 
+NONE = 'None'
 
 SETTINGS_PER_IMAGE = 4
 METHOD_LS = 'LeastSquares'
@@ -30,30 +31,30 @@ class CorrectSpilloverApply(cpm.Module):
         """Make settings here (and set the module name)"""
         self.images = []
         self.add_image(can_delete = False)
-        self.add_image_button = cps.DoSomething("", "Add another image",
+        self.add_image_button = cps.do_something.DoSomething("", "Add another image",
                                                 self.add_image)
 
     def add_image(self, can_delete = True):
         '''Add an image and its settings to the list of images'''
-        image_name = cps.ImageNameSubscriber(
+        image_name = cps.subscriber.ImageSubscriber(
             "Select the input image",
-            cps.NONE, doc = '''
+            NONE, doc = '''
             Select the image to be corrected.''')
 
-        corrected_image_name = cps.ImageNameProvider(
+        corrected_image_name = cps.text.ImageName(
             "Name the output image",
             "SpillCorrected", doc = '''
             Enter a name for the corrected image.''')
 
-        spill_correct_function_image_name = cps.ImageNameSubscriber(
+        spill_correct_function_image_name = cps.subscriber.ImageSubscriber(
             "Select the spillover function image",
-            cps.NONE, doc = '''
+            NONE, doc = '''
             Select the spillover correction image that will be used to
             carry out the correction. This image is usually produced by the R
             software CATALYST or loaded as a .tiff format image using the
             <b>Images</b> module or
             <b>LoadSingleImage</b>.''')
-        spill_correct_method = cps.Choice(
+        spill_correct_method = cps.choice.Choice(
             "Spillover correction method",
             [ METHOD_LS, METHOD_NNLS], doc = """
             Select the spillover correction method.
