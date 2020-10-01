@@ -1,50 +1,44 @@
-'''test_stackimages.py - test the stackimages module
-'''
-
-import StringIO
-import base64
-import unittest
-import zlib
+"""test_stackimages.py - test the stackimages module
+"""
 
 import numpy as np
-from scipy.ndimage import gaussian_filter
 
-from cellprofiler.preferences import set_headless
+from cellprofiler_core.preferences import set_headless
 
 set_headless()
 
-import cellprofiler.workspace as cpw
-import cellprofiler.image as cpi
-import cellprofiler.module as cpm
-import cellprofiler.modules as modules
-import cellprofiler.object as cpo
-import cellprofiler.pipeline as cpp
-import cellprofiler.measurement as cpmeas
+import cellprofiler_core.workspace as cpw
+import cellprofiler_core.image as cpi
+import cellprofiler_core.object as cpo
+import cellprofiler_core.pipeline as cpp
+import cellprofiler_core.measurement as cpmeas
 
 import plugins.stackimages as S
 
-INPUT_IMAGE_BASENAME = 'myimage'
+INPUT_IMAGE_BASENAME = "myimage"
 
-OUTPUT_IMAGE_NAME = 'mystackedimage'
+OUTPUT_IMAGE_NAME = "mystackedimage"
 
 
-class TestStackImages(unittest.TestCase):
+class TestStackImages:
     def make_workspace(self, images):
-        '''Make a workspace '''
+        """Make a workspace """
         module = S.StackImages()
         pipeline = cpp.Pipeline()
         object_set = cpo.ObjectSet()
         image_set_list = cpi.ImageSetList()
         image_set = image_set_list.get_image_set(0)
-        workspace = cpw.Workspace(pipeline,
-                                  module,
-                                  image_set,
-                                  object_set,
-                                  cpmeas.Measurements(),
-                                  image_set_list)
+        workspace = cpw.Workspace(
+            pipeline,
+            module,
+            image_set,
+            object_set,
+            cpmeas.Measurements(),
+            image_set_list,
+        )
 
         # setup the input images
-        names = [ INPUT_IMAGE_BASENAME+str(i) for i, img in enumerate(images) ]
+        names = [INPUT_IMAGE_BASENAME + str(i) for i, img in enumerate(images)]
         for img, nam in zip(images, names):
             image_set.add(nam, cpi.Image(img))
 
@@ -66,9 +60,8 @@ class TestStackImages(unittest.TestCase):
                 offset = im.shape[2]
             else:
                 offset = 1
-            ub = lb+offset
-            np.testing.assert_equal(
-                    np.squeeze(result.pixel_data[:,:,lb:ub]), im)
+            ub = lb + offset
+            np.testing.assert_equal(np.squeeze(result.pixel_data[:, :, lb:ub]), im)
             lb = ub
 
     def assert_shape(self, images, result):
@@ -80,29 +73,27 @@ class TestStackImages(unittest.TestCase):
             else:
                 c += 1
         new_shape += [c]
-        np.testing.assert_equal(result.pixel_data.shape,
-                new_shape)
+        np.testing.assert_equal(result.pixel_data.shape, new_shape)
 
     def test_stack_multichannel(self):
-        img_shape = (10, 10,5)
+        img_shape = (10, 10, 5)
         image1 = np.zeros(img_shape)
         image2 = np.copy(image1)
         image2[:] = 1
-        input_imgs =[image1, image2]
+        input_imgs = [image1, image2]
         workspace, module = self.make_workspace(input_imgs)
         module.run(workspace)
         result = workspace.image_set.get_image(OUTPUT_IMAGE_NAME)
         self.assert_stack(input_imgs, result)
         self.assert_shape(input_imgs, result)
 
-
     def test_stack_multi_gray(self):
-        img_shape = (10,10,5)
+        img_shape = (10, 10, 5)
         image1 = np.zeros(img_shape)
         image1[:] = 1
-        img_shape2= (10,10)
+        img_shape2 = (10, 10)
         image2 = np.zeros(img_shape2)
-        input_imgs =[image1, image2]
+        input_imgs = [image1, image2]
         workspace, module = self.make_workspace(input_imgs)
         module.run(workspace)
         result = workspace.image_set.get_image(OUTPUT_IMAGE_NAME)
@@ -114,7 +105,7 @@ class TestStackImages(unittest.TestCase):
         image1 = np.zeros(img_shape)
         image2 = np.copy(image1)
         image2[:] = 1
-        input_imgs =[image1, image2]
+        input_imgs = [image1, image2]
         workspace, module = self.make_workspace(input_imgs)
         module.run(workspace)
         result = workspace.image_set.get_image(OUTPUT_IMAGE_NAME)
@@ -123,7 +114,7 @@ class TestStackImages(unittest.TestCase):
 
     def test_stack_3multichannel(self):
         nimgs = 5
-        img_shape = (10, 10,5)
+        img_shape = (10, 10, 5)
         image = np.zeros(img_shape)
         input_imgs = []
         for i in range(nimgs):
