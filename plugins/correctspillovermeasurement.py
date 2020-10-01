@@ -1,30 +1,33 @@
-'''<b>CorrectSpillover - Apply</b> applies an spillover matrix, usually created by
+"""<b>CorrectSpillover - Apply</b> applies an spillover matrix, usually created by
 the R Bioconductor package CATALYST to a multichannel measurement
 <hr>
 
 This module applies a previously calculate spillover matrix,
 loaded by <b>LoadSingleImage</b> to single cell measurements.
-'''
+"""
 
 import numpy as np
 import re
 import scipy.optimize as spo
 
-import cellprofiler.image  as cpi
+import cellprofiler.image as cpi
 import cellprofiler.module as cpm
 import cellprofiler.setting as cps
 import cellprofiler.measurement as cpmeas
 
 
 SETTINGS_PER_IMAGE = 5
-METHOD_LS = 'LeastSquares'
-METHOD_NNLS = 'NonNegativeLeastSquares'
+METHOD_LS = "LeastSquares"
+METHOD_NNLS = "NonNegativeLeastSquares"
+
 
 class PatchedMeasurementSetting(cps.Measurement):
     def __init__(self, *args, **kwargs):
         super(PatchedMeasurementSetting, self).__init__(*args, **kwargs)
+
     def test_valid(self, pipeline):
         pass
+
 
 class CorrectSpilloverMeasurements(cpm.Module):
     category = "Measurement"
@@ -34,37 +37,46 @@ class CorrectSpilloverMeasurements(cpm.Module):
     def create_settings(self):
         """Make settings here (and set the module name)"""
         self.compmeasurements = []
-        self.add_compmeasurement(can_delete = False)
-        self.add_compmeasurement_button = cps.DoSomething("", "Add another measurement",
-                                                self.add_compmeasurement)
+        self.add_compmeasurement(can_delete=False)
+        self.add_compmeasurement_button = cps.DoSomething(
+            "", "Add another measurement", self.add_compmeasurement
+        )
 
-    def add_compmeasurement(self, can_delete = True):
-        '''Add an compmeasurement and its settings to the list of compmeasurements'''
+    def add_compmeasurement(self, can_delete=True):
+        """Add an compmeasurement and its settings to the list of compmeasurements"""
         group = cps.SettingsGroup()
 
-        object_name = cps.ObjectNameSubscriber('Select Object')
+        object_name = cps.ObjectNameSubscriber("Select Object")
 
         compmeasurement_name = PatchedMeasurementSetting(
-            'Select the measurment to correct for spillover',
-            object_name.get_value, cps.NONE, doc=""" Select compmeasurement
-            to be spillover corrected""")
+            "Select the measurment to correct for spillover",
+            object_name.get_value,
+            cps.NONE,
+            doc=""" Select compmeasurement
+            to be spillover corrected""",
+        )
 
         corrected_compmeasurement_suffix = cps.AlphanumericText(
             "Name the output compmeasurement suffix",
-            "Corrected", doc = '''
-            Enter a name for the corrected measurement.''')
+            "Corrected",
+            doc="""
+            Enter a name for the corrected measurement.""",
+        )
 
         spill_correct_function_image_name = cps.ImageNameSubscriber(
             "Select the spillover function image",
-            cps.NONE, doc = '''
+            cps.NONE,
+            doc="""
             Select the spillover correction image that will be used to
             carry out the correction. This image is usually produced by the R
             software CATALYST or loaded as a .tiff format image using the
             <b>Images</b> module or
-            <b>LoadSingleImage</b>.''')
+            <b>LoadSingleImage</b>.""",
+        )
         spill_correct_method = cps.Choice(
             "Spillover correction method",
-            [ METHOD_LS, METHOD_NNLS], doc = """
+            [METHOD_LS, METHOD_NNLS],
+            doc="""
             Select the spillover correction method.
             <ul>
             <li><i>%(METHOD_LS)s:</i> Gives the least square solution
@@ -75,22 +87,32 @@ class CorrectSpilloverMeasurements(cpm.Module):
             squares criterium, without any negative values.
             </li>
             </ul>
-            """ % globals())
+            """
+            % globals(),
+        )
 
         compmeasurement_settings = cps.SettingsGroup()
-        compmeasurement_settings.append('object_name', object_name)
+        compmeasurement_settings.append("object_name", object_name)
         compmeasurement_settings.append("compmeasurement_name", compmeasurement_name)
-        compmeasurement_settings.append("corrected_compmeasurement_suffix", corrected_compmeasurement_suffix)
-        compmeasurement_settings.append("spill_correct_function_image_name",
-                              spill_correct_function_image_name)
+        compmeasurement_settings.append(
+            "corrected_compmeasurement_suffix", corrected_compmeasurement_suffix
+        )
+        compmeasurement_settings.append(
+            "spill_correct_function_image_name", spill_correct_function_image_name
+        )
         compmeasurement_settings.append("spill_correct_method", spill_correct_method)
 
         if can_delete:
-            compmeasurement_settings.append("remover",
-                                  cps.RemoveSettingButton("","Remove this measurement",
-                                                          self.compmeasurements,
-                                                          compmeasurement_settings))
-        compmeasurement_settings.append("divider",cps.Divider())
+            compmeasurement_settings.append(
+                "remover",
+                cps.RemoveSettingButton(
+                    "",
+                    "Remove this measurement",
+                    self.compmeasurements,
+                    compmeasurement_settings,
+                ),
+            )
+        compmeasurement_settings.append("divider", cps.Divider())
         self.compmeasurements.append(compmeasurement_settings)
 
     def settings(self):
@@ -103,25 +125,26 @@ class CorrectSpilloverMeasurements(cpm.Module):
         """
         result = []
         for compmeasurement in self.compmeasurements:
-            result += [compmeasurement.object_name,
-                       compmeasurement.compmeasurement_name,
-                       compmeasurement.corrected_compmeasurement_suffix,
-                       compmeasurement.spill_correct_function_image_name,
-                       compmeasurement.spill_correct_method
-                      ]
+            result += [
+                compmeasurement.object_name,
+                compmeasurement.compmeasurement_name,
+                compmeasurement.corrected_compmeasurement_suffix,
+                compmeasurement.spill_correct_function_image_name,
+                compmeasurement.spill_correct_method,
+            ]
         return result
 
     def visible_settings(self):
-        """Return the list of displayed settings
-        """
+        """Return the list of displayed settings"""
         result = []
         for compmeasurement in self.compmeasurements:
-            result += [compmeasurement.object_name,
-                       compmeasurement.compmeasurement_name,
-                       compmeasurement.corrected_compmeasurement_suffix,
-                       compmeasurement.spill_correct_function_image_name,
-                       compmeasurement.spill_correct_method
-                      ]
+            result += [
+                compmeasurement.object_name,
+                compmeasurement.compmeasurement_name,
+                compmeasurement.corrected_compmeasurement_suffix,
+                compmeasurement.spill_correct_function_image_name,
+                compmeasurement.spill_correct_method,
+            ]
             #
             # Get the "remover" button if there is one
             #
@@ -154,28 +177,36 @@ class CorrectSpilloverMeasurements(cpm.Module):
     def _get_compmeasurement_columns(self, cm, pipeline):
         compmeasurement_name = cm.compmeasurement_name.value
         object_name = cm.object_name.value
-        mods = [module for module in pipeline.modules()
-                if module.module_num < self.module_num]
-        cols = [col for m in mods for col in m.get_measurement_columns(pipeline)
-                if (col[0] == object_name) and (
-                    col[1].startswith(compmeasurement_name+'_c'))]
+        mods = [
+            module
+            for module in pipeline.modules()
+            if module.module_num < self.module_num
+        ]
+        cols = [
+            col
+            for m in mods
+            for col in m.get_measurement_columns(pipeline)
+            if (col[0] == object_name)
+            and (col[1].startswith(compmeasurement_name + "_c"))
+        ]
         return cols
 
     def _get_compmeasurment_output_columns(self, cm, pipeline):
         incols = self._get_compmeasurement_columns(cm, pipeline)
         suffix = cm.corrected_compmeasurement_suffix.value
-        outcols = [(c[0], self._generate_outcolname(c[1], suffix), c[2])
-                   for c in incols]
+        outcols = [
+            (c[0], self._generate_outcolname(c[1], suffix), c[2]) for c in incols
+        ]
         return outcols
 
     def _generate_outcolname(self, colname, suffix):
-        colfrag = colname.split('_')
+        colfrag = colname.split("_")
         colfrag[1] += suffix
-        outcol = '_'.join(colfrag)
+        outcol = "_".join(colfrag)
         return outcol
 
     def get_measurement_columns(self, pipeline):
-        '''Return column definitions for compmeasurements made rby this module'''
+        """Return column definitions for compmeasurements made rby this module"""
         columns = []
         for cm in self.compmeasurements:
             columns += self._get_compmeasurment_output_columns(cm, pipeline)
@@ -199,17 +230,19 @@ class CorrectSpilloverMeasurements(cpm.Module):
         results = []
         for cm in self.compmeasurements:
             if (object_name == self._get_obj(cm, pipeline)) and (
-                category == 'Intensity'):
+                category == "Intensity"
+            ):
                 results += [self._get_featureout(cm, pipeline)]
         return results
 
-    def get_measurement_images(self, pipeline, object_name,
-                               category, measurement):
+    def get_measurement_images(self, pipeline, object_name, category, measurement):
         results = []
         for cm in self.compmeasurements:
-            if (object_name == self._get_obj(cm, pipeline)) and (
-                category == 'Intensity') and (
-                measurement == self._get_featureout(cm, pipeline)):
+            if (
+                (object_name == self._get_obj(cm, pipeline))
+                and (category == "Intensity")
+                and (measurement == self._get_featureout(cm, pipeline))
+            ):
                 image_name = cm.compmeasurement_name.get_image_name(pipeline)
                 results += [image_name]
         return results
@@ -227,11 +260,8 @@ class CorrectSpilloverMeasurements(cpm.Module):
         for compmeasurement in self.compmeasurements:
             self.run_compmeasurement(compmeasurement, workspace)
 
-
     def run_compmeasurement(self, compmeasurement, workspace):
-        '''Perform spillover correction according to the parameters of e compmeasurement setting group
-
-        '''
+        """Perform spillover correction according to the parameters of e compmeasurement setting group"""
         # TODO: currently this relies on the channels being stored
         # in increasing order (which seems to be currently true). However
         # it would be clearly better to assert this channel order.
@@ -241,15 +271,19 @@ class CorrectSpilloverMeasurements(cpm.Module):
         compmeasurement_name = compmeasurement.compmeasurement_name.value
         object_name = compmeasurement.object_name.value
         spill_correct_name = compmeasurement.spill_correct_function_image_name.value
-        corrected_compmeasurement_suffix = compmeasurement.corrected_compmeasurement_suffix.value
+        corrected_compmeasurement_suffix = (
+            compmeasurement.corrected_compmeasurement_suffix.value
+        )
         #
         # Get compmeasurements from workspace
         #
         measurements = workspace.get_measurements()
         pipline = workspace.pipeline
 
-        m = [measurements.get_measurement(object_name, c[1])
-             for c in self._get_compmeasurement_columns(compmeasurement, pipline)]
+        m = [
+            measurements.get_measurement(object_name, c[1])
+            for c in self._get_compmeasurement_columns(compmeasurement, pipline)
+        ]
         data = np.stack(m).T
 
         spillover_mat = workspace.image_set.get_image(spill_correct_name)
@@ -257,15 +291,16 @@ class CorrectSpilloverMeasurements(cpm.Module):
         # Either divide or subtract the illumination image from the original
         #
         method = compmeasurement.spill_correct_method.value
-        compdat = self.compensate_dat(data,
-                                              spillover_mat.pixel_data, method)
+        compdat = self.compensate_dat(data, spillover_mat.pixel_data, method)
         # Save the output image in the image set and have it inherit
         # mask & cropping from the original image.
         #
         #
         # Save images for display
         #
-        for m, c in zip(compdat.T, self._get_compmeasurment_output_columns(compmeasurement, pipline)):
+        for m, c in zip(
+            compdat.T, self._get_compmeasurment_output_columns(compmeasurement, pipline)
+        ):
             measurements.add_measurement(object_name, c[1], m)
 
     def compensate_dat(self, dat, sm, method):
@@ -287,6 +322,7 @@ class CorrectSpilloverMeasurements(cpm.Module):
         # columns with any not finite value are set to np.nan
         compdat[~fil, :] = np.nan
         return compdat
+
     @staticmethod
     def compensate_ls(dat, sm):
         compdat = np.linalg.lstsq(sm.T, dat.T)[0]
@@ -296,15 +332,16 @@ class CorrectSpilloverMeasurements(cpm.Module):
     def compensate_nnls(dat, sm):
         def nnls(x):
             return spo.nnls(sm.T, x)[0]
-        return np.apply_along_axis(nnls,1, dat)
 
+        return np.apply_along_axis(nnls, 1, dat)
 
     def display(self, workspace, figure):
-        ''' Display one row of orig / illum / output per image setting group'''
+        """ Display one row of orig / illum / output per image setting group"""
         pass
 
-    def upgrade_settings(self, setting_values, variable_revision_number,
-                         module_name, from_matlab):
+    def upgrade_settings(
+        self, setting_values, variable_revision_number, module_name, from_matlab
+    ):
         """Adjust settings based on revision # of save file
 
         setting_values - sequence of string values as they appear in the
