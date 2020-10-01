@@ -27,21 +27,15 @@ See also **Smooth** and several related modules in the *Advanced* category
 
 import numpy as np
 import scipy.ndimage as scind
-from centrosome.filter import median_filter, bilateral_filter, circular_average_filter
-from centrosome.smooth import circular_gaussian_kernel
+from centrosome.filter import median_filter, circular_average_filter
 from centrosome.smooth import fit_polynomial
 from centrosome.smooth import smooth_with_function_and_mask
 import skimage.restoration
 from scipy import ndimage
 
-import cellprofiler.image as cpi
-import cellprofiler.module as cpm
-import cellprofiler.setting as cps
-from cellprofiler.modules._help import (
-    HELP_ON_MEASURING_DISTANCES,
-    HELP_ON_PIXEL_INTENSITIES,
-)
-from cellprofiler.setting import YES, NO
+import cellprofiler_core.image as cpi
+import cellprofiler_core.module as cpm
+import cellprofiler_core.setting as cps
 
 FIT_POLYNOMIAL = "Fit Polynomial"
 MEDIAN_FILTER = "Median Filter"
@@ -52,6 +46,7 @@ CIRCULAR_AVERAGE_FILTER = "Circular Average Filter"
 SM_TO_AVERAGE = "Smooth to Average"
 CLIP_HOT_PIXELS = "Remove single hot pixels"
 
+YES, NO, NONE = "yes", "no", "None"
 
 class SmoothMultichannel(cpm.Module):
     module_name = "Smooth Multichannel"
@@ -59,19 +54,19 @@ class SmoothMultichannel(cpm.Module):
     variable_revision_number = 5
 
     def create_settings(self):
-        self.image_name = cps.ImageNameSubscriber(
+        self.image_name = cps.subscriber.ImageSubscriber(
             "Select the input image",
-            cps.NONE,
+            NONE,
             doc="""Select the image to be smoothed.""",
         )
 
-        self.filtered_image_name = cps.ImageNameProvider(
+        self.filtered_image_name = cps.text.ImageName(
             "Name the output image",
             "FilteredImage",
             doc="""Enter a name for the resulting image.""",
         )
 
-        self.smoothing_method = cps.Choice(
+        self.smoothing_method = cps.choice.Choice(
             "Select smoothing method",
             [
                 CLIP_HOT_PIXELS,
@@ -156,7 +151,7 @@ Select *%(NO)s* to manually enter an artifact diameter.
             % globals(),
         )
 
-        self.object_size = cps.Float(
+        self.object_size = cps.text.Float(
             "Typical artifact diameter",
             16.0,
             doc="""\
@@ -172,7 +167,7 @@ amounts of time to process.
             % globals(),
         )
 
-        self.sigma_range = cps.Float(
+        self.sigma_range = cps.text.Float(
             "Edge intensity difference",
             0.1,
             doc="""\
@@ -208,7 +203,7 @@ the output image.
             % globals(),
         )
 
-        self.hp_filter_size = cps.Integer(
+        self.hp_filter_size = cps.text.Integer(
             "Neighborhood filter size",
             3,
             minval=3,
@@ -223,7 +218,7 @@ this value can be interpreted as diameter and thus has to be odd.
             % globals(),
         )
 
-        self.hp_threshold = cps.Float(
+        self.hp_threshold = cps.text.Float(
             "Hot pixel threshold",
             50,
             minval=0,
@@ -277,7 +272,7 @@ example, if one wants to set a threshold of 100 counts, a value of either
         if variable_revision_number < 2:
             setting_values += [3, 20]  # hp_filter_size, hp_threshold
         if variable_revision_number < 4:
-            setting_values.append(cps.NO)  # scale_hp_threshold
+            setting_values.append(NO)  # scale_hp_threshold
         return setting_values, variable_revision_number, from_matlab
 
     def visible_settings(self):
