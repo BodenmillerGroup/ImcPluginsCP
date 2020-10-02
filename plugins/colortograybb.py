@@ -29,7 +29,6 @@ See also **GrayToColor**.
 """
 
 import cellprofiler.modules.colortogray
-from cellprofiler_core.module import Module
 
 YES = "Yes"
 NO = "No"
