@@ -20,16 +20,17 @@ See also **ColorToGray** and **GrayToColor**.
 # This is almost 1:1 copied from GrayToColor from CellProfiler
 import numpy as np
 
-import cellprofiler.image as cpi
-import cellprofiler.module as cpm
-import cellprofiler.setting as cps
+import cellprofiler_core.image as cpi
+import cellprofiler_core.module as cpm
+import cellprofiler_core.setting as cps
 
 OFF_STACK_CHANNEL_COUNT = 1
 
+NONE = 'None'
 
 class StackImages(cpm.Module):
     module_name = "StackImages"
-    variable_revision_number = 1
+    variable_revision_number = 2
     category = "Image Processing"
 
     def create_settings(self):
@@ -39,7 +40,7 @@ class StackImages(cpm.Module):
         # Stack settings
         #
         # # # # # # # # # # # # # #
-        self.stack_image_name = cps.ImageNameProvider(
+        self.stack_image_name = cps.text.ImageName(
             "Name the output image",
             "ColorImage",
             doc="""Enter a name for the resulting image.""",
@@ -49,7 +50,7 @@ class StackImages(cpm.Module):
         self.stack_channel_count = cps.HiddenCount(self.stack_channels)
         self.add_stack_channel_cb(can_remove=False)
         self.add_stack_channel_cb(can_remove=False)
-        self.add_stack_channel = cps.DoSomething(
+        self.add_stack_channel = cps.do_something.DoSomething(
             "Add another channel",
             "Add another channel",
             self.add_stack_channel_cb,
@@ -62,9 +63,9 @@ class StackImages(cpm.Module):
         group = cps.SettingsGroup()
         group.append(
             "image_name",
-            cps.ImageNameSubscriber(
+            cps.subscriber.ImageSubscriber(
                 "Image name",
-                cps.NONE,
+                NONE,
                 doc="""\
 Select the input image to add to the stacked image.
 """
@@ -75,7 +76,7 @@ Select the input image to add to the stacked image.
         if can_remove:
             group.append(
                 "remover",
-                cps.RemoveSettingButton(
+                cps.do_something.RemoveSettingButton(
                     "", "Remove this image", self.stack_channels, group
                 ),
             )

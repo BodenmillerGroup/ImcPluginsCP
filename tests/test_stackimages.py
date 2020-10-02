@@ -1,6 +1,8 @@
 """test_stackimages.py - test the stackimages module
 """
 
+import unittest
+
 import numpy as np
 
 from cellprofiler_core.preferences import set_headless
@@ -20,7 +22,7 @@ INPUT_IMAGE_BASENAME = "myimage"
 OUTPUT_IMAGE_NAME = "mystackedimage"
 
 
-class TestStackImages:
+class TestStackImages(unittest.TestCase):
     def make_workspace(self, images):
         """Make a workspace """
         module = S.StackImages()
