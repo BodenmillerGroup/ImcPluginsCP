@@ -1,23 +1,24 @@
 import numpy
 import pytest
 import six.moves
+import io
 
 import cellprofiler_core.image
 import cellprofiler_core.measurement
 
-
-import cellprofiler.modules.colortogray
 import cellprofiler_core.modules.injectimage
 import cellprofiler_core.object
 import cellprofiler_core.pipeline
 import cellprofiler_core.workspace
-import tests.modules
+from cellprofiler_core.utilities.core import modules as cpmodules
 
 IMAGE_NAME = "image"
 OUTPUT_IMAGE_F = "outputimage%d"
 
+import cellprofiler.modules.colortogray
 import plugins.colortograybb as colortogray
-
+cpmodules.fill_modules()
+cpmodules.add_module_for_tst(colortogray.ColorToGray)
 def get_my_image():
     """A color image with red in the upper left, green in the lower left and blue in the upper right"""
     img = numpy.zeros((50, 50, 3))
@@ -228,3 +229,46 @@ def test_split_channels():
         assert tuple(pixels.shape) == (20, 10)
         numpy.testing.assert_almost_equal(image[:, :, channel_index], pixels)
 
+def test_old_color2gray():
+    data = r"""CellProfiler Pipeline: http://www.cellprofiler.org
+    Version:4
+    DateRevision:318
+    ModuleCount:12
+    HasImagePlaneDetails:False
+
+    ColorToGray bb:[module_num:6|svn_version:\'Unknown\'|variable_revision_number:3|show_window:False|notes:\x5B\x5D|batch_state:array(\x5B\x5D, dtype=uint8)|enabled:True|wants_pause:False]
+    Select the input image:FullSpillCorr
+    Conversion method:Split
+    Image type:Channels
+    Name the output image:OrigGray
+    Relative weight of the red channel:1.0
+    Relative weight of the green channel:1.0
+    Relative weight of the blue channel:1.0
+    Convert red to gray?:Yes
+    Name the output image:OrigRed
+    Convert green to gray?:Yes
+    Name the output image:OrigGreen
+    Convert blue to gray?:Yes
+    Name the output image:OrigBlue
+    Convert hue to gray?:Yes
+    Name the output image:OrigHue
+    Convert saturation to gray?:Yes
+    Name the output image:OrigSaturation
+    Convert value to gray?:Yes
+    Name the output image:OrigValue
+    Channel count:2
+    Channel number:36
+    Relative weight of the channel:1.0
+    Image name:Er167
+    Channel number:38
+    Relative weight of the channel:1.0
+    Image name:Tm169
+
+    """
+    pipeline = cellprofiler_core.pipeline.Pipeline()
+    cpmodules.fill_modules()
+    cpmodules.add_module_for_tst(colortogray.ColorToGray)
+    pipeline.load(io.StringIO(data))
+    assert len(pipeline.modules()) == 1
+    smooth = pipeline.modules()[0]
+    assert isinstance(smooth, colortogray.ColorToGray)
