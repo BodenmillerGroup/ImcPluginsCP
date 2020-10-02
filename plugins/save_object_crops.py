@@ -29,10 +29,10 @@ logger = logging.getLogger(__name__)
 import skimage.io
 import skimage.util
 
-import cellprofiler.module as cpm
-import cellprofiler.measurement as cpmeas
-import cellprofiler.setting as cps
-from cellprofiler.setting import YES, NO
+import cellprofiler_core.module as cpm
+import cellprofiler_core.measurement as cpmeas
+import cellprofiler_core.setting as cps
+
 import cellprofiler.preferences as cpp
 from cellprofiler.preferences import (
     standardize_default_folder_names,
@@ -44,14 +44,15 @@ from cellprofiler.preferences import (
     get_default_image_directory,
 )
 
+YES, NO = "Yes", "No"
 # from cellprofiler.utilities.relpath import relpath
-from cellprofiler.measurement import C_FILE_NAME, C_PATH_NAME, C_URL
-from cellprofiler.measurement import (
+from cellprofiler_core.measurement import C_FILE_NAME, C_PATH_NAME, C_URL
+from cellprofiler_core.measurement import (
     C_OBJECTS_FILE_NAME,
     C_OBJECTS_PATH_NAME,
     C_OBJECTS_URL,
 )
-from cellprofiler.modules.loadimages import pathname2url
+from cellprofiler_core.modules.loadimages import pathname2url
 from centrosome.cpmorphology import distance_color_labels
 
 NOTDEFINEDYET = "Helptext Not Defined Yet"
@@ -125,30 +126,30 @@ class SaveObjectCrops(cpm.Module):
     category = "File Processing"
 
     def create_settings(self):
-        self.input_type = cps.Choice("Select the type of input", [IF_IMAGE], IF_IMAGE)
+        self.input_type = cps.choice.Choice("Select the type of input", [IF_IMAGE], IF_IMAGE)
 
-        self.image_name = cps.ImageNameSubscriber(
+        self.image_name = cps.subscriber.ImageSubscriber(
             "Select the image to save",
-            cps.NONE,
+            "None",
             doc="""
             <i>(Used only if "%(IF_IMAGE)s", "%(IF_MASK)s" or "%(IF_CROPPING)s" are selected to save)</i><br>
             Select the image you want to save."""
             % globals(),
         )
 
-        self.input_object_name = cps.ObjectNameSubscriber(
-            "Select the objects to save", cps.NONE
+        self.input_object_name = cps.subscriber.LabelSubscriber(
+            "Select the objects to save", "None"
         )
 
-        self.objects_name = cps.ObjectNameSubscriber(
+        self.objects_name = cps.subscriber.LabelSubscriber(
             "Select the objects to crop and save",
-            cps.NONE,
+            "None",
             doc="""
             Select the objects that you want to save."""
             % globals(),
         )
 
-        self.file_name_method = cps.Choice(
+        self.file_name_method = cps.choice.Choice(
             "Select method for constructing file names",
             [
                 FN_FROM_IMAGE,
@@ -172,7 +173,7 @@ class SaveObjectCrops(cpm.Module):
 
         self.file_image_name = cps.FileImageNameSubscriber(
             "Select image name for file prefix",
-            cps.NONE,
+            "None",
             doc="""
             <i>(Used only when "%(FN_FROM_IMAGE)s" is selected for contructing the filename)</i><br>
             Select an image loaded using <b>NamesAndTypes</b>. The original filename will be
@@ -198,7 +199,7 @@ class SaveObjectCrops(cpm.Module):
             Enter the text that should be appended to the filename specified above.""",
         )
 
-        self.file_format = cps.Choice(
+        self.file_format = cps.choice.Choice(
             "Saved file format",
             [FF_TIFF],
             value=FF_TIFF,
@@ -236,7 +237,7 @@ class SaveObjectCrops(cpm.Module):
             % globals(),
         )
 
-        self.bit_depth = cps.Choice(
+        self.bit_depth = cps.choice.Choice(
             "Image bit depth",
             [BIT_DEPTH_8, BIT_DEPTH_16, BIT_DEPTH_FLOAT],
             doc="""
@@ -250,7 +251,7 @@ class SaveObjectCrops(cpm.Module):
             % globals(),
         )
 
-        self.object_extension = cps.Integer(
+        self.object_extension = cps.text.Integer(
             "Object extension",
             value=1,
             doc="""
@@ -269,7 +270,7 @@ class SaveObjectCrops(cpm.Module):
             % globals(),
         )
 
-        self.when_to_save = cps.Choice(
+        self.when_to_save = cps.choice.Choice(
             "When to save",
             [WS_FIRST_CYCLE],
             doc="""<a name='when_to_save'>
@@ -394,7 +395,7 @@ class SaveObjectCrops(cpm.Module):
     def run(self, workspace):
         """Run the module
 
-        pipeline     - instance of CellProfiler.Pipeline for this run
+        pipeline     - instance of cellprofiler_core.pipeline for this run
         workspace    - the workspace contains:
             image_set    - the images in the image set being processed
             object_set   - the objects (labeled masks) in this image set
@@ -718,7 +719,7 @@ class SaveObjectCrops(cpm.Module):
     ):
         """Adjust the setting values to be backwards-compatible with old versions"""
         if variable_revision_number < 2:
-            setting_values = [IF_IMAGE, cps.NONE] + setting_values
+            setting_values = [IF_IMAGE, "None"] + setting_values
         if variable_revision_number < 3:
             setting_values[11] = BIT_DEPTH_FLOAT
         return setting_values, variable_revision_number

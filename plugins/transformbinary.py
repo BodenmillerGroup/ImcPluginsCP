@@ -7,11 +7,10 @@ usefull to quantify the distance of objects to a mask.
 import numpy as np
 import scipy.ndimage as scind
 
-import cellprofiler.image as cpi
-import cellprofiler.module as cpm
-import cellprofiler.setting as cps
-from cellprofiler.setting import YES, NO
-
+import cellprofiler_core.image as cpi
+import cellprofiler_core.module as cpm
+import cellprofiler_core.setting as cps
+YES, NO = "Yes", "No"
 from matplotlib.widgets import Slider, Button, RadioButtons
 
 from scipy import ndimage as ndi
@@ -28,13 +27,13 @@ class TransformBinary(cpm.Module):
     variable_revision_number = 1
 
     def create_settings(self):
-        self.image_name = cps.ImageNameSubscriber("Select the input image", cps.NONE)
+        self.image_name = cps.subscriber.ImageSubscriber("Select the input image", "None")
 
-        self.transformed_image_name = cps.ImageNameProvider(
+        self.transformed_image_name = cps.text.ImageName(
             "Name the transformed image", "DistanceImage"
         )
 
-        self.transform_method = cps.Choice(
+        self.transform_method = cps.choice.Choice(
             "Select a transformation",
             [DISTANCE_BORDER],
             doc="""

@@ -44,16 +44,16 @@ from skimage.filters import rank
 import scipy.ndimage as ndi
 
 
-import cellprofiler.image as cpi
-import cellprofiler.module as cpm
-import cellprofiler.measurement as cpmeas
-import cellprofiler.object as cpo
-import cellprofiler.setting as cps
-from cellprofiler.modules.identify import add_object_count_measurements
-from cellprofiler.modules.identify import add_object_location_measurements
-from cellprofiler.modules.identify import get_object_measurement_columns
-from cellprofiler.setting import YES, NO
+import cellprofiler_core.image as cpi
+import cellprofiler_core.module as cpm
+import cellprofiler_core.measurement as cpmeas
+import cellprofiler_core.object as cpo
+import cellprofiler_core.setting as cps
+from cellprofiler_core.modules.identify import add_object_count_measurements
+from cellprofiler_core.modules.identify import add_object_location_measurements
+from cellprofiler_core.modules.identify import get_object_measurement_columns
 
+YES, NO = "Yes", "No"
 O_UPSCALE = "Upscale objects with a scaling factor"
 O_DOWNSCALE = "Downscale objects with a scaling factor"
 
@@ -66,21 +66,21 @@ class RescaleObjects(cpm.Module):
     variable_revision_number = 1
 
     def create_settings(self):
-        self.object_name = cps.ObjectNameSubscriber(
+        self.object_name = cps.subscriber.LabelSubscriber(
             "Select the input objects",
-            cps.NONE,
+            "None",
             doc="""
             Select the objects that you want to rescale.""",
         )
 
-        self.output_object_name = cps.ObjectNameProvider(
+        self.output_object_name = cps.text.LabelName(
             "Name the output objects",
             "RescaledObject",
             doc="""
             Enter a name for the resulting objects.""",
         )
 
-        self.operation = cps.Choice(
+        self.operation = cps.choice.Choice(
             "Select the operation",
             O_ALL,
             doc="""
@@ -93,7 +93,7 @@ class RescaleObjects(cpm.Module):
             % globals(),
         )
 
-        self.scaling = cps.Float("Factor to scale the object mask", 1, minval=0)
+        self.scaling = cps.text.Float("Factor to scale the object mask", 1, minval=0)
 
     def settings(self):
         return [self.object_name, self.output_object_name, self.operation, self.scaling]

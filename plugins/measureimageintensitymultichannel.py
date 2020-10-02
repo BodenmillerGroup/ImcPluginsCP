@@ -2,12 +2,12 @@
 
 import numpy as np
 
-import cellprofiler.module as cpm
-import cellprofiler.measurement as cpmeas
-import cellprofiler.setting as cps
-from cellprofiler.setting import YES, NO
-from cellprofiler.modules import _help
+import cellprofiler_core.module as cpm
+import cellprofiler_core.measurement as cpmeas
+import cellprofiler_core.setting as cps
+from cellprofiler_core.modules import _help
 
+YES, NO = "Yes", "No"
 __doc__ = """
 MeasureImageIntensity
 =====================
@@ -116,7 +116,7 @@ class MeasureImageIntensity(cpm.Module):
         self.divider_top = cps.Divider(line=False)
         self.images = []
         self.add_image_measurement(can_remove=False)
-        self.add_button = cps.DoSomething(
+        self.add_button = cps.do_something.DoSomething(
             "", "Add another image", self.add_image_measurement
         )
         self.divider_bottom = cps.Divider(line=False)
@@ -128,9 +128,9 @@ class MeasureImageIntensity(cpm.Module):
 
         group.append(
             "image_name",
-            cps.ImageNameSubscriber(
+            cps.subscriber.ImageSubscriber(
                 "Select the image to measure",
-                cps.NONE,
+                "None",
                 doc="""\
 Choose an image name from the drop-down menu to calculate intensity for
 that image. Use the *Add another image* button below to add additional
@@ -142,7 +142,7 @@ objects.""",
 
         group.append(
             "nchannels",
-            cps.Integer(
+            cps.text.Integer(
                 "How many channels does the image have?",
                 1,
                 doc="""
@@ -170,9 +170,9 @@ object individually, see **MeasureObjectIntensity** instead.
 
         group.append(
             "object_name",
-            cps.ObjectNameSubscriber(
+            cps.subscriber.LabelSubscriber(
                 "Select the input objects",
-                cps.NONE,
+                "None",
                 doc="""\
 *(Used only when measuring intensity from area occupied by objects)*
 
@@ -185,7 +185,7 @@ objects.""",
         if can_remove:
             group.append(
                 "remover",
-                cps.RemoveSettingButton("", "Remove this image", self.images, group),
+                cps.do_something.RemoveSettingButton("", "Remove this image", self.images, group),
             )
         self.images.append(group)
 

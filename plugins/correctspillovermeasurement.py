@@ -10,10 +10,10 @@ import numpy as np
 import re
 import scipy.optimize as spo
 
-import cellprofiler.image as cpi
-import cellprofiler.module as cpm
-import cellprofiler.setting as cps
-import cellprofiler.measurement as cpmeas
+import cellprofiler_core.image as cpi
+import cellprofiler_core.module as cpm
+import cellprofiler_core.setting as cps
+import cellprofiler_core.measurement as cpmeas
 
 
 SETTINGS_PER_IMAGE = 5
@@ -38,7 +38,7 @@ class CorrectSpilloverMeasurements(cpm.Module):
         """Make settings here (and set the module name)"""
         self.compmeasurements = []
         self.add_compmeasurement(can_delete=False)
-        self.add_compmeasurement_button = cps.DoSomething(
+        self.add_compmeasurement_button = cps.do_something.DoSomething(
             "", "Add another measurement", self.add_compmeasurement
         )
 
@@ -46,12 +46,12 @@ class CorrectSpilloverMeasurements(cpm.Module):
         """Add an compmeasurement and its settings to the list of compmeasurements"""
         group = cps.SettingsGroup()
 
-        object_name = cps.ObjectNameSubscriber("Select Object")
+        object_name = cps.subscriber.LabelSubscriber("Select Object")
 
         compmeasurement_name = PatchedMeasurementSetting(
             "Select the measurment to correct for spillover",
             object_name.get_value,
-            cps.NONE,
+            "None",
             doc=""" Select compmeasurement
             to be spillover corrected""",
         )
@@ -63,9 +63,9 @@ class CorrectSpilloverMeasurements(cpm.Module):
             Enter a name for the corrected measurement.""",
         )
 
-        spill_correct_function_image_name = cps.ImageNameSubscriber(
+        spill_correct_function_image_name = cps.subscriber.ImageSubscriber(
             "Select the spillover function image",
-            cps.NONE,
+            "None",
             doc="""
             Select the spillover correction image that will be used to
             carry out the correction. This image is usually produced by the R
@@ -73,7 +73,7 @@ class CorrectSpilloverMeasurements(cpm.Module):
             <b>Images</b> module or
             <b>LoadSingleImage</b>.""",
         )
-        spill_correct_method = cps.Choice(
+        spill_correct_method = cps.choice.Choice(
             "Spillover correction method",
             [METHOD_LS, METHOD_NNLS],
             doc="""
@@ -105,7 +105,7 @@ class CorrectSpilloverMeasurements(cpm.Module):
         if can_delete:
             compmeasurement_settings.append(
                 "remover",
-                cps.RemoveSettingButton(
+                cps.do_something.RemoveSettingButton(
                     "",
                     "Remove this measurement",
                     self.compmeasurements,
@@ -118,7 +118,7 @@ class CorrectSpilloverMeasurements(cpm.Module):
     def settings(self):
         """Return the settings to be loaded or saved to/from the pipeline
 
-        These are the settings (from cellprofiler.settings) that are
+        These are the settings (from cellprofiler_core.settings) that are
         either read from the strings in the pipeline or written out
         to the pipeline. The settings should appear in a consistent
         order so they can be matched to the strings in the pipeline.

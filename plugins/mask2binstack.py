@@ -13,9 +13,9 @@ import re
 import matplotlib.colors
 import numpy as np
 
-import cellprofiler.image  as cpi
-import cellprofiler.module as cpm
-import cellprofiler.setting as cps
+import cellprofiler_core.image  as cpi
+import cellprofiler_core.module as cpm
+import cellprofiler_core.setting as cps
 
 IF_OBJECTS     = "Objects"
 IF_IMAGE       = "Image"
@@ -31,25 +31,25 @@ class MaskToBinstack(cpm.Module):
     category = "Object Processing"
 
     def create_settings(self):
-        self.input_type = cps.Choice(
+        self.input_type = cps.choice.Choice(
             "Select the type of input",
             [IF_IMAGE, IF_OBJECTS], IF_IMAGE)
 
 
-        self.image_name = cps.ImageNameSubscriber(
-            "Select input images", cps.NONE)
+        self.image_name = cps.subscriber.ImageSubscriber(
+            "Select input images", "None")
 
-        self.objects_name = cps.ObjectNameSubscriber(
-                "Select the input objects", cps.NONE,
+        self.objects_name = cps.subscriber.LabelSubscriber(
+                "Select the input objects", "None",
         )
         
-        self.output_name = cps.ImageNameProvider(
+        self.output_name = cps.text.ImageName(
                 "Input the output image stack name",
                 "BinStack", doc="""
             Input the output name.
             """ %globals())
         
-        self.main_object_def = cps.Choice(
+        self.main_object_def = cps.choice.Choice(
             "How should the main label be determined?",
                 [SEL_MID, SEL_MAXAREA, SEL_PROVIDED],
                 SEL_MID, doc="""
@@ -101,7 +101,7 @@ class MaskToBinstack(cpm.Module):
     def run(self, workspace):
         """Run the module
          
-        pipeline     - instance of CellProfiler.Pipeline for this run
+        pipeline     - instance of cellprofiler_core.pipeline for this run
         workspace    - the workspace contains:
             image_set    - the images in the image set being processed
             object_set   - the objects (labeled masks) in this image set

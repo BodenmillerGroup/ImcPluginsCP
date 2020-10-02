@@ -14,9 +14,9 @@ import matplotlib.colors
 import numpy as np
 import functools
 
-import cellprofiler.image as cpi
-import cellprofiler.module as cpm
-import cellprofiler.setting as cps
+import cellprofiler_core.image as cpi
+import cellprofiler_core.module as cpm
+import cellprofiler_core.setting as cps
 
 CH_CHANNELS = "Channels"
 MEAN = "Mean"
@@ -34,9 +34,9 @@ class ColorToGray(cpm.Module):
     category = "Image Processing"
 
     def create_settings(self):
-        self.image_name = cps.ImageNameSubscriber("Select the input image", cps.NONE)
+        self.image_name = cps.subscriber.ImageSubscriber("Select the input image", "None")
 
-        self.conversion_method = cps.Choice(
+        self.conversion_method = cps.choice.Choice(
             "Conversion method",
             [MEAN, MEDIAN, CUSTOMFUNCTION],
             doc="""
@@ -58,7 +58,7 @@ class ColorToGray(cpm.Module):
         """,
         )
         # The following settings are used for the combine option
-        self.grayscale_name = cps.ImageNameProvider("Name the output image", "OrigGray")
+        self.grayscale_name = cps.text.ImageName("Name the output image", "OrigGray")
 
         # The alternative model:
         self.channels = []
@@ -90,7 +90,7 @@ class ColorToGray(cpm.Module):
     def run(self, workspace):
         """Run the module
 
-        pipeline     - instance of CellProfiler.Pipeline for this run
+        pipeline     - instance of cellprofiler_core.pipeline for this run
         workspace    - the workspace contains:
             image_set    - the images in the image set being processed
             object_set   - the objects (labeled masks) in this image set

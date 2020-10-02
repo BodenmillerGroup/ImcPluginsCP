@@ -4,7 +4,7 @@ illumination (uneven shading).
 <hr>
 
 This module applies a previously calculate spillover matrix,
-loaded by <b>LoadSingleImage</b>.
+loaded as a normal image or via <b>LoadSingleImage</b>.
 This module corrects each image in the pipeline using the function specified.
 
 """
@@ -91,7 +91,7 @@ class CorrectSpilloverApply(cpm.Module):
         if can_delete:
             image_settings.append(
                 "remover",
-                cps.RemoveSettingButton(
+                cps.do_something.RemoveSettingButton(
                     "", "Remove this image", self.images, image_settings
                 ),
             )
@@ -101,7 +101,7 @@ class CorrectSpilloverApply(cpm.Module):
     def settings(self):
         """Return the settings to be loaded or saved to/from the pipeline
 
-        These are the settings (from cellprofiler.settings) that are
+        These are the settings (from cellprofiler_core.settings) that are
         either read from the strings in the pipeline or written out
         to the pipeline. The settings should appear in a consistent
         order so they can be matched to the strings in the pipeline.
@@ -169,7 +169,6 @@ class CorrectSpilloverApply(cpm.Module):
             self.run_image(image, workspace)
 
     def run_image(self, image, workspace):
-        """Perform illumination according to the parameters of one image setting group"""
         #
         # Get the image names from the settings
         #
@@ -216,7 +215,7 @@ class CorrectSpilloverApply(cpm.Module):
             >>> img = np.array([[[1,0.1],[0, 1], [1,0.1]],
                                 [[0,1],[1,0.1], [2,0.2]]])
             >>> sm = np.array([[1,0.1],[0,1]])
-            >>> compensate_image(sm, img)
+            >>> compensate_image_ls(sm, img)
             array([[[ 1.,  0.],
                     [ 0.,  1.],
                     [ 1.,  0.]],

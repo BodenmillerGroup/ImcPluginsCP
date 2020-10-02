@@ -46,12 +46,12 @@ import skimage.io
 import skimage.util
 import tifffile
 
-import cellprofiler.measurement
-import cellprofiler.module
-import cellprofiler.modules.loadimages
+import cellprofiler_core.measurement
+import cellprofiler_core.module
+import cellprofiler_core.modules.loadimages
 import cellprofiler.preferences
-import cellprofiler.setting
-from cellprofiler.modules import _help
+import cellprofiler_core.setting
+from cellprofiler_core.modules import _help
 
 
 IF_IMAGE = "Image"
@@ -83,7 +83,7 @@ WS_FIRST_CYCLE = "First cycle"
 WS_LAST_CYCLE = "Last cycle"
 
 
-class SaveImagesBB(cellprofiler.module.Module):
+class SaveImagesBB(cellprofiler_core.module.Module):
     module_name = "SaveImages Ilastik"
 
     variable_revision_number = 13
@@ -91,7 +91,7 @@ class SaveImagesBB(cellprofiler.module.Module):
     category = "File Processing"
 
     def create_settings(self):
-        self.save_image_or_figure = cellprofiler.setting.Choice(
+        self.save_image_or_figure = cellprofiler_core.setting.Choice(
             "Select the type of image to save",
             IF_ALL,
             IF_IMAGE,
@@ -124,11 +124,11 @@ The following types of images can be saved as a file on the hard drive:
             })
         )
 
-        self.image_name = cellprofiler.setting.ImageNameSubscriber(
+        self.image_name = cellprofiler_core.setting.ImageNameSubscriber(
             "Select the image to save", doc="Select the image you want to save."
         )
 
-        self.file_name_method = cellprofiler.setting.Choice(
+        self.file_name_method = cellprofiler_core.setting.Choice(
             "Select method for constructing file names",
             [
                 FN_FROM_IMAGE,
@@ -173,9 +173,9 @@ Several choices are available for constructing the image file name:
             })
         )
 
-        self.file_image_name = cellprofiler.setting.FileImageNameSubscriber(
+        self.file_image_name = cellprofiler_core.setting.FileImageNameSubscriber(
             "Select image name for file prefix",
-            cellprofiler.setting.NONE,
+            "None",
             doc="""\
 *(Used only when “{FN_FROM_IMAGE}” is selected for constructing the filename)*
 
@@ -185,7 +185,7 @@ will be used as the prefix for the output filename.""".format(**{
             })
         )
 
-        self.single_file_name = cellprofiler.setting.Text(
+        self.single_file_name = cellprofiler_core.setting.Text(
             SINGLE_NAME_TEXT,
             "OrigBlue",
             metadata=True,
@@ -204,7 +204,7 @@ automatically.""".format(**{
             })
         )
 
-        self.number_of_digits = cellprofiler.setting.Integer(
+        self.number_of_digits = cellprofiler_core.setting.Integer(
             "Number of digits",
             4,
             doc="""\
@@ -218,19 +218,19 @@ will override the value entered.""".format(**{
             })
         )
 
-        self.wants_file_name_suffix = cellprofiler.setting.Binary(
+        self.wants_file_name_suffix = cellprofiler_core.setting.Binary(
             "Append a suffix to the image file name?",
             False,
             doc="""\
 Select "*{YES}*" to add a suffix to the image’s file name. Select "*{NO}*"
 to use the image name as-is.
             """.format(**{
-                "NO": cellprofiler.setting.NO,
-                "YES": cellprofiler.setting.YES
+                "NO": "No",
+                "YES": "Yes"
             })
         )
 
-        self.file_name_suffix = cellprofiler.setting.Text(
+        self.file_name_suffix = cellprofiler_core.setting.Text(
             "Text to append to the image name",
             "",
             metadata=True,
@@ -249,7 +249,7 @@ automatically.
             })
         )
 
-        self.file_format = cellprofiler.setting.Choice(
+        self.file_format = cellprofiler_core.setting.Choice(
             "Saved file format",
             [
                 FF_JPEG,
@@ -310,7 +310,7 @@ between the various operating systems.
             })
         )
 
-        self.bit_depth = cellprofiler.setting.Choice(
+        self.bit_depth = cellprofiler_core.setting.Choice(
             "Image bit depth",
             [
                 BIT_DEPTH_8,
@@ -332,7 +332,7 @@ TIFF formats.""".format(**{
             })
         )
 
-        self.overwrite = cellprofiler.setting.Binary(
+        self.overwrite = cellprofiler_core.setting.Binary(
             "Overwrite existing files without warning?",
             False,
             doc="""\
@@ -342,12 +342,12 @@ Select "*{NO}*" to be prompted for confirmation first.
 If you are running the pipeline on a computing cluster, select "*{YES}*"
 since you will not be able to intervene and answer the confirmation
 prompt.""".format(**{
-                "NO": cellprofiler.setting.NO,
-                "YES": cellprofiler.setting.YES
+                "NO": "No",
+                "YES": "Yes"
             })
         )
 
-        self.when_to_save = cellprofiler.setting.Choice(
+        self.when_to_save = cellprofiler_core.setting.Choice(
             "When to save",
             [
                 WS_EVERY_CYCLE,
@@ -377,7 +377,7 @@ Specify at what point during pipeline execution to save file(s).
             })
         )
 
-        self.update_file_names = cellprofiler.setting.Binary(
+        self.update_file_names = cellprofiler_core.setting.Binary(
             "Record the file and path information to the saved image?",
             False,
             doc="""\
@@ -391,18 +391,18 @@ Instances in which this information may be useful include:
    CellProfiler Analyst, for example, you will want to enable this
    setting if you want the saved images to be displayed along with the
    original images.""".format(**{
-                "YES": cellprofiler.setting.YES
+                "YES": "Yes"
             })
         )
 
-        self.create_subdirectories = cellprofiler.setting.Binary(
+        self.create_subdirectories = cellprofiler_core.setting.Binary(
             "Create subfolders in the output folder?",
             False, doc="""Select "*{YES}*" to create subfolders to match the input image folder structure.""".format(**{
-                "YES": cellprofiler.setting.YES
+                "YES": "Yes"
             })
         )
 
-        self.root_dir = cellprofiler.setting.DirectoryPath(
+        self.root_dir = cellprofiler_core.setting.Directory(
             "Base image folder",
             doc="""\
 *Used only if creating subfolders in the output folder*
@@ -488,7 +488,7 @@ store images in the subfolder, "*date*\/*plate-name*".""")
     def run(self, workspace):
         """Run the module
 
-        pipeline     - instance of CellProfiler.Pipeline for this run
+        pipeline     - instance of cellprofiler_core.pipeline for this run
         workspace    - the workspace contains:
             image_set    - the images in the image set being processed
             object_set   - the objects (labeled masks) in this image set
@@ -527,7 +527,7 @@ store images in the subfolder, "*date*\/*plate-name*".""")
         #
         if self.when_to_save == WS_FIRST_CYCLE:
             d = self.get_dictionary(workspace.image_set_list)
-            if workspace.measurements[cellprofiler.measurement.IMAGE, cellprofiler.measurement.GROUP_INDEX] > 1:
+            if workspace.measurements[cellprofiler_core.measurement.IMAGE, cellprofiler_core.measurement.GROUP_INDEX] > 1:
                 workspace.display_data.wrote_image = False
                 self.save_filename_measurements(workspace)
                 return
@@ -691,42 +691,42 @@ store images in the subfolder, "*date*\/*plate-name*".""")
             filename = self.get_filename(workspace, make_dirs=False,
                                          check_overwrite=False)
             pn, fn = os.path.split(filename)
-            url = cellprofiler.modules.loadimages.pathname2url(filename)
-            workspace.measurements.add_measurement(cellprofiler.measurement.IMAGE,
+            url = cellprofiler_core.modules.loadimages.pathname2url(filename)
+            workspace.measurements.add_measurement(cellprofiler_core.measurement.IMAGE,
                                                    self.file_name_feature,
                                                    fn,
                                                    can_overwrite=True)
-            workspace.measurements.add_measurement(cellprofiler.measurement.IMAGE,
+            workspace.measurements.add_measurement(cellprofiler_core.measurement.IMAGE,
                                                    self.path_name_feature,
                                                    pn,
                                                    can_overwrite=True)
-            workspace.measurements.add_measurement(cellprofiler.measurement.IMAGE,
+            workspace.measurements.add_measurement(cellprofiler_core.measurement.IMAGE,
                                                    self.url_feature,
                                                    url,
                                                    can_overwrite=True)
 
     @property
     def file_name_feature(self):
-        return '_'.join((cellprofiler.measurement.C_FILE_NAME, self.image_name.value))
+        return '_'.join((cellprofiler_core.measurement.C_FILE_NAME, self.image_name.value))
 
     @property
     def path_name_feature(self):
-        return '_'.join((cellprofiler.measurement.C_PATH_NAME, self.image_name.value))
+        return '_'.join((cellprofiler_core.measurement.C_PATH_NAME, self.image_name.value))
 
     @property
     def url_feature(self):
-        return '_'.join((cellprofiler.measurement.C_URL, self.image_name.value))
+        return '_'.join((cellprofiler_core.measurement.C_URL, self.image_name.value))
 
     @property
     def source_file_name_feature(self):
         '''The file name measurement for the exemplar disk image'''
-        return '_'.join((cellprofiler.measurement.C_FILE_NAME, self.file_image_name.value))
+        return '_'.join((cellprofiler_core.measurement.C_FILE_NAME, self.file_image_name.value))
 
     def source_path(self, workspace):
         '''The path for the image data, or its first parent with a path'''
         if self.file_name_method.value == FN_FROM_IMAGE:
-            path_feature = '%s_%s' % (cellprofiler.measurement.C_PATH_NAME, self.file_image_name.value)
-            assert workspace.measurements.has_feature(cellprofiler.measurement.IMAGE, path_feature), \
+            path_feature = '%s_%s' % (cellprofiler_core.measurement.C_PATH_NAME, self.file_image_name.value)
+            assert workspace.measurements.has_feature(cellprofiler_core.measurement.IMAGE, path_feature), \
                 "Image %s does not have a path!" % self.file_image_name.value
             return workspace.measurements.get_current_image_measurement(path_feature)
 
@@ -739,12 +739,12 @@ store images in the subfolder, "*date*\/*plate-name*".""")
 
     def get_measurement_columns(self, pipeline):
         if self.update_file_names.value:
-            return [(cellprofiler.measurement.IMAGE,
+            return [(cellprofiler_core.measurement.IMAGE,
                      self.file_name_feature,
-                     cellprofiler.measurement.COLTYPE_VARCHAR_FILE_NAME),
-                    (cellprofiler.measurement.IMAGE,
+                     cellprofiler_core.measurement.COLTYPE_VARCHAR_FILE_NAME),
+                    (cellprofiler_core.measurement.IMAGE,
                      self.path_name_feature,
-                     cellprofiler.measurement.COLTYPE_VARCHAR_PATH_NAME)]
+                     cellprofiler_core.measurement.COLTYPE_VARCHAR_PATH_NAME)]
         else:
             return []
 
@@ -857,13 +857,13 @@ store images in the subfolder, "*date*\/*plate-name*".""")
             #
             # Make sure that the image name is available on every cycle
             #
-            for setting in cellprofiler.setting.get_name_providers(pipeline,
+            for setting in cellprofiler_core.setting.get_name_providers(pipeline,
                                                                    self.image_name):
-                if setting.provided_attributes.get(cellprofiler.setting.AVAILABLE_ON_LAST_ATTRIBUTE):
+                if setting.provided_attributes.get(cellprofiler_core.setting.AVAILABLE_ON_LAST_ATTRIBUTE):
                     #
                     # If we fell through, then you can only save on the last cycle
                     #
-                    raise cellprofiler.setting.ValidationError("%s is only available after processing all images in an image group" %
+                    raise cellprofiler_core.setting.ValidationError("%s is only available after processing all images in an image group" %
                                                                self.image_name.value,
                                                                self.when_to_save)
 
@@ -877,7 +877,7 @@ store images in the subfolder, "*date*\/*plate-name*".""")
             text_str = self.single_file_name.value if self.file_name_method == FN_SINGLE_NAME else self.file_name_suffix.value
             undefined_tags = pipeline.get_undefined_metadata_tags(text_str)
             if len(undefined_tags) > 0:
-                raise cellprofiler.setting.ValidationError(
+                raise cellprofiler_core.setting.ValidationError(
                         "%s is not a defined metadata tag. Check the metadata specifications in your load modules" %
                         undefined_tags[0],
                         self.single_file_name if self.file_name_method == FN_SINGLE_NAME else self.file_name_suffix)
@@ -886,7 +886,7 @@ store images in the subfolder, "*date*\/*plate-name*".""")
         return True
 
 
-class SaveImagesDirectoryPath(cellprofiler.setting.DirectoryPath):
+class SaveImagesDirectoryPath(cellprofiler_core.setting.Directory):
     '''A specialized version of DirectoryPath to handle saving in the image dir'''
 
     def __init__(self, text, file_image_name, doc):
@@ -897,10 +897,10 @@ class SaveImagesDirectoryPath(cellprofiler.setting.DirectoryPath):
         '''
         super(SaveImagesDirectoryPath, self).__init__(
                 text, dir_choices=[
-                    cellprofiler.setting.DEFAULT_OUTPUT_FOLDER_NAME, cellprofiler.setting.DEFAULT_INPUT_FOLDER_NAME,
-                    PC_WITH_IMAGE, cellprofiler.setting.ABSOLUTE_FOLDER_NAME,
-                    cellprofiler.setting.DEFAULT_OUTPUT_SUBFOLDER_NAME,
-                    cellprofiler.setting.DEFAULT_INPUT_SUBFOLDER_NAME], doc=doc)
+                    cellprofiler_core.setting.DEFAULT_OUTPUT_FOLDER_NAME, cellprofiler_core.setting.DEFAULT_INPUT_FOLDER_NAME,
+                    PC_WITH_IMAGE, cellprofiler_core.setting.ABSOLUTE_FOLDER_NAME,
+                    cellprofiler_core.setting.DEFAULT_OUTPUT_SUBFOLDER_NAME,
+                    cellprofiler_core.setting.DEFAULT_INPUT_SUBFOLDER_NAME], doc=doc)
         self.file_image_name = file_image_name
 
     def get_absolute_path(self, measurements=None, image_set_index=None):
@@ -912,5 +912,5 @@ class SaveImagesDirectoryPath(cellprofiler.setting.DirectoryPath):
 
     def test_valid(self, pipeline):
         if self.dir_choice not in self.dir_choices:
-            raise cellprofiler.setting.ValidationError("%s is not a valid directory option" %
+            raise cellprofiler_core.setting.ValidationError("%s is not a valid directory option" %
                                                        self.dir_choice, self)

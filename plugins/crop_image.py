@@ -10,10 +10,10 @@ import numpy as np
 
 logger = logging.getLogger(__name__)
 
-import cellprofiler.module as cpm
-import cellprofiler.image as cpi
-import cellprofiler.setting as cps
-import cellprofiler.measurement as cpmeas
+import cellprofiler_core.module as cpm
+import cellprofiler_core.image as cpi
+import cellprofiler_core.setting as cps
+import cellprofiler_core.measurement as cpmeas
 
 import hashlib
 
@@ -35,21 +35,21 @@ class Crop(cpm.Module):
     module_name = "Crop bb"
 
     def create_settings(self):
-        self.image_name = cps.ImageNameSubscriber(
+        self.image_name = cps.subscriber.ImageSubscriber(
             "Select the input image",
-            cps.NONE,
+            "None",
             doc="""
             Select the image to be resized.""",
         )
 
-        self.cropped_image_name = cps.ImageNameProvider(
+        self.cropped_image_name = cps.text.ImageName(
             "Name the output image",
             "CroppedImage",
             doc="""
             Enter the name of the cropped image.""",
         )
 
-        self.crop_random = cps.Choice(
+        self.crop_random = cps.choice.Choice(
             "Crop random or specified section?", [C_RANDOM, C_SPECIFIC, C_SEED_METADATA]
         )
 
@@ -103,7 +103,7 @@ class Crop(cpm.Module):
             self.additional_images, "Additional image count"
         )
 
-        self.add_button = cps.DoSomething("", "Add another image", self.add_image)
+        self.add_button = cps.do_something.DoSomething("", "Add another image", self.add_image)
 
     def add_image(self, can_remove=True):
         """Add an image + associated questions and buttons"""
@@ -113,9 +113,9 @@ class Crop(cpm.Module):
 
         group.append(
             "input_image_name",
-            cps.ImageNameSubscriber(
+            cps.subscriber.ImageSubscriber(
                 "Select the additional image?",
-                cps.NONE,
+                "None",
                 doc="""
                                             What is the name of the additional image to resize? This image will be
                                             resized with the same settings as the first image.""",
@@ -123,7 +123,7 @@ class Crop(cpm.Module):
         )
         group.append(
             "output_image_name",
-            cps.ImageNameProvider(
+            cps.text.ImageName(
                 "Name the output image",
                 "CroppedImage2",
                 doc="""
@@ -133,7 +133,7 @@ class Crop(cpm.Module):
         if can_remove:
             group.append(
                 "remover",
-                cps.RemoveSettingButton(
+                cps.do_something.RemoveSettingButton(
                     "", "Remove above image", self.additional_images, group
                 ),
             )

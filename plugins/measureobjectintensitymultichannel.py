@@ -7,12 +7,12 @@ import numpy
 import scipy.ndimage
 import skimage.segmentation
 
-import cellprofiler.measurement
-import cellprofiler.module
-import cellprofiler.object
-import cellprofiler.setting
-from cellprofiler.modules import identify
-from cellprofiler.modules import _help
+import cellprofiler_core.measurement
+import cellprofiler_core.module
+import cellprofiler_core.object
+import cellprofiler_core.setting
+from cellprofiler_core.modules import identify
+from cellprofiler_core.modules import _help
 
 __doc__ = """
 MeasureObjectIntensity
@@ -135,7 +135,7 @@ ALL_LOCATION_MEASUREMENTS = [
 ]
 
 
-class MeasureObjectIntensity(cellprofiler.module.Module):
+class MeasureObjectIntensity(cellprofiler_core.module.Module):
     module_name = "MeasureObjectIntensity Multichannel"
     variable_revision_number = 1
     category = "Measurement"
@@ -143,14 +143,14 @@ class MeasureObjectIntensity(cellprofiler.module.Module):
     def create_settings(self):
         self.images = []
         self.add_image(can_remove=False)
-        self.image_count = cellprofiler.setting.HiddenCount(self.images)
-        self.add_image_button = cellprofiler.setting.DoSomething(
+        self.image_count = cellprofiler_core.setting.HiddenCount(self.images)
+        self.add_image_button = cellprofiler_core.setting.DoSomething(
             "", "Add another image", self.add_image
         )
-        self.divider = cellprofiler.setting.Divider()
+        self.divider = cellprofiler_core.setting.Divider()
         self.objects = []
         self.add_object(can_remove=False)
-        self.add_object_button = cellprofiler.setting.DoSomething(
+        self.add_object_button = cellprofiler_core.setting.DoSomething(
             "", "Add another object", self.add_object
         )
 
@@ -160,21 +160,21 @@ class MeasureObjectIntensity(cellprofiler.module.Module):
         can_delete - set this to False to keep from showing the "remove"
                      button for images that must be present.
         """
-        group = cellprofiler.setting.SettingsGroup()
+        group = cellprofiler_core.setting.SettingsGroup()
         if can_remove:
-            group.append("divider", cellprofiler.setting.Divider(line=False))
+            group.append("divider", cellprofiler_core.setting.Divider(line=False))
         group.append(
             "name",
-            cellprofiler.setting.ImageNameSubscriber(
+            cellprofiler_core.setting.ImageNameSubscriber(
                 "Select an image to measure",
-                cellprofiler.setting.NONE,
+                "None",
                 doc="""\
 Select the grayscale images whose intensity you want to measure.""",
             ),
         )
         group.append(
             "nchannels",
-            cellprofiler.setting.Integer(
+            cellprofiler_core.setting.Integer(
                 "Number of channels",
                 1,
                 minval=1,
@@ -185,7 +185,7 @@ Select the grayscale images whose intensity you want to measure.""",
         if can_remove:
             group.append(
                 "remover",
-                cellprofiler.setting.RemoveSettingButton(
+                cellprofiler_core.setting.RemoveSettingButton(
                     "", "Remove this image", self.images, group
                 ),
             )
@@ -197,14 +197,14 @@ Select the grayscale images whose intensity you want to measure.""",
         can_delete - set this to False to keep from showing the "remove"
                      button for images that must be present.
         """
-        group = cellprofiler.setting.SettingsGroup()
+        group = cellprofiler_core.setting.SettingsGroup()
         if can_remove:
-            group.append("divider", cellprofiler.setting.Divider(line=False))
+            group.append("divider", cellprofiler_core.setting.Divider(line=False))
         group.append(
             "name",
-            cellprofiler.setting.ObjectNameSubscriber(
+            cellprofiler_core.setting.subscriber.LabelSubscriber(
                 "Select objects to measure",
-                cellprofiler.setting.NONE,
+                "None",
                 doc="""\
 Select the objects whose intensities you want to measure.""",
             ),
@@ -213,7 +213,7 @@ Select the objects whose intensities you want to measure.""",
         if can_remove:
             group.append(
                 "remover",
-                cellprofiler.setting.RemoveSettingButton(
+                cellprofiler_core.setting.RemoveSettingButton(
                     "", "Remove this object", self.objects, group
                 ),
             )
@@ -270,7 +270,7 @@ Select the objects whose intensities you want to measure.""",
         takes a variable number of images or objects can increase or decrease
         the number of relevant settings so they map correctly to the values.
 
-        See cellprofiler.modules.measureobjectsizeshape for an example.
+        See cellprofiler_core.modules.measureobjectsizeshape for an example.
         """
         #
         # The settings have two parts - images, then objects
@@ -290,7 +290,7 @@ Select the objects whose intensities you want to measure.""",
         images = set()
         for group in self.images:
             if group.name.value in images:
-                raise cellprofiler.setting.ValidationError(
+                raise cellprofiler_core.setting.ValidationError(
                     "%s has already been selected" % group.name.value, group.name
                 )
             images.add(group.name.value)
@@ -298,7 +298,7 @@ Select the objects whose intensities you want to measure.""",
         objects = set()
         for group in self.objects:
             if group.name.value in objects:
-                raise cellprofiler.setting.ValidationError(
+                raise cellprofiler_core.setting.ValidationError(
                     "%s has already been selected" % group.name.value, group.name
                 )
             objects.add(group.name.value)
@@ -313,7 +313,7 @@ Select the objects whose intensities you want to measure.""",
                     for category, features in (
                         (INTENSITY, ALL_MEASUREMENTS),
                         (
-                            cellprofiler.measurement.C_LOCATION,
+                            cellprofiler_core.measurement.C_LOCATION,
                             ALL_LOCATION_MEASUREMENTS,
                         ),
                     ):
@@ -328,7 +328,7 @@ Select the objects whose intensities you want to measure.""",
                                         image_name.value,
                                         str(channel + 1),
                                     ),
-                                    cellprofiler.measurement.COLTYPE_FLOAT,
+                                    cellprofiler_core.measurement.COLTYPE_FLOAT,
                                 )
                             )
 
@@ -343,12 +343,12 @@ Select the objects whose intensities you want to measure.""",
         """
         for object_name_variable in [obj.name for obj in self.objects]:
             if object_name_variable.value == object_name:
-                return [INTENSITY, cellprofiler.measurement.C_LOCATION]
+                return [INTENSITY, cellprofiler_core.measurement.C_LOCATION]
         return []
 
     def get_measurements(self, pipeline, object_name, category):
         """Get the measurements made on the given object in the given category"""
-        if category == cellprofiler.measurement.C_LOCATION:
+        if category == cellprofiler_core.measurement.C_LOCATION:
             all_measurements = ALL_LOCATION_MEASUREMENTS
         elif category == INTENSITY:
             all_measurements = ALL_MEASUREMENTS
@@ -364,7 +364,7 @@ Select the objects whose intensities you want to measure.""",
         if category == INTENSITY:
             if measurement not in ALL_MEASUREMENTS:
                 return []
-        elif category == cellprofiler.measurement.C_LOCATION:
+        elif category == cellprofiler_core.measurement.C_LOCATION:
             if measurement not in ALL_LOCATION_MEASUREMENTS:
                 return []
         else:
@@ -441,10 +441,10 @@ Select the objects whose intensities you want to measure.""",
                         if image.dimensions == 2:
                             labels = labels.reshape(1, *labels.shape)
 
-                        labels, img = cellprofiler.object.crop_labels_and_image(
+                        labels, img = cellprofiler_core.object.crop_labels_and_image(
                             labels, img
                         )
-                        _, masked_image = cellprofiler.object.crop_labels_and_image(
+                        _, masked_image = cellprofiler_core.object.crop_labels_and_image(
                             labels, masked_image
                         )
                         outlines = skimage.segmentation.find_boundaries(
@@ -452,7 +452,7 @@ Select the objects whose intensities you want to measure.""",
                         )
 
                         if image.has_mask:
-                            _, mask = cellprofiler.object.crop_labels_and_image(
+                            _, mask = cellprofiler_core.object.crop_labels_and_image(
                                 labels, image_mask
                             )
                             masked_labels = labels.copy()
@@ -697,12 +697,12 @@ Select the objects whose intensities you want to measure.""",
                         (INTENSITY, MEDIAN_INTENSITY, median_intensity),
                         (INTENSITY, MAD_INTENSITY, mad_intensity),
                         (INTENSITY, UPPER_QUARTILE_INTENSITY, upper_quartile_intensity),
-                        (cellprofiler.measurement.C_LOCATION, LOC_CMI_X, cmi_x),
-                        (cellprofiler.measurement.C_LOCATION, LOC_CMI_Y, cmi_y),
-                        (cellprofiler.measurement.C_LOCATION, LOC_CMI_Z, cmi_z),
-                        (cellprofiler.measurement.C_LOCATION, LOC_MAX_X, max_x),
-                        (cellprofiler.measurement.C_LOCATION, LOC_MAX_Y, max_y),
-                        (cellprofiler.measurement.C_LOCATION, LOC_MAX_Z, max_z),
+                        (cellprofiler_core.measurement.C_LOCATION, LOC_CMI_X, cmi_x),
+                        (cellprofiler_core.measurement.C_LOCATION, LOC_CMI_Y, cmi_y),
+                        (cellprofiler_core.measurement.C_LOCATION, LOC_CMI_Z, cmi_z),
+                        (cellprofiler_core.measurement.C_LOCATION, LOC_MAX_X, max_x),
+                        (cellprofiler_core.measurement.C_LOCATION, LOC_MAX_Y, max_y),
+                        (cellprofiler_core.measurement.C_LOCATION, LOC_MAX_Z, max_z),
                     ):
                         measurement_name = "%s_%s_%s_c%s" % (
                             category,
