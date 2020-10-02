@@ -29,7 +29,7 @@ C_W = "Width of cropped section"
 S_ADDITIONAL_IMAGE_COUNT = 8
 
 
-class Crop(cpm.Module):
+class CropImage(cpm.Module):
     category = "Image Processing"
     variable_revision_number = 4
     module_name = "Crop bb"
@@ -53,39 +53,39 @@ class Crop(cpm.Module):
             "Crop random or specified section?", [C_RANDOM, C_SPECIFIC, C_SEED_METADATA]
         )
 
-        self.crop_x = cps.Text(
+        self.crop_x = cps.text.number.integer.Integer(
             "X of upper left corner",
-            "0",
+            0,
             doc="""
             X position.""",
             metadata=True,
         )
 
-        self.crop_y = cps.Text(
+        self.crop_y = cps.text.number.integer.Integer(
             "Y of upper left corner",
-            "0",
+            0,
             doc="""
             Y position.""",
             metadata=True,
         )
 
-        self.crop_w = cps.Text(
+        self.crop_w = cps.text.number.integer.Integer(
             "W width",
-            "100",
+            100,
             doc="""
             Width of cut.""",
             metadata=True,
         )
 
-        self.crop_h = cps.Text(
+        self.crop_h = cps.text.number.integer.Integer(
             "H height",
-            "100",
+            100,
             doc="""
             Height of cut.""",
             metadata=True,
         )
 
-        self.seed_metadata = cps.Text(
+        self.seed_metadata = cps.text.Text(
             "Optional Random Seed",
             "",
             doc="""

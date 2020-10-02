@@ -56,7 +56,7 @@ class CorrectSpilloverMeasurements(cpm.Module):
             to be spillover corrected""",
         )
 
-        corrected_compmeasurement_suffix = cps.AlphanumericText(
+        corrected_compmeasurement_suffix = cps.text.alphanumeric.Alphanumeric(
             "Name the output compmeasurement suffix",
             "Corrected",
             doc="""

@@ -52,7 +52,7 @@ class MaskToBinstack(cpm.Module):
         self.main_object_def = cps.choice.Choice(
             "How should the main label be determined?",
                 [SEL_MID, SEL_MAXAREA, SEL_PROVIDED],
-                SEL_MID, doc="""
+                SEL_MID, doc=r"""
             The main object can be determined by 3 ways:
             <ul>
             <li> %(SEL_PROVIDED)s: Label provided by metadata or
@@ -64,9 +64,9 @@ class MaskToBinstack(cpm.Module):
             <\ul>
             """ % globals())
 
-        self.main_object_id = cps.Text(
+        self.main_object_id = cps.text.number.integer.Integer(
                 "Indicate the object id",
-                '1',
+                1,
                 doc="""
                 Indicates the id from the main object.
                 Rightclick to choose a metadata value.
@@ -191,6 +191,5 @@ class MaskToBinstack(cpm.Module):
     def upgrade_settings(self,
                          setting_values,
                          variable_revision_number,
-                         module_name,
-                         from_matlab):
+                         module_name):
         return setting_values, variable_revision_number
