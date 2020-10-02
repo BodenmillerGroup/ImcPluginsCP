@@ -29,6 +29,7 @@ See also **GrayToColor**.
 """
 
 import re
+import numbers
 
 import matplotlib.colors
 import numpy as np
@@ -39,6 +40,7 @@ from cellprofiler_core.module import Module
 
 YES = "Yes"
 NO = "No"
+NONE = 'None'
 
 COMBINE = "Combine"
 SPLIT = "Split"
@@ -62,7 +64,7 @@ class ColorToGray(Module):
     def create_settings(self):
         self.image_name = cps.subscriber.ImageSubscriber(
             "Select the input image",
-            cps.NONE,
+            NONE,
             doc="""Select the multichannel image you want to convert to grayscale.""",
         )
 
@@ -255,7 +257,7 @@ saturation will be ignored.
 Enter a name for the resulting grayscale image coming from the saturation.""",
         )
 
-        self.use_value = cps.subscriber.Binary(
+        self.use_value = cps.Binary(
             "Convert value to gray?",
             True,
             doc="""\
@@ -316,7 +318,7 @@ example, “5” for a three-channel .PNG file.""",
 
         group.append(
             "contribution",
-            cps.Float(
+            cps.text.Float(
                 "Relative weight of the channel",
                 1,
                 0,
@@ -331,7 +333,7 @@ other, increase or decrease the relative weights.""",
 
         group.append(
             "image_name",
-            cps.ImageNameProvider(
+            cps.text.ImageName(
                 "Image name",
                 value="Channel%d" % (len(self.channels) + 1),
                 doc="""\
@@ -344,7 +346,7 @@ Select the name of the output grayscale image.""",
         if group.can_remove:
             group.append(
                 "remover",
-                cps.RemoveSettingButton(
+                cps.do_something.RemoveSettingButton(
                     "", "Remove this channel", self.channels, group
                 ),
             )
@@ -474,10 +476,9 @@ Select the name of the output grayscale image.""",
                     )
                 )
             ]
-
         return [
             (
-                self.channel_names.index(channel.channel_choice),
+                self.get_channel_idx_from_choice(channel.channel_choice.value),
                 channel.contribution.value,
             )
             for channel in self.channels
@@ -491,7 +492,10 @@ Select the name of the output grayscale image.""",
                  (string ending in a one-based index)
         returns the zero-based index of the channel.
         """
-        return int(re.search("[0-9]+$", choice).group()) - 1
+        if isinstance(choice, numbers.Integral):
+            return choice - 1
+        else:
+            return int(re.search("[0-9]+$", choice).group()) - 1
 
     def channels_and_image_names(self):
         """Return tuples of channel indexes and the image names for output"""
