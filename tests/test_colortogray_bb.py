@@ -1,6 +1,5 @@
 import numpy
 import pytest
-import six.moves
 import io
 
 import cellprofiler_core.image
@@ -16,9 +15,8 @@ IMAGE_NAME = "image"
 OUTPUT_IMAGE_F = "outputimage%d"
 
 import cellprofiler.modules.colortogray
-import plugins.colortograybb as colortogray
-cpmodules.fill_modules()
-cpmodules.add_module_for_tst(colortogray.ColorToGray)
+import plugins.colortograybb as colortograybb
+
 def get_my_image():
     """A color image with red in the upper left, green in the lower left and blue in the upper right"""
     img = numpy.zeros((50, 50, 3))
@@ -29,14 +27,14 @@ def get_my_image():
 
 
 def test_init():
-    x = colortogray.ColorToGray()
+    x = colortograybb.ColorToGrayBB()
 
 
 def test_combine():
     img = get_my_image()
     inj = cellprofiler_core.modules.injectimage.InjectImage("my_image", img)
     inj.set_module_num(1)
-    ctg = colortogray.ColorToGray()
+    ctg = colortograybb.ColorToGrayBB()
     ctg.set_module_num(2)
     ctg.image_name.value = "my_image"
     ctg.combine_or_split.value = cellprofiler.modules.colortogray.COMBINE
@@ -81,7 +79,7 @@ def test_split_all():
     img = get_my_image()
     inj = cellprofiler_core.modules.injectimage.InjectImage("my_image", img)
     inj.set_module_num(1)
-    ctg = colortogray.ColorToGray()
+    ctg = colortograybb.ColorToGrayBB()
     ctg.set_module_num(2)
     ctg.image_name.value = "my_image"
     ctg.combine_or_split.value = cellprofiler.modules.colortogray.SPLIT
@@ -145,7 +143,7 @@ def test_combine_channels():
     image_set = image_set_list.get_image_set(0)
     image_set.add(IMAGE_NAME, cellprofiler_core.image.Image(image))
 
-    module = colortogray.ColorToGray()
+    module = colortograybb.ColorToGrayBB()
     module.set_module_num(1)
     module.image_name.value = IMAGE_NAME
     module.combine_or_split.value = cellprofiler.modules.colortogray.COMBINE
@@ -192,7 +190,7 @@ def test_split_channels():
     image_set = image_set_list.get_image_set(0)
     image_set.add(IMAGE_NAME, cellprofiler_core.image.Image(image))
 
-    module = colortogray.ColorToGray()
+    module = colortograybb.ColorToGrayBB()
     module.set_module_num(1)
     module.image_name.value = IMAGE_NAME
     module.combine_or_split.value = cellprofiler.modules.colortogray.SPLIT
@@ -267,8 +265,8 @@ def test_old_color2gray():
     """
     pipeline = cellprofiler_core.pipeline.Pipeline()
     cpmodules.fill_modules()
-    cpmodules.add_module_for_tst(colortogray.ColorToGray)
+    cpmodules.add_module_for_tst(colortograybb.ColorToGrayBB)
     pipeline.load(io.StringIO(data))
     assert len(pipeline.modules()) == 1
     smooth = pipeline.modules()[0]
-    assert isinstance(smooth, colortogray.ColorToGray)
+    assert isinstance(smooth, colortograybb.ColorToGrayBB)
