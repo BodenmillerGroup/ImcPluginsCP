@@ -328,13 +328,13 @@ class Crop(cpm.Module):
         return meas
 
     def upgrade_settings(
-        self, setting_values, variable_revision_number, module_name, from_matlab
+        self, setting_values, variable_revision_number, module_name
     ):
         if variable_revision_number < 3:
             setting_values = setting_values[:7] + [""] + setting_values[7:]
             variable_revision_number = 3
 
-        return setting_values, variable_revision_number, from_matlab
+        return setting_values, variable_revision_number
 
     # functions
     @staticmethod

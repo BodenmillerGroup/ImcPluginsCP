@@ -714,14 +714,14 @@ class SaveObjectCrops(cpm.Module):
             return BIT_DEPTH_8
 
     def upgrade_settings(
-        self, setting_values, variable_revision_number, module_name, from_matlab
+        self, setting_values, variable_revision_number, module_name
     ):
         """Adjust the setting values to be backwards-compatible with old versions"""
         if variable_revision_number < 2:
             setting_values = [IF_IMAGE, cps.NONE] + setting_values
         if variable_revision_number < 3:
             setting_values[11] = BIT_DEPTH_FLOAT
-        return setting_values, variable_revision_number, from_matlab
+        return setting_values, variable_revision_number
 
     def validate_module(self, pipeline):
         # if (self.save_image_or_figure in (IF_IMAGE, IF_MASK, IF_CROPPING) and

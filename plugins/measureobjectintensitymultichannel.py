@@ -237,7 +237,7 @@ Select the objects whose intensities you want to measure.""",
         return result
 
     def upgrade_settings(
-        self, setting_values, variable_revision_number, module_name, from_matlab
+        self, setting_values, variable_revision_number, module_name
     ):
         """Adjust setting values if they came from a previous revision
 
@@ -258,7 +258,7 @@ Select the objects whose intensities you want to measure.""",
         they should leave things as-is so that the caller can report
         an error.
         """
-        return setting_values, variable_revision_number, from_matlab
+        return setting_values, variable_revision_number
 
     def prepare_settings(self, setting_values):
         """Do any sort of adjustment to the settings required for the given values

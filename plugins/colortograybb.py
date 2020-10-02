@@ -643,61 +643,7 @@ Select the name of the output grayscale image.""",
             self.add_channel()
 
     def upgrade_settings(
-        self, setting_values, variable_revision_number, module_name, from_matlab
+        self, setting_values, variable_revision_number, module_name
     ):
-        if from_matlab and variable_revision_number == 1:
-            new_setting_values = [
-                setting_values[0],  # image name
-                setting_values[1],  # combine or split
-                # blank slot for text: "Combine options"
-                setting_values[3],  # grayscale name
-                setting_values[4],  # red contribution
-                setting_values[5],  # green contribution
-                setting_values[6]  # blue contribution
-                # blank slot for text: "Split options"
-            ]
-            for i in range(3):
-                vv = setting_values[i + 8]
-                use_it = ((vv == cps.DO_NOT_USE or vv == "N") and cps.NO) or cps.YES
-                new_setting_values.append(use_it)
-                new_setting_values.append(vv)
-            setting_values = new_setting_values
-            module_name = self.module_class()
-            variable_revision_number = 1
-            from_matlab = False
 
-        if not from_matlab and variable_revision_number == 1:
-            #
-            # Added rgb_or_channels at position # 2, added channel count
-            # at end.
-            #
-            setting_values = (
-                setting_values[:2]
-                + [CH_RGB]
-                + setting_values[2:]
-                + ["1", "Red: 1", "1", "Channel1"]
-            )
-            variable_revision_number = 2
-
-        if not from_matlab and variable_revision_number == 2:
-            #
-            # Added HSV settings
-            #
-            setting_values = (
-                setting_values[:13]
-                + [cps.YES, "OrigHue", cps.YES, "OrigSaturation", cps.YES, "OrigValue"]
-                + setting_values[13:]
-            )
-            variable_revision_number = 3
-
-        #
-        # Standardize the channel choices
-        #
-        setting_values = list(setting_values)
-        nchannels = int(setting_values[SLOT_CHANNEL_COUNT])
-        for i in range(nchannels):
-            idx = SLOT_FIXED_COUNT + SLOT_CHANNEL_CHOICE + i * SLOTS_PER_CHANNEL
-            channel_idx = self.get_channel_idx_from_choice(setting_values[idx])
-            setting_values[idx] = self.channel_names[channel_idx]
-
-        return setting_values, variable_revision_number, from_matlab
+        return setting_values, variable_revision_number

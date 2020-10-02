@@ -267,13 +267,13 @@ example, if one wants to set a threshold of 100 counts, a value of either
         ]
 
     def upgrade_settings(
-        self, setting_values, variable_revision_number, module_name, from_matlab
+        self, setting_values, variable_revision_number, module_name
     ):
         if variable_revision_number < 2:
             setting_values += [3, 20]  # hp_filter_size, hp_threshold
         if variable_revision_number < 4:
             setting_values.append(NO)  # scale_hp_threshold
-        return setting_values, variable_revision_number, from_matlab
+        return setting_values, variable_revision_number
 
     def visible_settings(self):
         result = [self.image_name, self.filtered_image_name, self.smoothing_method]

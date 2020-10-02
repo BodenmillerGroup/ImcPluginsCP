@@ -340,7 +340,7 @@ class CorrectSpilloverMeasurements(cpm.Module):
         pass
 
     def upgrade_settings(
-        self, setting_values, variable_revision_number, module_name, from_matlab
+        self, setting_values, variable_revision_number, module_name
     ):
         """Adjust settings based on revision # of save file
 
@@ -353,4 +353,4 @@ class CorrectSpilloverMeasurements(cpm.Module):
 
         returns the updated setting_values, revision # and matlab flag
         """
-        return setting_values, variable_revision_number, from_matlab
+        return setting_values, variable_revision_number

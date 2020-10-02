@@ -802,8 +802,8 @@ store images in the subfolder, "*date*\/*plate-name*".""")
         else:
             return BIT_DEPTH_8
 
-    def upgrade_settings(self, setting_values, variable_revision_number, module_name, from_matlab):
-        return setting_values, variable_revision_number, False
+    def upgrade_settings(self, setting_values, variable_revision_number, module_name):
+        return setting_values, variable_revision_number
 
     def validate_module(self, pipeline):
         if (self.save_image_or_figure in (IF_IMAGE, IF_MASK, IF_CROPPING) and

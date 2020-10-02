@@ -193,4 +193,4 @@ class MaskToBinstack(cpm.Module):
                          variable_revision_number,
                          module_name,
                          from_matlab):
-        return setting_values, variable_revision_number, from_matlab
+        return setting_values, variable_revision_number

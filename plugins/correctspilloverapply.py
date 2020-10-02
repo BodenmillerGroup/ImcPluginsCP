@@ -281,7 +281,7 @@ class CorrectSpilloverApply(cpm.Module):
             )
 
     def upgrade_settings(
-        self, setting_values, variable_revision_number, module_name, from_matlab
+        self, setting_values, variable_revision_number, module_name
     ):
         """Adjust settings based on revision # of save file
 
@@ -303,4 +303,4 @@ class CorrectSpilloverApply(cpm.Module):
                 for i in range(n_images)
             ][0]
             variable_revision_number = +1
-        return setting_values, variable_revision_number, from_matlab
+        return setting_values, variable_revision_number
