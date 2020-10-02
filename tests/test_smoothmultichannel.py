@@ -63,6 +63,8 @@ def test_01_03_load_v02():
 
     """
     pipeline = cpp.Pipeline()
+    cpmodules.fill_modules()
+    cpmodules.add_module_for_tst(S.SmoothMultichannel)
     pipeline.load(io.StringIO(data))
     assert len(pipeline.modules()) == 1
     smooth = pipeline.modules()[0]
