@@ -36,7 +36,12 @@ from scipy import ndimage
 import cellprofiler_core.image as cpi
 import cellprofiler_core.module as cpm
 import cellprofiler_core.setting as cps
+import cellprofiler_core.setting.choice
 
+from cellprofiler_core.constants.module import (
+    HELP_ON_MEASURING_DISTANCES,
+    HELP_ON_PIXEL_INTENSITIES,
+)
 FIT_POLYNOMIAL = "Fit Polynomial"
 MEDIAN_FILTER = "Median Filter"
 MEDIAN_FILTER_SCIPY = "Median Filter Scipy"
@@ -51,7 +56,7 @@ YES, NO, NONE = "yes", "no", "None"
 class SmoothMultichannel(cpm.Module):
     module_name = "Smooth Multichannel"
     category = "Image Processing"
-    variable_revision_number = 5
+    variable_revision_number = 6
 
     def create_settings(self):
         self.image_name = cps.subscriber.ImageSubscriber(
