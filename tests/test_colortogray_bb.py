@@ -28,14 +28,14 @@ def get_my_image():
 
 
 def test_init():
-    x = colortograybb.ColorToGrayBB()
+    x = colortograybb.Deprecated_ColorToGrayBB()
 
 
 def test_combine():
     img = get_my_image()
     inj = cellprofiler_core.modules.injectimage.InjectImage("my_image", img)
     inj.set_module_num(1)
-    ctg = colortograybb.ColorToGrayBB()
+    ctg = colortograybb.Deprecated_ColorToGrayBB()
     ctg.set_module_num(2)
     ctg.image_name.value = "my_image"
     ctg.combine_or_split.value = cellprofiler.modules.colortogray.COMBINE
@@ -80,7 +80,7 @@ def test_split_all():
     img = get_my_image()
     inj = cellprofiler_core.modules.injectimage.InjectImage("my_image", img)
     inj.set_module_num(1)
-    ctg = colortograybb.ColorToGrayBB()
+    ctg = colortograybb.Deprecated_ColorToGrayBB()
     ctg.set_module_num(2)
     ctg.image_name.value = "my_image"
     ctg.combine_or_split.value = cellprofiler.modules.colortogray.SPLIT
@@ -144,7 +144,7 @@ def test_combine_channels():
     image_set = image_set_list.get_image_set(0)
     image_set.add(IMAGE_NAME, cellprofiler_core.image.Image(image))
 
-    module = colortograybb.ColorToGrayBB()
+    module = colortograybb.Deprecated_ColorToGrayBB()
     module.set_module_num(1)
     module.image_name.value = IMAGE_NAME
     module.combine_or_split.value = cellprofiler.modules.colortogray.COMBINE
@@ -191,7 +191,7 @@ def test_split_channels():
     image_set = image_set_list.get_image_set(0)
     image_set.add(IMAGE_NAME, cellprofiler_core.image.Image(image))
 
-    module = colortograybb.ColorToGrayBB()
+    module = colortograybb.Deprecated_ColorToGrayBB()
     module.set_module_num(1)
     module.image_name.value = IMAGE_NAME
     module.combine_or_split.value = cellprofiler.modules.colortogray.SPLIT
@@ -267,8 +267,8 @@ def test_old_color2gray():
     """
     pipeline = cellprofiler_core.pipeline.Pipeline()
     cpmodules.fill_modules()
-    cpmodules.add_module_for_tst(colortograybb.ColorToGrayBB)
+    cpmodules.add_module_for_tst(colortograybb.Deprecated_ColorToGrayBB)
     pipeline.load(io.StringIO(data))
     assert len(pipeline.modules()) == 1
     smooth = pipeline.modules()[0]
-    assert isinstance(smooth, colortograybb.ColorToGrayBB)
+    assert isinstance(smooth, colortograybb.Deprecated_ColorToGrayBB)
