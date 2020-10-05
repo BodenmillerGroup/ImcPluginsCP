@@ -16,6 +16,7 @@ from cellprofiler_core.utilities.core.module.identify import (
     add_object_count_measurements,
     add_object_location_measurements,
     get_object_measurement_columns)
+from cellprofiler_core.setting import HTMLText
 
 YES, NO = "Yes", "No"
 O_UPSCALE = "Upscale objects with a scaling factor"

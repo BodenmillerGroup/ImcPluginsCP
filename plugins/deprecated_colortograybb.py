@@ -50,9 +50,10 @@ SLOT_CHANNEL_CHOICE = 0
 from cellprofiler_core.setting import HTMLText
 
 DEPRECATION_STRING = """
-                The ColorToGray bb module is deprecated.
+                The ColorToGray bb module is deprecated as the
+                functionality is now integrated into the default ColorToGray.\n
                 If you save and reopen this pipeline it will automatically migrated
-                to the standard ColorToGray module.
+                to the standard ColorToGray module.\n
                 This module will be removed with the next major ImcPluginsCP release!
                 """
 
