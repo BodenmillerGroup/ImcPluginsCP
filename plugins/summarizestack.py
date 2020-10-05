@@ -1,11 +1,5 @@
 """
 <b>Summarize Stack</b> converts an image with multiple channels to one image by averaging over the pixel values.
-<hr>
-
-
-<br>
-<i>Note:</i>All <b>Identify</b> modules require grayscale images.
-<p>See also <b>GrayToColor</b>.
 """
 
 import re
@@ -28,9 +22,9 @@ SLOTS_PER_CHANNEL = 3
 SLOT_CHANNEL_CHOICE = 0
 
 
-class ColorToGray(cpm.Module):
-    module_name = "Summarize Stack"
-    variable_revision_number = 0
+class SummarizeStack(cpm.Module):
+    module_name = "SummarizeStack"
+    variable_revision_number = 1
     category = "Image Processing"
 
     def create_settings(self):
@@ -51,7 +45,7 @@ class ColorToGray(cpm.Module):
             % globals(),
         )
 
-        self.custom_function = cps.Text(
+        self.custom_function = cps.text.Text(
             "Input a Python function",
             "np.mean",
             doc="""
