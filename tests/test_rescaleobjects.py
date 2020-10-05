@@ -18,4 +18,4 @@ import plugins.deprecated_rescaleobjects as rescaleobjects
 
 
 def test_init():
-    x = rescaleobjects.RescaleObjects()
+    x = rescaleobjects.Deprecated_RescaleObjects()

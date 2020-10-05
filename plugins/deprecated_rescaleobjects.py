@@ -1,4 +1,4 @@
-"""<b>RescaleObjects</b> rescale objects by a defined distance.
+"""<b>Deprecated_RescaleObjects</b> rescale objects by a defined distance.
 x"""
 
 import numpy as np
@@ -34,8 +34,8 @@ DEPRECATION_STRING = """
                 This module will be removed with the next major ImcPluginsCP release!
                 """
 
-class RescaleObjects(cpm.Module):
-    module_name = "RescaleObjects"
+class Deprecated_RescaleObjects(cpm.Module):
+    module_name = "Deprecated_RescaleObjects"
     category = "Object Processing"
     variable_revision_number = 1
 
