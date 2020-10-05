@@ -119,9 +119,9 @@ ALL_MEASUREMENTS = [
 
 
 class MeasureImageIntensityMultiChannel(Module):
-    module_name = "MeasureImageIntensity Multichannel"
+    module_name = "MeasureImageIntensityMultichannel"
     category = "Measurement"
-    variable_revision_number = 1
+    variable_revision_number = 3
 
     def create_settings(self):
         """Create the settings & name the module"""
