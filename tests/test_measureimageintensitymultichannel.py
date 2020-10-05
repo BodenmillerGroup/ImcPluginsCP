@@ -264,7 +264,7 @@ def test_image_and_objects_and_mask(image, measurements, module, objects, worksp
     """Test operation on an image masked by objects and a mask"""
     numpy.random.seed(0)
 
-    pixels = numpy.random.uniform(size=(10, 10)).astype(numpy.float32)
+    pixels = numpy.random.uniform(size=(10, 10, N_CHANNELS)).astype(numpy.float32)
 
     mask = numpy.zeros((10, 10), bool)
 
@@ -286,23 +286,25 @@ def test_image_and_objects_and_mask(image, measurements, module, objects, worksp
 
     module.run(workspace)
 
-    assert (
-        measurements.get_current_measurement(
-            "Image", "Intensity_TotalArea_image_objects"
+    for c in range(N_CHANNELS):
+        assert (
+            measurements.get_current_measurement(
+                "Image", f"Intensity_TotalArea_image_objects_c{c+1}"
+            )
+            == 64
         )
-        == 64
-    )
 
-    assert measurements.get_current_measurement(
-        "Image", "Intensity_TotalIntensity_image_objects"
-    ) == numpy.sum(pixels[1:9, 1:9])
+        assert measurements.get_current_measurement(
+            "Image", f"Intensity_TotalIntensity_image_objects_c{c+1}"
 
-    assert (
-        measurements.get_current_measurement(
-            "Image", "Intensity_MeanIntensity_image_objects"
+        ) == numpy.sum(pixels[1:9, 1:9, c])
+
+        assert (
+            measurements.get_current_measurement(
+                "Image", f"Intensity_MeanIntensity_image_objects_c{c+1}"
+            )
+            == numpy.sum(pixels[1:9, 1:9, c]) / 64.0
         )
-        == numpy.sum(pixels[1:9, 1:9]) / 64.0
-    )
 
 
 def test_get_measurement_columns_whole_image_mode(module):
@@ -367,8 +369,8 @@ def test_get_measurement_columns_whole_image_mode(module):
 
             assert any(
                 [
-                    (column[1] == feature_name and column[2] == coltype)
-                    for column in columns
+                    (column[1] == f'{feature_name}_c{c+1}' and column[2] == coltype)
+                     for c in range(N_CHANNELS) for column in columns
                 ]
             )
 
@@ -437,7 +439,8 @@ def test_get_measurement_columns_object_mode(module):
             feature_name = feature % expected_suffix
             assert any(
                 [
-                    (column[1] == feature_name and column[2] == coltype)
+                    (column[1] == f"{feature_name}_c{c+1}" and column[2] == coltype)
+                    for c in range(N_CHANNELS)
                     for column in columns
                 ]
             )
