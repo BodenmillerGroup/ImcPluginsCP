@@ -13,6 +13,7 @@ from cellprofiler_core.setting.subscriber import (
     ImageListSubscriber,
     LabelListSubscriber,
 )
+from cellprofiler_core.setting.text import Integer
 from cellprofiler_core.utilities.core.object import crop_labels_and_image
 
 from cellprofiler.modules import _help
@@ -41,7 +42,7 @@ measurements desired.
 ============ ============ ===============
 Supports 2D? Supports 3D? Respects masks?
 ============ ============ ===============
-YES          YES          YES
+YES          NO           YES
 ============ ============ ===============
 
 See also
@@ -214,7 +215,7 @@ class MeasureObjectIntensityMultichannel(Module):
         """Return the column definitions for measurements made by this module"""
         columns = []
         for image_name in self.images_list.value:
-            for channel in range(self.nchannels):
+            for channel in range(self.nchannels.value):
                 for object_name in self.objects_list.value:
                     for category, features in (
                         (INTENSITY, ALL_MEASUREMENTS),
@@ -297,6 +298,7 @@ class MeasureObjectIntensityMultichannel(Module):
                     img_channels = 1
                 else:
                     img_channels = img.shape[2]
+
                 if img_channels != nchannels:
                     raise ValueError(
                     f"""
@@ -308,6 +310,9 @@ class MeasureObjectIntensityMultichannel(Module):
                     )
                 for object_name in self.objects_list.value:
                     if object_name not in workspace.object_set.object_names:
+                        raise ValueError(
+                            "The %s objects are missing from the pipeline." % object_name
+                        )
                     # Need to refresh image after each iteration...
                     if nchannels == 1:
                         img = img.squeeze()
@@ -593,7 +598,7 @@ class MeasureObjectIntensityMultichannel(Module):
                         (C_LOCATION, LOC_MAX_Y, max_y),
                         (C_LOCATION, LOC_MAX_Z, max_z),
                     ):
-                        measurement_name = "{}_{}_{}_{}".format(
+                        measurement_name = "{}_{}_{}_c{}".format(
                             category, feature_name, image_name, channel+1
                         )
                         m.add_measurement(object_name, measurement_name, measurement)
@@ -621,4 +626,4 @@ class MeasureObjectIntensityMultichannel(Module):
         )
 
     def volumetric(self):
-        return True
+        return False
