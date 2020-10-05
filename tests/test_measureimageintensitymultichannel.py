@@ -100,7 +100,7 @@ def test_zeros(image, measurements, module, workspace):
 
     columns = module.get_measurement_columns(workspace.pipeline)
 
-    features = measurements.get_feature_names("Image") * N_CHANNELS
+    features = measurements.get_feature_names("Image")
 
     assert len(columns) == len(features)
 
@@ -112,7 +112,7 @@ def test_image(image, measurements, module, workspace):
     """Test operation on a single unmasked image"""
     numpy.random.seed(0)
 
-    pixels = numpy.random.uniform(size=(10, 10)).astype(numpy.float32) * 0.99
+    pixels = numpy.random.uniform(size=(10, 10, N_CHANNELS)).astype(numpy.float32) * 0.99
 
     pixels[0:2, 0:2] = 1
 
@@ -120,43 +120,44 @@ def test_image(image, measurements, module, workspace):
 
     module.run(workspace)
 
-    assert (
-        measurements.get_current_measurement(
-            "Image", "Intensity_TotalArea_image"
+    for c in range(N_CHANNELS):
+        assert (
+            measurements.get_current_measurement(
+                "Image", f"Intensity_TotalArea_image_c{c+1}"
+            )
+            == 100
         )
-        == 100
-    )
 
-    assert measurements.get_current_measurement(
-        "Image", "Intensity_TotalIntensity_image"
-    ) == numpy.sum(pixels)
+        assert measurements.get_current_measurement(
+            "Image", f"Intensity_TotalIntensity_image_c{c+1}"
+        ) == numpy.sum(pixels[:, :, c])
 
-    assert (
-        measurements.get_current_measurement(
-            "Image", "Intensity_MeanIntensity_image"
+        assert (
+            measurements.get_current_measurement(
+                "Image", f"Intensity_MeanIntensity_image_c{c+1}"
+            )
+            == numpy.sum(pixels[:, :, c]) / 100.0
         )
-        == numpy.sum(pixels) / 100.0
-    )
 
-    assert measurements.get_current_image_measurement(
-        "Intensity_MinIntensity_image"
-    ) == numpy.min(pixels)
+        assert measurements.get_current_image_measurement(
+            f"Intensity_MinIntensity_image_c{c+1}"
+        ) == numpy.min(pixels[:, :, c])
 
-    assert measurements.get_current_image_measurement(
-        "Intensity_MaxIntensity_image"
-    ) == numpy.max(pixels)
+        assert measurements.get_current_image_measurement(
+            f"Intensity_MaxIntensity_image_c{c+1}"
+        ) == numpy.max(pixels[:, :, c])
 
-    assert (
-        measurements.get_current_image_measurement("Intensity_PercentMaximal_image")
-        == 4.0
-    )
+        assert (
+            measurements.get_current_image_measurement(f"Intensity_PercentMaximal_image_c{c+1}")
+            == 4.0
+        )
 
 
 def test_image_and_mask(image, measurements, module, workspace):
     """Test operation on a masked image"""
     numpy.random.seed(0)
 
-    pixels = numpy.random.uniform(size=(10, 10)).astype(numpy.float32) * 0.99
+    pixels = numpy.random.uniform(size=(10, 10, N_CHANNELS)).astype(numpy.float32) * 0.99
 
     pixels[1:3, 1:3] = 1
 
@@ -170,37 +171,38 @@ def test_image_and_mask(image, measurements, module, workspace):
 
     module.run(workspace)
 
-    assert (
-        measurements.get_current_measurement(
-            "Image", "Intensity_TotalArea_image"
+    for c in range(N_CHANNELS):
+        assert (
+            measurements.get_current_measurement(
+                "Image", f"Intensity_TotalArea_image_c{c+1}"
+            )
+            == 64
         )
-        == 64
-    )
 
-    assert measurements.get_current_measurement(
-        "Image", "Intensity_TotalIntensity_image"
-    ) == numpy.sum(pixels[1:9, 1:9])
+        assert measurements.get_current_measurement(
+            "Image", f"Intensity_TotalIntensity_image_c{c+1}"
+        ) == numpy.sum(pixels[1:9, 1:9, c])
 
-    assert (
-        measurements.get_current_measurement(
-            "Image", "Intensity_MeanIntensity_image"
+        assert (
+            measurements.get_current_measurement(
+                "Image", f"Intensity_MeanIntensity_image_c{c+1}"
+            )
+            == numpy.sum(pixels[1:9, 1:9, c]) / 64.0
         )
-        == numpy.sum(pixels[1:9, 1:9]) / 64.0
-    )
 
-    assert (
-        measurements.get_current_measurement(
-            "Image", "Intensity_PercentMaximal_image"
+        assert (
+            measurements.get_current_measurement(
+                "Image", f"Intensity_PercentMaximal_image_c{c+1}"
+            )
+            == 400.0 / 64.0
         )
-        == 400.0 / 64.0
-    )
 
 
 def test_image_and_objects(image, measurements, module, objects, workspace):
     """Test operation on an image masked by objects"""
     numpy.random.seed(0)
 
-    pixels = numpy.random.uniform(size=(10, 10)).astype(numpy.float32) * 0.99
+    pixels = numpy.random.uniform(size=(10, 10, N_CHANNELS)).astype(numpy.float32) * 0.99
 
     pixels[1:3, 1:3] = 1
 
@@ -218,31 +220,31 @@ def test_image_and_objects(image, measurements, module, objects, workspace):
 
     module.run(workspace)
 
-    assert (
-        measurements.get_current_measurement(
-            "Image", "Intensity_TotalArea_image_objects"
+    for c in range(N_CHANNELS):
+        assert (
+            measurements.get_current_measurement(
+                "Image", f"Intensity_TotalArea_image_objects_c{c+1}"
+            )
+            == 64
         )
-        == 64
-    )
 
-    assert measurements.get_current_measurement(
-        "Image", "Intensity_TotalIntensity_image_objects"
-    ) == numpy.sum(pixels[1:9, 1:9])
+        assert measurements.get_current_measurement(
+            "Image", f"Intensity_TotalIntensity_image_objects_c{c+1}"
+        ) == numpy.sum(pixels[1:9, 1:9, c])
 
-    assert (
-        measurements.get_current_measurement(
-            "Image", "Intensity_MeanIntensity_image_objects"
+        assert (
+            measurements.get_current_measurement(
+                "Image", f"Intensity_MeanIntensity_image_objects_c{c+1}"
+            )
+            == numpy.sum(pixels[1:9, 1:9, c]) / 64.0
         )
-        == numpy.sum(pixels[1:9, 1:9]) / 64.0
-    )
 
-    numpy.testing.assert_almost_equal(
-        measurements.get_current_measurement(
-            "Image",
-            "Intensity_PercentMaximal_image_objects",
-        ),
-        400.0 / 64.0,
-    )
+        assert (
+            measurements.get_current_measurement(
+                "Image", f"Intensity_PercentMaximal_image_objects_c{c+1}"
+            )
+            == 400.0 / 64.0
+        )
 
     assert len(measurements.get_object_names()) == 1
 
