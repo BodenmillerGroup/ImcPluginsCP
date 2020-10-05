@@ -15,7 +15,7 @@ IMAGE_NAME = "image"
 OUTPUT_IMAGE_F = "outputimage%d"
 
 import cellprofiler.modules.colortogray
-import plugins.colortograybb as colortograybb
+import plugins.deprecated_colortograybb as colortograybb
 
 
 def get_my_image():

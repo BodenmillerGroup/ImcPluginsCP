@@ -57,7 +57,7 @@ DEPRECATION_STRING = """
                 """
 
 
-class ColorToGrayBB(cellprofiler.modules.colortogray.ColorToGray):
+class Deprecated_ColorToGrayBB(cellprofiler.modules.colortogray.ColorToGray):
     module_name = "ColorToGray bb"
     variable_revision_number = 3
     category = "Image Processing"
