@@ -1,7 +1,7 @@
 # coding=utf-8
 
 """
-SaveImages h5
+SaveImages h5 - DEPRECATED
 ==========
 
 **SaveImages** saves image or movie files.
@@ -18,7 +18,8 @@ files in their original format and then saving them in an alternate
 format.
 
 This module has been modified to save images to hdf5 files for ilastik pixel
-classification.
+classification. In the meanwhile this functionality became available in the
+main SaveImages module. Use that one instead!
 
 ============ ============ ===============
 Supports 2D? Supports 3D? Respects masks?
