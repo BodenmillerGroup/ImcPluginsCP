@@ -27,7 +27,6 @@ class Deprecated_MeasureImageIntensityMultiChannel(MeasureImageIntensityMultiCha
         return [self.deprecation_warning] + result
 
     def upgrade_settings(self, setting_values, variable_revision_number, module_name):
-        module_name = "MeasureImageIntensityMultichannel"
         self.module_name = super().module_name
         return super().upgrade_settings(
             setting_values, variable_revision_number, module_name
