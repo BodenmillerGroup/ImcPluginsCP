@@ -126,7 +126,9 @@ class SaveObjectCrops(cpm.Module):
     category = "File Processing"
 
     def create_settings(self):
-        self.input_type = cps.choice.Choice("Select the type of input", [IF_IMAGE], IF_IMAGE)
+        self.input_type = cps.choice.Choice(
+            "Select the type of input", [IF_IMAGE], IF_IMAGE
+        )
 
         self.image_name = cps.subscriber.ImageSubscriber(
             "Select the image to save",
@@ -714,9 +716,7 @@ class SaveObjectCrops(cpm.Module):
         else:
             return BIT_DEPTH_8
 
-    def upgrade_settings(
-        self, setting_values, variable_revision_number, module_name
-    ):
+    def upgrade_settings(self, setting_values, variable_revision_number, module_name):
         """Adjust the setting values to be backwards-compatible with old versions"""
         if variable_revision_number < 2:
             setting_values = [IF_IMAGE, "None"] + setting_values

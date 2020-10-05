@@ -339,9 +339,7 @@ class CorrectSpilloverMeasurements(cpm.Module):
         """ Display one row of orig / illum / output per image setting group"""
         pass
 
-    def upgrade_settings(
-        self, setting_values, variable_revision_number, module_name
-    ):
+    def upgrade_settings(self, setting_values, variable_revision_number, module_name):
         """Adjust settings based on revision # of save file
 
         setting_values - sequence of string values as they appear in the

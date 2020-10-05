@@ -10,6 +10,7 @@ import scipy.ndimage as scind
 import cellprofiler_core.image as cpi
 import cellprofiler_core.module as cpm
 import cellprofiler_core.setting as cps
+
 YES, NO = "Yes", "No"
 from matplotlib.widgets import Slider, Button, RadioButtons
 
@@ -27,7 +28,9 @@ class TransformBinary(cpm.Module):
     variable_revision_number = 1
 
     def create_settings(self):
-        self.image_name = cps.subscriber.ImageSubscriber("Select the input image", "None")
+        self.image_name = cps.subscriber.ImageSubscriber(
+            "Select the input image", "None"
+        )
 
         self.transformed_image_name = cps.text.ImageName(
             "Name the transformed image", "DistanceImage"
@@ -110,9 +113,7 @@ class TransformBinary(cpm.Module):
         # schan1.on_changed(update)
         # schan2.on_changed(update)
 
-    def upgrade_settings(
-        self, setting_values, variable_revision_number, module_name
-    ):
+    def upgrade_settings(self, setting_values, variable_revision_number, module_name):
 
         return setting_values, variable_revision_number
 

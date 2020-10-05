@@ -16,5 +16,6 @@ OUTPUT_IMAGE_F = "outputimage%d"
 
 import plugins.correctspillovermeasurements as correctspillovermeasurements
 
+
 def test_init():
     x = correctspillovermeasurements.CorrectSpilloverMeasurements()

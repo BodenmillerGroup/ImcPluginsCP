@@ -17,6 +17,7 @@ OUTPUT_IMAGE_F = "outputimage%d"
 import cellprofiler.modules.colortogray
 import plugins.colortograybb as colortograybb
 
+
 def get_my_image():
     """A color image with red in the upper left, green in the lower left and blue in the upper right"""
     img = numpy.zeros((50, 50, 3))
@@ -226,6 +227,7 @@ def test_split_channels():
         assert pixels.ndim == 2
         assert tuple(pixels.shape) == (20, 10)
         numpy.testing.assert_almost_equal(image[:, :, channel_index], pixels)
+
 
 def test_old_color2gray():
     data = r"""CellProfiler Pipeline: http://www.cellprofiler.org

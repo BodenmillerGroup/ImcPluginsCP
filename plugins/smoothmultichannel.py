@@ -42,6 +42,7 @@ from cellprofiler_core.constants.module import (
     HELP_ON_MEASURING_DISTANCES,
     HELP_ON_PIXEL_INTENSITIES,
 )
+
 FIT_POLYNOMIAL = "Fit Polynomial"
 MEDIAN_FILTER = "Median Filter"
 MEDIAN_FILTER_SCIPY = "Median Filter Scipy"
@@ -52,6 +53,7 @@ SM_TO_AVERAGE = "Smooth to Average"
 CLIP_HOT_PIXELS = "Remove single hot pixels"
 
 YES, NO, NONE = "yes", "no", "None"
+
 
 class SmoothMultichannel(cpm.Module):
     module_name = "Smooth Multichannel"
@@ -271,9 +273,7 @@ example, if one wants to set a threshold of 100 counts, a value of either
             self.scale_hp_threshold,
         ]
 
-    def upgrade_settings(
-        self, setting_values, variable_revision_number, module_name
-    ):
+    def upgrade_settings(self, setting_values, variable_revision_number, module_name):
         if variable_revision_number < 2:
             setting_values += [3, 20]  # hp_filter_size, hp_threshold
         if variable_revision_number < 4:

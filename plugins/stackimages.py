@@ -26,7 +26,8 @@ import cellprofiler_core.setting as cps
 
 OFF_STACK_CHANNEL_COUNT = 1
 
-NONE = 'None'
+NONE = "None"
+
 
 class StackImages(cpm.Module):
     module_name = "StackImages"
@@ -180,7 +181,5 @@ Select the input image to add to the stacked image.
         #                      title=self.stack_image_name.value,
         #                      sharexy=figure.subplot(0, 0))
 
-    def upgrade_settings(
-        self, setting_values, variable_revision_number, module_name
-    ):
+    def upgrade_settings(self, setting_values, variable_revision_number, module_name):
         return setting_values, variable_revision_number

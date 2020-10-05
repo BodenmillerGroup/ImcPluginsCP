@@ -16,5 +16,6 @@ OUTPUT_IMAGE_F = "outputimage%d"
 
 import plugins.cropimage as cropimage
 
+
 def test_init():
     x = cropimage.CropImage()

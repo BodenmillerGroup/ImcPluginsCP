@@ -173,9 +173,7 @@ class RescaleObjects(cpm.Module):
         labels = self._scale_labels(labels=labels, scale=self.scaling)
         return labels
 
-    def upgrade_settings(
-        self, setting_values, variable_revision_number, module_name
-    ):
+    def upgrade_settings(self, setting_values, variable_revision_number, module_name):
         return setting_values, variable_revision_number
 
     def get_measurement_columns(self, pipeline):

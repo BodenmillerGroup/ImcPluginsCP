@@ -34,7 +34,9 @@ class ColorToGray(cpm.Module):
     category = "Image Processing"
 
     def create_settings(self):
-        self.image_name = cps.subscriber.ImageSubscriber("Select the input image", "None")
+        self.image_name = cps.subscriber.ImageSubscriber(
+            "Select the input image", "None"
+        )
 
         self.conversion_method = cps.choice.Choice(
             "Conversion method",
@@ -150,8 +152,6 @@ class ColorToGray(cpm.Module):
         the settings.
         """
 
-    def upgrade_settings(
-        self, setting_values, variable_revision_number, module_name
-    ):
+    def upgrade_settings(self, setting_values, variable_revision_number, module_name):
 
         return setting_values, variable_revision_number

@@ -20,7 +20,6 @@ N_CHANNELS = 4
 import plugins.measureimageintensitymultichannel as mimc
 
 
-
 @pytest.fixture(scope="function")
 def image():
     return cellprofiler_core.image.Image()
@@ -50,7 +49,6 @@ def module():
 
     module.nchannels.value = N_CHANNELS
 
-
     return module
 
 
@@ -75,8 +73,10 @@ def workspace(image, measurements, module, objects):
         image_set_list,
     )
 
+
 def test_init():
     x = mimc.MeasureImageIntensityMultiChannel()
+
 
 def test_zeros(image, measurements, module, workspace):
     """Test operation on a completely-masked image"""
@@ -112,7 +112,9 @@ def test_image(image, measurements, module, workspace):
     """Test operation on a single unmasked image"""
     numpy.random.seed(0)
 
-    pixels = numpy.random.uniform(size=(10, 10, N_CHANNELS)).astype(numpy.float32) * 0.99
+    pixels = (
+        numpy.random.uniform(size=(10, 10, N_CHANNELS)).astype(numpy.float32) * 0.99
+    )
 
     pixels[0:2, 0:2] = 1
 
@@ -148,7 +150,9 @@ def test_image(image, measurements, module, workspace):
         ) == numpy.max(pixels[:, :, c])
 
         assert (
-            measurements.get_current_image_measurement(f"Intensity_PercentMaximal_image_c{c+1}")
+            measurements.get_current_image_measurement(
+                f"Intensity_PercentMaximal_image_c{c+1}"
+            )
             == 4.0
         )
 
@@ -157,7 +161,9 @@ def test_image_and_mask(image, measurements, module, workspace):
     """Test operation on a masked image"""
     numpy.random.seed(0)
 
-    pixels = numpy.random.uniform(size=(10, 10, N_CHANNELS)).astype(numpy.float32) * 0.99
+    pixels = (
+        numpy.random.uniform(size=(10, 10, N_CHANNELS)).astype(numpy.float32) * 0.99
+    )
 
     pixels[1:3, 1:3] = 1
 
@@ -202,7 +208,9 @@ def test_image_and_objects(image, measurements, module, objects, workspace):
     """Test operation on an image masked by objects"""
     numpy.random.seed(0)
 
-    pixels = numpy.random.uniform(size=(10, 10, N_CHANNELS)).astype(numpy.float32) * 0.99
+    pixels = (
+        numpy.random.uniform(size=(10, 10, N_CHANNELS)).astype(numpy.float32) * 0.99
+    )
 
     pixels[1:3, 1:3] = 1
 
@@ -296,7 +304,6 @@ def test_image_and_objects_and_mask(image, measurements, module, objects, worksp
 
         assert measurements.get_current_measurement(
             "Image", f"Intensity_TotalIntensity_image_objects_c{c+1}"
-
         ) == numpy.sum(pixels[1:9, 1:9, c])
 
         assert (
@@ -369,8 +376,9 @@ def test_get_measurement_columns_whole_image_mode(module):
 
             assert any(
                 [
-                    (column[1] == f'{feature_name}_c{c+1}' and column[2] == coltype)
-                     for c in range(N_CHANNELS) for column in columns
+                    (column[1] == f"{feature_name}_c{c+1}" and column[2] == coltype)
+                    for c in range(N_CHANNELS)
+                    for column in columns
                 ]
             )
 

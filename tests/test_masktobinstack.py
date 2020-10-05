@@ -16,5 +16,6 @@ OUTPUT_IMAGE_F = "outputimage%d"
 
 import plugins.masktobinstack as masktobinstack
 
+
 def test_init():
     x = masktobinstack.MaskToBinstack()

@@ -279,9 +279,7 @@ class CorrectSpilloverApply(cpm.Module):
                 sharexy=figure.subplot(0, 0),
             )
 
-    def upgrade_settings(
-        self, setting_values, variable_revision_number, module_name
-    ):
+    def upgrade_settings(self, setting_values, variable_revision_number, module_name):
         """Adjust settings based on revision # of save file
 
         setting_values - sequence of string values as they appear in the

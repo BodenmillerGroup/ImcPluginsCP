@@ -189,9 +189,7 @@ that is made available by a prior module.
 
         return visible_settings
 
-    def upgrade_settings(
-            self, setting_values, variable_revision_number, module_name
-    ):
+    def upgrade_settings(self, setting_values, variable_revision_number, module_name):
         return setting_values, variable_revision_number
 
     #

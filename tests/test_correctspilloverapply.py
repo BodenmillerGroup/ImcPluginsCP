@@ -16,8 +16,6 @@ OUTPUT_IMAGE_F = "outputimage%d"
 
 import plugins.correctspilloverapply as correctspilloverapply
 
+
 def test_init():
     x = correctspilloverapply.CorrectSpilloverApply()
-
-
-

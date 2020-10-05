@@ -70,7 +70,7 @@ Measurements made by this module
 )
 
 """Number of settings saved/loaded per image measured"""
-#SETTINGS_PER_IMAGE = 4
+# SETTINGS_PER_IMAGE = 4
 
 """Measurement feature name format for the TotalIntensity measurement"""
 F_TOTAL_INTENSITY = "Intensity_TotalIntensity_%s"
@@ -182,7 +182,12 @@ class MeasureImageIntensityMultiChannel(Module):
                 objects.add(object_name)
 
     def settings(self):
-        result = [self.images_list, self.wants_objects, self.objects_list, self.nchannels]
+        result = [
+            self.images_list,
+            self.wants_objects,
+            self.objects_list,
+            self.nchannels,
+        ]
         return result
 
     def visible_settings(self):
@@ -225,7 +230,12 @@ class MeasureImageIntensityMultiChannel(Module):
                             "The %s image and %s objects do not (%s vs %s).\n"
                             "If they are paired correctly you may want to use the Resize, ResizeObjects or "
                             "Crop module(s) to make them the same size."
-                            % (im, object_set, input_pixels.shape[:2], objects.shape,)
+                            % (
+                                im,
+                                object_set,
+                                input_pixels.shape[:2],
+                                objects.shape,
+                            )
                         )
                     if image.has_mask:
                         mask = numpy.logical_and(objects.segmented != 0, image.mask)
@@ -254,7 +264,9 @@ class MeasureImageIntensityMultiChannel(Module):
             col_labels=workspace.display_data.col_labels,
         )
 
-    def measure(self, pixels, image_name, object_name, measurement_name, mask, workspace):
+    def measure(
+        self, pixels, image_name, object_name, measurement_name, mask, workspace
+    ):
         """Perform measurements on an array of pixels
         pixels - image pixel data, masked to objects if applicable
         image_name - name of the current input image
@@ -267,12 +279,22 @@ class MeasureImageIntensityMultiChannel(Module):
             pixel_plane = pixels[:, :, chan]
             if mask is not None:
                 pixel_plane = pixel_plane[mask]
-            cur_measurement_name = f'{measurement_name}_c{chan+1}'
-            measurements.append(self.measure_plane(pixel_plane, image_name, object_name, cur_measurement_name, chan, workspace))
+            cur_measurement_name = f"{measurement_name}_c{chan+1}"
+            measurements.append(
+                self.measure_plane(
+                    pixel_plane,
+                    image_name,
+                    object_name,
+                    cur_measurement_name,
+                    chan,
+                    workspace,
+                )
+            )
         return measurements
 
-
-    def measure_plane(self, pixels, image_name, object_name, measurement_name, channel, workspace):
+    def measure_plane(
+        self, pixels, image_name, object_name, measurement_name, channel, workspace
+    ):
         """Perform measurements on an array of pixels
         pixels - image pixel data, masked to objects if applicable
         image_name - name of the current input image
@@ -329,7 +351,7 @@ class MeasureImageIntensityMultiChannel(Module):
             [
                 image_name,
                 object_name if self.wants_objects.value else "",
-                feature_name + f'_c{channel}',
+                feature_name + f"_c{channel}",
                 str(value),
             ]
             for feature_name, value in (
@@ -373,8 +395,14 @@ class MeasureImageIntensityMultiChannel(Module):
                         measurement_names.append(im)
 
                     for measurement_name in measurement_names:
-                        measurement_name = f'{measurement_name}_c{channel+1}'
-                        columns.append(("Image", feature % measurement_name, coltype,))
+                        measurement_name = f"{measurement_name}_c{channel+1}"
+                        columns.append(
+                            (
+                                "Image",
+                                feature % measurement_name,
+                                coltype,
+                            )
+                        )
         return columns
 
     def get_categories(self, pipeline, object_name):
@@ -425,7 +453,12 @@ class MeasureImageIntensityMultiChannel(Module):
             images_string = ", ".join(map(str, images_set))
             wants_objects = "Yes" if "Yes" in use_objects else "No"
             objects_string = ", ".join(map(str, objects_set))
-            setting_values = [images_string, wants_objects, objects_string, nchannels[0]]
+            setting_values = [
+                images_string,
+                wants_objects,
+                objects_string,
+                nchannels[0],
+            ]
             if len(use_objects) > 1 or len(objects_set) > 1 or len(images_set):
                 logging.warning(
                     "The pipeline you loaded was converted from an older version of CellProfiler.\n"

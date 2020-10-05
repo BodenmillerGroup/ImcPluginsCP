@@ -236,9 +236,7 @@ Select the objects whose intensities you want to measure.""",
         result += [self.add_object_button]
         return result
 
-    def upgrade_settings(
-        self, setting_values, variable_revision_number, module_name
-    ):
+    def upgrade_settings(self, setting_values, variable_revision_number, module_name):
         """Adjust setting values if they came from a previous revision
 
         setting_values - a sequence of strings representing the settings
@@ -444,7 +442,10 @@ Select the objects whose intensities you want to measure.""",
                         labels, img = cellprofiler_core.object.crop_labels_and_image(
                             labels, img
                         )
-                        _, masked_image = cellprofiler_core.object.crop_labels_and_image(
+                        (
+                            _,
+                            masked_image,
+                        ) = cellprofiler_core.object.crop_labels_and_image(
                             labels, masked_image
                         )
                         outlines = skimage.segmentation.find_boundaries(

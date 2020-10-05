@@ -103,7 +103,9 @@ class CropImage(cpm.Module):
             self.additional_images, "Additional image count"
         )
 
-        self.add_button = cps.do_something.DoSomething("", "Add another image", self.add_image)
+        self.add_button = cps.do_something.DoSomething(
+            "", "Add another image", self.add_image
+        )
 
     def add_image(self, can_remove=True):
         """Add an image + associated questions and buttons"""
@@ -327,9 +329,7 @@ class CropImage(cpm.Module):
             )
         return meas
 
-    def upgrade_settings(
-        self, setting_values, variable_revision_number, module_name
-    ):
+    def upgrade_settings(self, setting_values, variable_revision_number, module_name):
         if variable_revision_number < 3:
             setting_values = setting_values[:7] + [""] + setting_values[7:]
             variable_revision_number = 3
