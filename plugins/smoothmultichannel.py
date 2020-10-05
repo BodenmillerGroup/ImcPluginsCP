@@ -56,7 +56,7 @@ YES, NO, NONE = "yes", "no", "None"
 
 
 class SmoothMultichannel(cpm.Module):
-    module_name = "Smooth Multichannel"
+    module_name = "SmoothMultichannel"
     category = "Image Processing"
     variable_revision_number = 6
 
