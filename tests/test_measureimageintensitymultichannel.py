@@ -17,4 +17,4 @@ OUTPUT_IMAGE_F = "outputimage%d"
 import plugins.measureimageintensitymultichannel as mimc
 
 def test_init():
-    x = mimc.MeasureImageIntensity()
+    x = mimc.MeasureImageIntensityMultiChannel()
