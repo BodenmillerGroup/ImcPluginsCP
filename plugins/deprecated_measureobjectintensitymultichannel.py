@@ -2,7 +2,7 @@ import logging
 
 from cellprofiler_core.setting import HTMLText
 
-from measureobjectintensitymultichannel import MeasureObjectIntensityMultiChannel
+from measureobjectintensitymultichannel import MeasureObjectIntensityMultichannel
 
 DEPRECATION_STRING = """
                 This module changed names, now it is called:
@@ -13,7 +13,7 @@ DEPRECATION_STRING = """
                 """
 
 
-class Deprecated_MeasureObjectIntensityMultiChannel(MeasureObjectIntensityMultiChannel):
+class Deprecated_MeasureObjectIntensityMultiChannel(MeasureObjectIntensityMultichannel):
     module_name = "MeasureObjectIntensity Multichannel"
     category = "Measurement"
     variable_revision_number = 4
