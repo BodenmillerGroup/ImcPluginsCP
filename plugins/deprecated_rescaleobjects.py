@@ -1,57 +1,21 @@
-"""<b>Expand Or Shrink Objects</b> expands or shrinks objects by a defined distance.
-<hr>
-The module expands or shrinks objects by adding or removing border
-pixels. You can specify a certain number of border pixels to be
-added or removed, expand objects until they are almost touching or shrink
-objects down to a point. Objects are never lost using this module (shrinking
-stops when an object becomes a single pixel). The module can separate touching
-objects without otherwise shrinking
-the objects.
-
-<p><b>ExpandOrShrinkObjects</b> can perform some specialized morphological operations that
-remove pixels without completely removing an object. See the Settings help (below)
-for more detail.</p>
-
-<p><i>Special note on saving images:</i> You can use the settings in this module to pass object
-outlines along to the module <b>OverlayOutlines</b> and then save them
-with the <b>SaveImages</b> module. You can also pass the identified objects themselves along to the
-object processing module <b>ConvertToImage</b> and then save them with the
-<b>SaveImages</b> module.</p>
-
-<h4>Available measurements</h4>
-<b>Image measurements:</b>
-<ul>
-<li><i>Count:</i> Number of expanded/shrunken objects in the image.</li>
-</ul>
-<b>Object measurements:</b>
-<ul>
-<li><i>Location_X, Location_Y:</i> Pixel (<i>X,Y</i>) coordinates of the center of mass of
-the expanded/shrunken objects.</li>
-</ul>
-
-<p>See also <b>Identify</b> modules.</p>"""
+"""<b>RescaleObjects</b> rescale objects by a defined distance.
+x"""
 
 import numpy as np
-from centrosome.cpmorphology import binary_shrink, thin
-from centrosome.cpmorphology import fill_labeled_holes, adjacent
-from centrosome.cpmorphology import skeletonize_labels, spur
-from centrosome.outline import outline
-from scipy.ndimage import distance_transform_edt
 
 from skimage import transform
 from skimage.morphology import disk
-from skimage.filters import rank
 import scipy.ndimage as ndi
 
 
-import cellprofiler_core.image as cpi
 import cellprofiler_core.module as cpm
 import cellprofiler_core.measurement as cpmeas
 import cellprofiler_core.object as cpo
 import cellprofiler_core.setting as cps
-from cellprofiler_core.modules.identify import add_object_count_measurements
-from cellprofiler_core.modules.identify import add_object_location_measurements
-from cellprofiler_core.modules.identify import get_object_measurement_columns
+from cellprofiler_core.utilities.core.module.identify import (
+    add_object_count_measurements,
+    add_object_location_measurements,
+    get_object_measurement_columns)
 
 YES, NO = "Yes", "No"
 O_UPSCALE = "Upscale objects with a scaling factor"
@@ -60,12 +24,24 @@ O_DOWNSCALE = "Downscale objects with a scaling factor"
 O_ALL = [O_UPSCALE, O_DOWNSCALE]
 
 
+DEPRECATION_STRING = """
+                The RescaleObject module is deprecated as the
+                functionality is now integrated in the official `ResizeObjects` module.\n
+                Please MANUALLY migrate to the new module.\n
+                Consider using the 'ExpandOrShrinkObjects' modules to recreate the border
+                between objects after scaling them down (as it was done in the old module).\n
+                This module will be removed with the next major ImcPluginsCP release!
+                """
+
 class RescaleObjects(cpm.Module):
     module_name = "RescaleObjects"
     category = "Object Processing"
     variable_revision_number = 1
 
     def create_settings(self):
+        self.deprecation_warning = HTMLText(
+            text="Deprecation Warning", content=DEPRECATION_STRING, doc=DEPRECATION_STRING
+        )
         self.object_name = cps.subscriber.LabelSubscriber(
             "Select the input objects",
             "None",
@@ -99,7 +75,10 @@ class RescaleObjects(cpm.Module):
         return [self.object_name, self.output_object_name, self.operation, self.scaling]
 
     def visible_settings(self):
-        result = [self.object_name, self.output_object_name, self.operation]
+        result = [self.deprecation_warning,
+                  self.object_name,
+                  self.output_object_name,
+                  self.operation]
         # if self.operation in (O_SHRINK, O_EXPAND, O_SPUR):
         #     result += [self.iterations]
         # if self.operation in (O_SHRINK, O_SHRINK_INF):
