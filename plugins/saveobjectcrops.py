@@ -16,13 +16,8 @@ See also <b>NamesAndTypes</b>, <b>ConserveMemory</b>.
 
 import logging
 import os
-import re
-import sys
-import traceback
 
-import matplotlib
 import numpy as np
-import scipy.io.matlab.mio
 import scipy.ndimage as ndi
 
 logger = logging.getLogger(__name__)
@@ -33,27 +28,11 @@ import cellprofiler_core.module as cpm
 import cellprofiler_core.measurement as cpmeas
 import cellprofiler_core.setting as cps
 
-import cellprofiler.preferences as cpp
-from cellprofiler.preferences import (
-    standardize_default_folder_names,
-    DEFAULT_INPUT_FOLDER_NAME,
-    DEFAULT_OUTPUT_FOLDER_NAME,
-    ABSOLUTE_FOLDER_NAME,
-    DEFAULT_INPUT_SUBFOLDER_NAME,
-    DEFAULT_OUTPUT_SUBFOLDER_NAME,
-    get_default_image_directory,
-)
 
 YES, NO = "Yes", "No"
-# from cellprofiler.utilities.relpath import relpath
 from cellprofiler_core.measurement import C_FILE_NAME, C_PATH_NAME, C_URL
-from cellprofiler_core.measurement import (
-    C_OBJECTS_FILE_NAME,
-    C_OBJECTS_PATH_NAME,
-    C_OBJECTS_URL,
-)
-from cellprofiler_core.modules.loadimages import pathname2url
-from centrosome.cpmorphology import distance_color_labels
+
+from cellprofiler.modules.loadimages import pathname2url
 
 NOTDEFINEDYET = "Helptext Not Defined Yet"
 USING_METADATA_TAGS_REF = NOTDEFINEDYET
@@ -192,7 +171,7 @@ class SaveObjectCrops(cpm.Module):
             % globals(),
         )
 
-        self.file_name_suffix = cps.Text(
+        self.file_name_suffix = cps.text.Text(
             "Text to append to the image name",
             "",
             metadata=True,
@@ -253,7 +232,7 @@ class SaveObjectCrops(cpm.Module):
             % globals(),
         )
 
-        self.object_extension = cps.text.Integer(
+        self.object_extension = cps.textInteger(
             "Object extension",
             value=1,
             doc="""
@@ -311,7 +290,7 @@ class SaveObjectCrops(cpm.Module):
             % globals(),
         )
 
-        self.root_dir = cps.DirectoryPath(
+        self.root_dir = cps.text.Directory(
             "Base image folder",
             doc="""
             <i>Used only if creating subfolders in the output folder</i>
