@@ -198,7 +198,7 @@ class MeasureImageIntensityMultiChannel(Module):
 
     def run(self, workspace):
         """Perform the measurements on the image sets"""
-        col_labels = ["Image", "Masking object", "Feature", "Value"]
+        col_labels = ["Image", "Masking object", "Channel", "Feature", "Value"]
         statistics = []
         nchannels = self.nchannels.value
 
@@ -351,7 +351,8 @@ class MeasureImageIntensityMultiChannel(Module):
             [
                 image_name,
                 object_name if self.wants_objects.value else "",
-                feature_name + f"_c{channel}",
+                f"Channel {channel}",
+                feature_name,
                 str(value),
             ]
             for feature_name, value in (
