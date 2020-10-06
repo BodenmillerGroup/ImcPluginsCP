@@ -97,7 +97,7 @@ def method(request):
 
 
 @dataclass
-class TestCase:
+class ExampleCase:
     """
     Simple testcase
     """
@@ -113,7 +113,7 @@ class TestCase:
 def testcase(request, method):
     case = request.param
     if case == "test_simple":
-        return TestCase(
+        return ExampleCase(
             name=case,
             method=method,
             data=[[1, 0.1], [0, 1], [1, 0.1], [0, 1], [1, 0.1], [0.5, 0.05]],
@@ -140,7 +140,7 @@ def testcase(request, method):
             expected[0][1] = 0
             expected[0][0] = 0.990099
 
-        return TestCase(
+        return ExampleCase(
             name=case,
             method=method,
             data=[[1, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0.0]],
@@ -149,7 +149,7 @@ def testcase(request, method):
         )
 
     elif case == "test_zeros":
-        return TestCase(
+        return ExampleCase(
             name=case,
             method=method,
             data=[[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0.0]],

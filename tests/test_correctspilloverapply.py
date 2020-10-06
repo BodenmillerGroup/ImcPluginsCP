@@ -79,7 +79,7 @@ def method(request):
 
 
 @dataclass
-class TestCase:
+class ExampleCase:
     """
     Simple testcase
     """
@@ -95,7 +95,7 @@ class TestCase:
 def testcase(request, method):
     case = request.param
     if case == "test_simple":
-        return TestCase(
+        return ExampleCase(
             name=case,
             method=method,
             img=np.asarray(
@@ -120,7 +120,7 @@ def testcase(request, method):
             expected[0, 0, 1] = 0
             expected[0, 0, 0] = 0.990099
 
-        return TestCase(
+        return ExampleCase(
             name=case,
             method=method,
             img=np.asarray([[[1, 0], [0, 0], [0, 0]], [[0, 0], [0, 0], [0, 0.0]]]),
@@ -129,7 +129,7 @@ def testcase(request, method):
         )
 
     elif case == "test_zeros":
-        return TestCase(
+        return ExampleCase(
             name=case,
             method=method,
             img=np.asarray([[[0, 0], [0, 0], [0, 0]], [[0, 0], [0, 0], [0, 0.0]]]),
