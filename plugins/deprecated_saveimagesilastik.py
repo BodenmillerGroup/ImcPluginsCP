@@ -47,6 +47,12 @@ import cellprofiler_core.setting
 from cellprofiler.modules import _help
 
 from cellprofiler_core.setting import HTMLText
+from cellprofiler_core.preferences import ABSOLUTE_FOLDER_NAME
+from cellprofiler_core.preferences import DEFAULT_INPUT_FOLDER_NAME
+from cellprofiler_core.preferences import DEFAULT_INPUT_SUBFOLDER_NAME
+from cellprofiler_core.preferences import DEFAULT_OUTPUT_FOLDER_NAME
+from cellprofiler_core.preferences import DEFAULT_OUTPUT_SUBFOLDER_NAME
+from cellprofiler_core.setting.text import Text, Integer, Directory
 
 IF_IMAGE = "Image"
 IF_MASK = "Mask"
@@ -182,7 +188,7 @@ Several choices are available for constructing the image file name:
             })
         )
 
-        self.file_image_name = cellprofiler_core.setting.subscriber.image_subscriber.FileImageSubscriber(
+        self.file_image_name = cellprofiler_core.setting.subscriber.FileImageSubscriber(
             "Select image name for file prefix",
             "None",
             doc="""\
@@ -411,7 +417,7 @@ Instances in which this information may be useful include:
             })
         )
 
-        self.root_dir = cellprofiler_core.setting.text.Directory(
+        self.root_dir = SaveImagesDirectoryPath(
             "Base image folder",
             doc="""\
 *Used only if creating subfolders in the output folder*
@@ -549,3 +555,39 @@ store images in the subfolder, "*date*\/*plate-name*".""")
     def volumetric(self):
         return True
 
+class SaveImagesDirectoryPath(Directory):
+    """A specialized version of Directory to handle saving in the image dir"""
+
+    def __init__(self, text, file_image_name, doc):
+        """Constructor
+        text - explanatory text to display
+        file_image_name - the file_image_name setting so we can save in same dir
+        doc - documentation for user
+        """
+        super(SaveImagesDirectoryPath, self).__init__(
+            text,
+            dir_choices=[
+                DEFAULT_OUTPUT_FOLDER_NAME,
+                DEFAULT_INPUT_FOLDER_NAME,
+                PC_WITH_IMAGE,
+                ABSOLUTE_FOLDER_NAME,
+                DEFAULT_OUTPUT_SUBFOLDER_NAME,
+                DEFAULT_INPUT_SUBFOLDER_NAME,
+            ],
+            doc=doc,
+        )
+        self.file_image_name = file_image_name
+
+    def get_absolute_path(self, measurements=None, image_set_index=None):
+        if self.dir_choice == PC_WITH_IMAGE:
+            path_name_feature = "PathName_%s" % self.file_image_name.value
+            return measurements.get_current_image_measurement(path_name_feature)
+        return super(SaveImagesDirectoryPath, self).get_absolute_path(
+            measurements, image_set_index
+        )
+
+    def test_valid(self, pipeline):
+        if self.dir_choice not in self.dir_choices:
+            raise ValidationError(
+                "%s is not a valid directory option" % self.dir_choice, self
+            )
