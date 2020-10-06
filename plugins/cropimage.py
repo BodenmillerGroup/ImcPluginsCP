@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 import cellprofiler_core.module as cpm
 import cellprofiler_core.image as cpi
 import cellprofiler_core.setting as cps
-import cellprofiler_core.measurement as cpmeas
+import cellprofiler_core.constants.measurement as cpmeas
 
 import hashlib
 
@@ -320,7 +320,7 @@ class CropImage(cpm.Module):
         for f in ["x", "w", "y", "h"]:
             meas.append(
                 (
-                    cpmeas.IMAGE,
+                    "Image",
                     "_".join(
                         [cpmeas.C_METADATA, "Crop", self.cropped_image_name.value, f]
                     ),
