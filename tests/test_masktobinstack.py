@@ -14,9 +14,10 @@ IMAGE_NAME = "image"
 OUTPUT_IMAGE = "outputimage"
 OBJECT_NAME = "ObjectName"
 
-IMAGE_SCALE = 2**16-1
+IMAGE_SCALE = 2 ** 16 - 1
 
 import plugins.masktobinstack as masktobinstack
+
 
 @pytest.fixture(scope="function")
 def image():
@@ -68,12 +69,14 @@ def workspace(image, measurements, module, objects):
         image_set_list,
     )
 
+
 def test_init():
     x = masktobinstack.MaskToBinstack()
 
-@pytest.fixture(scope='function', params=['test1', 'empty'])
+
+@pytest.fixture(scope="function", params=["test1", "empty"])
 def data(request):
-    if request.param == 'test1':
+    if request.param == "test1":
         data = np.array(
             [
                 [0, 0, 0, 0, 0, 0, 0],
@@ -83,14 +86,15 @@ def data(request):
                 [1, 0, 0, 0, 0, 0, 0],
             ]
         )
-    elif request.param == 'empty':
+    elif request.param == "empty":
         data = np.zeros((4, 4))
 
     return data
 
 
-@pytest.fixture(scope='function', params=[masktobinstack.IF_IMAGE,
-                                          masktobinstack.IF_OBJECTS])
+@pytest.fixture(
+    scope="function", params=[masktobinstack.IF_IMAGE, masktobinstack.IF_OBJECTS]
+)
 def conf_module(request, data, image, objects, module):
     input_type = request.param
     module.input_type.value = input_type
@@ -108,9 +112,10 @@ def test_maskimg_mid(data, conf_module, workspace):
     module.run(workspace)
     result = workspace.image_set.get_image(OUTPUT_IMAGE).pixel_data
 
-    np.testing.assert_equal(result[:,:,0], data==3)
-    np.testing.assert_equal(result[:,:,1], (data==2) | (data ==1) )
-    np.testing.assert_equal(result[:,:,2], data==0)
+    np.testing.assert_equal(result[:, :, 0], data == 3)
+    np.testing.assert_equal(result[:, :, 1], (data == 2) | (data == 1))
+    np.testing.assert_equal(result[:, :, 2], data == 0)
+
 
 def test_maskimg_max(data, conf_module, workspace):
     module = conf_module
@@ -119,9 +124,10 @@ def test_maskimg_max(data, conf_module, workspace):
     module.run(workspace)
     result = workspace.image_set.get_image(OUTPUT_IMAGE).pixel_data
 
-    np.testing.assert_equal(result[:,:,0], data==2)
-    np.testing.assert_equal(result[:,:,1], (data==3) | (data ==1) )
-    np.testing.assert_equal(result[:,:,2], data==0)
+    np.testing.assert_equal(result[:, :, 0], data == 2)
+    np.testing.assert_equal(result[:, :, 1], (data == 3) | (data == 1))
+    np.testing.assert_equal(result[:, :, 2], data == 0)
+
 
 def test_maskimg_provided(data, conf_module, workspace):
     module = conf_module
@@ -131,7 +137,6 @@ def test_maskimg_provided(data, conf_module, workspace):
     module.run(workspace)
     result = workspace.image_set.get_image(OUTPUT_IMAGE).pixel_data
 
-    np.testing.assert_equal(result[:,:,0], data==1)
-    np.testing.assert_equal(result[:,:,1], (data==2) | (data==3) )
-    np.testing.assert_equal(result[:,:,2], data==0)
-
+    np.testing.assert_equal(result[:, :, 0], data == 1)
+    np.testing.assert_equal(result[:, :, 1], (data == 2) | (data == 3))
+    np.testing.assert_equal(result[:, :, 2], data == 0)
