@@ -37,7 +37,7 @@ DEPRECATION_STRING = """
 
 
 class Deprecated_RescaleObjects(cpm.Module):
-    module_name = "Deprecated_RescaleObjects"
+    module_name = "RescaleObjects"
     category = "Deprecated"
     variable_revision_number = 1
 
