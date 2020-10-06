@@ -35,7 +35,7 @@ def measurements():
 def module():
     module = transformbinary.TransformBinary()
     module.image_name.value = IMAGE_NAME
-    module.grayscale_name.value = OUTPUT_IMAGE
+    module.transformed_image_name.value = OUTPUT_IMAGE
 
     return module
 
@@ -58,3 +58,31 @@ def workspace(image, measurements, module):
         measurements,
         image_set_list,
     )
+
+
+def test_transform(image, measurements, module, workspace):
+    img = [[0, 0, 0], [0, 1.0, 0], [0, 0, 0]]
+    sqrt_2 = np.sqrt(2)
+    expected = [[-sqrt_2, -1, -sqrt_2], [-1, 1, -1], [-sqrt_2, -1, -sqrt_2]]
+
+    image.pixel_data = img
+
+    module.run(workspace)
+
+    result = workspace.image_set.get_image(OUTPUT_IMAGE).pixel_data
+
+    np.testing.assert_array_almost_equal(result, expected)
+
+
+def test_transform_2(image, measurements, module, workspace):
+    img = [[0.5, 0.2, 0.7], [1, 0, 0.5], [0.1, 0.2, 0.3]]
+    sqrt_2 = np.sqrt(2)
+    expected = [[sqrt_2, 1, sqrt_2], [1, -1, 1], [sqrt_2, 1, sqrt_2]]
+
+    image.pixel_data = img
+
+    module.run(workspace)
+
+    result = workspace.image_set.get_image(OUTPUT_IMAGE).pixel_data
+
+    np.testing.assert_array_almost_equal(result, expected)
