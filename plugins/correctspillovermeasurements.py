@@ -182,7 +182,24 @@ class CorrectSpilloverMeasurements(cpm.Module):
         cols = [(object_name, f"{compmeasurement_name}_c{i+1}") for i in range(nchan)]
         return cols
 
-    def _get_compmeasurment_output_columns(self, nchan, cm):
+    def _get_nchannels_measurement(self, cm, pipeline):
+        compmeasurement_name = cm.compmeasurement_name.value
+        object_name = cm.object_name.value
+        mods = [
+            module
+            for module in pipeline.modules()
+            if module.module_num < self.module_num
+        ]
+        cols = [
+            col
+            for m in mods
+            for col in m.get_measurement_columns(pipeline)
+            if (col[0] == object_name)
+            and (col[1].startswith(compmeasurement_name + "_c"))
+        ]
+        return len(cols)
+
+    def _get_compmeasurement_output_columns(self, nchan, cm):
         incols = self._get_compmeasurement_columns(nchan, cm)
         suffix = cm.corrected_compmeasurement_suffix.value
         outcols = [
@@ -201,7 +218,8 @@ class CorrectSpilloverMeasurements(cpm.Module):
         """Return column definitions for compmeasurements made by this module"""
         columns = []
         for cm in self.compmeasurements:
-            columns += self._get_compmeasurment_output_columns(cm, pipeline)
+            nchan = self._get_nchannels_measurement(cm, pipeline)
+            columns += self._get_compmeasurement_output_columns(nchan, cm)
         return columns
 
     def get_categories(self, pipeline, object_name):
@@ -261,10 +279,28 @@ class CorrectSpilloverMeasurements(cpm.Module):
         sm = spillover_mat.pixel_data
         sm_nchannels_input = sm.shape[1]
         sm_nchannels_output = sm.shape[0]
+        if sm_nchannels_input != sm_nchannels_input:
+            raise ValueError(
+                f"""
+    Currently only symmetric compensation matrices supported!\n
 
+    Current matrix {spill_correct_name} has non-symmetric dimensions
+    {sm_nchannels_input}x{sm_nchannels_output}
+"""
+            )
         # Get compmeasurements from workspace
         measurements = workspace.get_measurements()
         pipeline = workspace.pipeline
+
+        nchan_pipeline = self._get_nchannels_measurement(compmeasurement, pipeline)
+        if nchan_pipeline != sm_nchannels_input:
+            raise ValueError(
+                f"""
+                    Measurement: {compmeasurement.compmeasurement_name.value}
+                    was measured with {nchan_pipeline} which is incompatible
+w                   with a spillover matrix with {sm_nchannels_input} channels!
+                            """
+            )
 
         m = [
             measurements.get_measurement(
@@ -281,7 +317,7 @@ class CorrectSpilloverMeasurements(cpm.Module):
         compdat = self.compensate_dat(data, spillover_mat.pixel_data, method)
         # Save the output image in the image set and have it inherit
         # mask & cropping from the original image.
-        out_names = self._get_compmeasurment_output_columns(
+        out_names = self._get_compmeasurement_output_columns(
             sm_nchannels_output, compmeasurement
         )
         for i in range(sm_nchannels_output):
