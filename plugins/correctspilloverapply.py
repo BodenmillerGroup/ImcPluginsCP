@@ -204,24 +204,13 @@ class CorrectSpilloverApply(cpm.Module):
                     spill_correct_name
                 ] = spillover_mat.pixel_data
 
-    def compensate_image_ls(self, img, sm, method):
+    @staticmethod
+    def compensate_image_ls(img, sm, method):
         """
         Compensate an img with dimensions (x, y, c) with a spillover matrix
         with dimensions (c, c) by first reshaping the matrix to the shape dat=(x*y,
         c) and the solving the linear system:
             comp * sm = dat -> comp = dat * inv(sm)
-
-        Example:
-            >>> img = np.array([[[1,0.1],[0, 1], [1,0.1]],
-                                [[0,1],[1,0.1], [2,0.2]]])
-            >>> sm = np.array([[1,0.1],[0,1]])
-            >>> compensate_image_ls(sm, img)
-            array([[[ 1.,  0.],
-                    [ 0.,  1.],
-                    [ 1.,  0.]],
-                   [[ 0.,  1.],
-                    [ 1.,  0.],
-                    [ 2.,  0.]]])
         """
         x, y, c = img.shape
         dat = np.ravel(img, order="C")
