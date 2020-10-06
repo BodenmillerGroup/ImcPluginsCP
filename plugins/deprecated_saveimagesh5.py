@@ -411,8 +411,9 @@ Instances in which this information may be useful include:
             })
         )
 
-        self.root_dir = cellprofiler_core.setting.text.Directory(
+        self.root_dir = SaveImagesDirectoryPath(
             "Base image folder",
+            self.file_image_name,
             doc="""\
 *Used only if creating subfolders in the output folder*
 
