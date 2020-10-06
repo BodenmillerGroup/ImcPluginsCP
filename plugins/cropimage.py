@@ -224,8 +224,8 @@ class CropImage(cpm.Module):
         image = workspace.image_set.get_image(input_image_name)
         image_pixels = image.pixel_data
         if self.crop_random == C_SPECIFIC:
-            x = int(workspace.measurements.apply_metadata(self.crop_x.value))
-            y = int(workspace.measurements.apply_metadata(self.crop_y.value))
+            x = int(workspace.measurements.apply_metadata(str(self.crop_x.value)))
+            y = int(workspace.measurements.apply_metadata(str(self.crop_y.value)))
         else:
             x = None
             y = None
@@ -233,14 +233,14 @@ class CropImage(cpm.Module):
         if self.crop_random == C_RANDOM:
             random_seed = None
         else:
-            val = workspace.measurements.apply_metadata(self.seed_metadata.value)
+            val = workspace.measurements.apply_metadata(str(self.seed_metadata.value))
             random_seed = hashlib.md5(val.encode())
             random_seed = int(random_seed.hexdigest(), 16) % 2 ** 32
 
         crop_slice = self.crop_slice(
             image_pixels.shape[:2],
-            w=int(workspace.measurements.apply_metadata(self.crop_w.value)),
-            h=int(workspace.measurements.apply_metadata(self.crop_h.value)),
+            w=int(workspace.measurements.apply_metadata(str(self.crop_w.value))),
+            h=int(workspace.measurements.apply_metadata(str(self.crop_h.value))),
             x=x,
             y=y,
             flipped_axis=True,
