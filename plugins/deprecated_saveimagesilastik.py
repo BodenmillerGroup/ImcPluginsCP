@@ -93,7 +93,7 @@ class Deprecated_SaveImagesIlastik(cellprofiler_core.module.Module):
 
     variable_revision_number = 13
 
-    category = "File Processing"
+    category = "Deprecated"
 
     def create_settings(self):
         self.deprecation_warning = HTMLText(

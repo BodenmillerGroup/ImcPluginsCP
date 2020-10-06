@@ -15,7 +15,7 @@ DEPRECATION_STRING = """
 
 class Deprecated_SummarizeStack(SummarizeStack):
     module_name = "Summarize Stack"
-    category = "Image Processing"
+    category = "Deprecated"
     variable_revision_number = 0
 
     deprecation_warning = HTMLText(

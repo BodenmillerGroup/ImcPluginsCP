@@ -15,7 +15,7 @@ DEPRECATION_STRING = """
 
 class Deprecated_CropImage(CropImage):
     module_name = "Crop bb"
-    category = ""
+    category = "Deprecated"
     variable_revision_number = 3
 
     deprecation_warning = HTMLText(

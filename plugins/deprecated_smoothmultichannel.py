@@ -15,7 +15,7 @@ DEPRECATION_STRING = """
 
 class Deprecated_SmoothMultiChannel(SmoothMultichannel):
     module_name = "Smooth Multichannel"
-    category = "Measurement"
+    category = "Deprecated"
     variable_revision_number = 3
 
     deprecation_warning = HTMLText(

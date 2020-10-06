@@ -15,7 +15,7 @@ DEPRECATION_STRING = """
 
 class Deprecated_MeasureImageIntensityMultiChannel(MeasureImageIntensityMultiChannel):
     module_name = "MeasureImageIntensity Multichannel"
-    category = "Measurement"
+    category = "Deprecated"
     variable_revision_number = 3
 
     deprecation_warning = HTMLText(

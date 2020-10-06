@@ -88,7 +88,7 @@ class Deprecated_SaveImagesH5(cellprofiler_core.module.Module):
 
     variable_revision_number = 1
 
-    category = "File Processing"
+    category = "Deprecated"
 
     def create_settings(self):
         self.deprecation_warning = HTMLText(

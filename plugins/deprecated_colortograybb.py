@@ -61,7 +61,7 @@ DEPRECATION_STRING = """
 class Deprecated_ColorToGrayBB(cellprofiler.modules.colortogray.ColorToGray):
     module_name = "ColorToGray bb"
     variable_revision_number = 3
-    category = "Image Processing"
+    category = "Deprecated"
 
     deprecation_warning = HTMLText(
         text="Deprecation Warning", content=DEPRECATION_STRING, doc=DEPRECATION_STRING

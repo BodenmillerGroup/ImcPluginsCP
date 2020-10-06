@@ -38,7 +38,7 @@ DEPRECATION_STRING = """
 
 class Deprecated_RescaleObjects(cpm.Module):
     module_name = "Deprecated_RescaleObjects"
-    category = "Object Processing"
+    category = "Deprecated"
     variable_revision_number = 1
 
     def create_settings(self):
