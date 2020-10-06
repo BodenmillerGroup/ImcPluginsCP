@@ -15,6 +15,8 @@ import cellprofiler_core.module as cpm
 import cellprofiler_core.setting as cps
 import cellprofiler_core.measurement as cpmeas
 
+from cellprofiler_core.constants.measurement import COLTYPE_FLOAT
+
 
 SETTINGS_PER_IMAGE = 5
 METHOD_LS = "LeastSquares"
@@ -174,39 +176,29 @@ class CorrectSpilloverMeasurements(cpm.Module):
         while len(self.compmeasurements) < compmeasurement_count:
             self.add_compmeasurement()
 
-    def _get_compmeasurement_columns(self, cm, pipeline):
+    def _get_compmeasurement_columns(self, nchan, cm):
         compmeasurement_name = cm.compmeasurement_name.value
         object_name = cm.object_name.value
-        mods = [
-            module
-            for module in pipeline.modules()
-            if module.module_num < self.module_num
-        ]
-        cols = [
-            col
-            for m in mods
-            for col in m.get_measurement_columns(pipeline)
-            if (col[0] == object_name)
-            and (col[1].startswith(compmeasurement_name + "_c"))
-        ]
+        cols = [(object_name, f"{compmeasurement_name}_c{i+1}") for i in range(nchan)]
         return cols
 
-    def _get_compmeasurment_output_columns(self, cm, pipeline):
-        incols = self._get_compmeasurement_columns(cm, pipeline)
+    def _get_compmeasurment_output_columns(self, nchan, cm):
+        incols = self._get_compmeasurement_columns(nchan, cm)
         suffix = cm.corrected_compmeasurement_suffix.value
         outcols = [
-            (c[0], self._generate_outcolname(c[1], suffix), c[2]) for c in incols
+            (c[0], self._generate_outcolname(c[1], suffix), COLTYPE_FLOAT)
+            for c in incols
         ]
         return outcols
 
     def _generate_outcolname(self, colname, suffix):
-        colfrag = colname.split("_")
-        colfrag[1] += suffix
-        outcol = "_".join(colfrag)
+        colfrag = colname.split("_c")
+        colfrag[-2] += suffix
+        outcol = "_c".join(colfrag)
         return outcol
 
     def get_measurement_columns(self, pipeline):
-        """Return column definitions for compmeasurements made rby this module"""
+        """Return column definitions for compmeasurements made by this module"""
         columns = []
         for cm in self.compmeasurements:
             columns += self._get_compmeasurment_output_columns(cm, pipeline)
@@ -262,46 +254,39 @@ class CorrectSpilloverMeasurements(cpm.Module):
 
     def run_compmeasurement(self, compmeasurement, workspace):
         """Perform spillover correction according to the parameters of e compmeasurement setting group"""
-        # TODO: currently this relies on the channels being stored
-        # in increasing order (which seems to be currently true). However
-        # it would be clearly better to assert this channel order.
-        #
-        # Get the compmeasurement names from the settings
-        #
-        compmeasurement_name = compmeasurement.compmeasurement_name.value
         object_name = compmeasurement.object_name.value
         spill_correct_name = compmeasurement.spill_correct_function_image_name.value
-        corrected_compmeasurement_suffix = (
-            compmeasurement.corrected_compmeasurement_suffix.value
-        )
-        #
+        spillover_mat = workspace.image_set.get_image(spill_correct_name)
+
+        sm = spillover_mat.pixel_data
+        sm_nchannels_input = sm.shape[1]
+        sm_nchannels_output = sm.shape[0]
+
         # Get compmeasurements from workspace
-        #
         measurements = workspace.get_measurements()
-        pipline = workspace.pipeline
+        pipeline = workspace.pipeline
 
         m = [
-            measurements.get_measurement(object_name, c[1])
-            for c in self._get_compmeasurement_columns(compmeasurement, pipline)
+            measurements.get_measurement(
+                object_name,
+                c[1],
+            )
+            for c in self._get_compmeasurement_columns(
+                sm_nchannels_input, compmeasurement
+            )
         ]
         data = np.stack(m).T
 
-        spillover_mat = workspace.image_set.get_image(spill_correct_name)
-        #
-        # Either divide or subtract the illumination image from the original
-        #
         method = compmeasurement.spill_correct_method.value
         compdat = self.compensate_dat(data, spillover_mat.pixel_data, method)
         # Save the output image in the image set and have it inherit
         # mask & cropping from the original image.
-        #
-        #
-        # Save images for display
-        #
-        for m, c in zip(
-            compdat.T, self._get_compmeasurment_output_columns(compmeasurement, pipline)
-        ):
-            measurements.add_measurement(object_name, c[1], m)
+        out_names = self._get_compmeasurment_output_columns(
+            sm_nchannels_output, compmeasurement
+        )
+        for i in range(sm_nchannels_output):
+            corr_meas = compdat.T[i]
+            measurements.add_measurement(object_name, out_names[i][1], corr_meas)
 
     def compensate_dat(self, dat, sm, method):
         """
@@ -325,7 +310,7 @@ class CorrectSpilloverMeasurements(cpm.Module):
 
     @staticmethod
     def compensate_ls(dat, sm):
-        compdat = np.linalg.lstsq(sm.T, dat.T)[0]
+        compdat = np.linalg.lstsq(sm.T, dat.T, None)[0]
         return compdat.T
 
     @staticmethod
