@@ -1,4 +1,4 @@
-import numpy
+import numpy as np
 import pytest
 import io
 
@@ -19,3 +19,24 @@ import plugins.correctspilloverapply as correctspilloverapply
 
 def test_init():
     x = correctspilloverapply.CorrectSpilloverApply()
+
+
+@pytest.fixture(params=[correctspilloverapply.METHOD_LS,
+                        correctspilloverapply.METHOD_NNLS])
+def method(request):
+    return request.param
+
+def test_compensate_image_ls(method):
+    img = np.array([[[1, 0.1], [0, 1], [1, 0.1]],
+                         [[0, 1], [1, 0.1], [2, 0.2]]])
+    sm = np.array([[1, 0.1], [0, 1]])
+    expected = np.array([[[1., 0.],
+                       [0., 1.],
+                       [1., 0.]],
+                      [[0., 1.],
+                       [1., 0.],
+                       [2., 0.]]])
+    out = correctspilloverapply.CorrectSpilloverApply.compensate_image_ls(img, sm, method)
+
+    np.testing.assert_array_almost_equal(out, expected)
+
