@@ -86,3 +86,16 @@ def test_transform_2(image, measurements, module, workspace):
     result = workspace.image_set.get_image(OUTPUT_IMAGE).pixel_data
 
     np.testing.assert_array_almost_equal(result, expected)
+
+def test_transform_3(image, measurements, module, workspace):
+    img = [[1, 0, 1], [0, 0, 0.], [1, 0, 1]]
+    sqrt_2 = np.sqrt(2)
+    expected = [[1, -1, 1], [-1, -sqrt_2, -1], [1, -1, 1]]
+
+    image.pixel_data = img
+
+    module.run(workspace)
+
+    result = workspace.image_set.get_image(OUTPUT_IMAGE).pixel_data
+
+    np.testing.assert_array_almost_equal(result, expected)
