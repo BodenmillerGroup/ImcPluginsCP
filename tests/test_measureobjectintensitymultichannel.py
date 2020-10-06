@@ -9,7 +9,11 @@ import skimage.segmentation
 
 import cellprofiler_core.image
 import cellprofiler_core.measurement
-from cellprofiler_core.constants.measurement import EXPERIMENT, COLTYPE_FLOAT, C_LOCATION
+from cellprofiler_core.constants.measurement import (
+    EXPERIMENT,
+    COLTYPE_FLOAT,
+    C_LOCATION,
+)
 
 
 import cellprofiler_core.object
@@ -77,6 +81,7 @@ def workspace(image, measurements, module, objects):
         image_set_list,
     )
 
+
 def test_init():
     x = momc.MeasureObjectIntensityMultichannel()
 
@@ -130,35 +135,25 @@ def test_supplied_measurements(module):
 
     assert module.get_categories(None, "Foo") == []
 
-    measurements = module.get_measurements(
-        None, "MyObjects1", momc.INTENSITY
-    )
+    measurements = module.get_measurements(None, "MyObjects1", momc.INTENSITY)
 
-    assert len(measurements) == len(
-        momc.ALL_MEASUREMENTS
-    )
+    assert len(measurements) == len(momc.ALL_MEASUREMENTS)
 
-    measurements = module.get_measurements(
-        None, "MyObjects1", C_LOCATION
-    )
+    measurements = module.get_measurements(None, "MyObjects1", C_LOCATION)
 
-    assert len(measurements) == len(
-        momc.ALL_LOCATION_MEASUREMENTS
-    )
+    assert len(measurements) == len(momc.ALL_LOCATION_MEASUREMENTS)
 
-    assert all(
-        [
-            m in momc.ALL_LOCATION_MEASUREMENTS
-            for m in measurements
-        ]
-    )
+    assert all([m in momc.ALL_LOCATION_MEASUREMENTS for m in measurements])
 
-    assert module.get_measurement_images(
-        None,
-        "MyObjects1",
-        momc.INTENSITY,
-        momc.MAX_INTENSITY,
-    ) == ["MyImage"]
+    assert (
+        module.get_measurement_images(
+            None,
+            "MyObjects1",
+            momc.INTENSITY,
+            momc.MAX_INTENSITY,
+        )
+        == ["MyImage"]
+    )
 
 
 def test_get_measurement_columns(module):
@@ -172,8 +167,7 @@ def test_get_measurement_columns(module):
     columns = module.get_measurement_columns(None)
 
     assert len(columns) == N_CHANNELS * 2 * (
-        len(momc.ALL_MEASUREMENTS)
-        + len(momc.ALL_LOCATION_MEASUREMENTS)
+        len(momc.ALL_MEASUREMENTS) + len(momc.ALL_LOCATION_MEASUREMENTS)
     )
 
     for column in columns:
@@ -224,7 +218,7 @@ def test_zero(image, measurements, module, objects, workspace):
     ):
         for meas_name in features:
             for c in range(N_CHANNELS):
-                feature_name = "%s_%s_%s_c%s" % (category, meas_name, "MyImage", c+1)
+                feature_name = "%s_%s_%s_c%s" % (category, meas_name, "MyImage", c + 1)
 
                 data = measurements.get_current_measurement("MyObjects", feature_name)
 
@@ -255,7 +249,7 @@ def test_masked(image, measurements, module, objects, workspace):
                 momc.INTENSITY,
                 meas_name,
                 "MyImage",
-                c + 1
+                c + 1,
             )
 
             data = measurements.get_current_measurement("MyObjects", feature_name)
@@ -421,12 +415,7 @@ def test_one_masked(image, measurements, module, objects, workspace):
         (momc.MAD_INTENSITY, 0),
         (momc.UPPER_QUARTILE_INTENSITY, 1),
     ):
-        feature_name = "%s_%s_%s_c%s" % (
-            momc.INTENSITY,
-            meas_name,
-            "MyImage",
-            1
-        )
+        feature_name = "%s_%s_%s_c%s" % (momc.INTENSITY, meas_name, "MyImage", 1)
 
         data = measurements.get_current_measurement("MyObjects", feature_name)
 
@@ -467,12 +456,7 @@ def test_intensity_location(image, measurements, module, objects, workspace):
         (momc.LOC_MAX_X, 5),
         (momc.LOC_MAX_Y, 2),
     ):
-        feature_name = "%s_%s_%s_c%s" % (
-            C_LOCATION,
-            feature,
-            "MyImage",
-            1
-        )
+        feature_name = "%s_%s_%s_c%s" % (C_LOCATION, feature, "MyImage", 1)
 
         values = measurements.get_current_measurement(OBJECT_NAME, feature_name)
 
@@ -534,7 +518,7 @@ def test_mass_displacement(image, measurements, module, objects, workspace):
         momc.INTENSITY,
         momc.MASS_DISPLACEMENT,
         "MyImage",
-        1
+        1,
     )
 
     mass_displacement = measurements.get_current_measurement("MyObjects", feature_name)
@@ -607,7 +591,7 @@ def test_mass_displacement_masked(image, measurements, module, objects, workspac
         momc.INTENSITY,
         momc.MASS_DISPLACEMENT,
         "MyImage",
-        1
+        1,
     )
 
     mass_displacement = measurements.get_current_measurement("MyObjects", feature_name)
@@ -639,7 +623,7 @@ def test_quartiles_uniform(image, measurements, module, objects, workspace):
         momc.INTENSITY,
         momc.LOWER_QUARTILE_INTENSITY,
         "MyImage",
-        1
+        1,
     )
 
     data = measurements.get_current_measurement("MyObjects", feature_name)
@@ -650,19 +634,14 @@ def test_quartiles_uniform(image, measurements, module, objects, workspace):
         momc.INTENSITY,
         momc.MEDIAN_INTENSITY,
         "MyImage",
-        1
+        1,
     )
 
     data = measurements.get_current_measurement("MyObjects", feature_name)
 
     numpy.testing.assert_almost_equal(data[0], 0.50, 2)
 
-    feature_name = "%s_%s_%s_c%s" % (
-        momc.INTENSITY,
-        momc.MAD_INTENSITY,
-        "MyImage",
-        1
-    )
+    feature_name = "%s_%s_%s_c%s" % (momc.INTENSITY, momc.MAD_INTENSITY, "MyImage", 1)
 
     data = measurements.get_current_measurement("MyObjects", feature_name)
 
@@ -672,7 +651,7 @@ def test_quartiles_uniform(image, measurements, module, objects, workspace):
         momc.INTENSITY,
         momc.UPPER_QUARTILE_INTENSITY,
         "MyImage",
-        1
+        1,
     )
 
     data = measurements.get_current_measurement("MyObjects", feature_name)
@@ -727,7 +706,7 @@ def test_quartiles_four_objects(image, measurements, module, objects, workspace)
         momc.INTENSITY,
         momc.LOWER_QUARTILE_INTENSITY,
         "MyImage",
-        1
+        1,
     )
 
     data = measurements.get_current_measurement("MyObjects", feature_name)
@@ -744,7 +723,7 @@ def test_quartiles_four_objects(image, measurements, module, objects, workspace)
         momc.INTENSITY,
         momc.MEDIAN_INTENSITY,
         "MyImage",
-        1
+        1,
     )
 
     data = measurements.get_current_measurement("MyObjects", feature_name)
@@ -761,7 +740,7 @@ def test_quartiles_four_objects(image, measurements, module, objects, workspace)
         momc.INTENSITY,
         momc.UPPER_QUARTILE_INTENSITY,
         "MyImage",
-        1
+        1,
     )
 
     data = measurements.get_current_measurement("MyObjects", feature_name)
@@ -774,12 +753,7 @@ def test_quartiles_four_objects(image, measurements, module, objects, workspace)
 
     numpy.testing.assert_almost_equal(data[3], 3.0 / 16.0, 2)
 
-    feature_name = "%s_%s_%s_c%s" % (
-        momc.INTENSITY,
-        momc.MAD_INTENSITY,
-        "MyImage",
-        1
-    )
+    feature_name = "%s_%s_%s_c%s" % (momc.INTENSITY, momc.MAD_INTENSITY, "MyImage", 1)
 
     data = measurements.get_current_measurement("MyObjects", feature_name)
 
@@ -811,8 +785,9 @@ def test_median_intensity_masked(image, measurements, module, objects, workspace
 
     objects.segmented = labels
 
-    expected = [numpy.sort(pixel_data[mask, c])[numpy.sum(mask) // 2]
-                for c in range(N_CHANNELS)]
+    expected = [
+        numpy.sort(pixel_data[mask, c])[numpy.sum(mask) // 2] for c in range(N_CHANNELS)
+    ]
 
     module.nchannels.value = N_CHANNELS
 
@@ -823,17 +798,9 @@ def test_median_intensity_masked(image, measurements, module, objects, workspace
     for c, exp in enumerate(expected):
         values = measurements.get_current_measurement(
             OBJECT_NAME,
-            "_".join(
-                (
-                    momc.INTENSITY,
-                    momc.MEDIAN_INTENSITY,
-                    IMAGE_NAME,
-                    f"c{c+1}"
-                )
-            ),
+            "_".join((momc.INTENSITY, momc.MEDIAN_INTENSITY, IMAGE_NAME, f"c{c+1}")),
         )
 
         assert len(values) == 1
 
         assert exp == values[0]
-

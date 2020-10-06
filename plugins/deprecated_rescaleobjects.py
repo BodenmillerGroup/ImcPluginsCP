@@ -15,7 +15,8 @@ import cellprofiler_core.setting as cps
 from cellprofiler_core.utilities.core.module.identify import (
     add_object_count_measurements,
     add_object_location_measurements,
-    get_object_measurement_columns)
+    get_object_measurement_columns,
+)
 from cellprofiler_core.setting import HTMLText
 
 YES, NO = "Yes", "No"
@@ -34,6 +35,7 @@ DEPRECATION_STRING = """
                 This module will be removed with the next major ImcPluginsCP release!
                 """
 
+
 class Deprecated_RescaleObjects(cpm.Module):
     module_name = "Deprecated_RescaleObjects"
     category = "Object Processing"
@@ -41,7 +43,9 @@ class Deprecated_RescaleObjects(cpm.Module):
 
     def create_settings(self):
         self.deprecation_warning = HTMLText(
-            text="Deprecation Warning", content=DEPRECATION_STRING, doc=DEPRECATION_STRING
+            text="Deprecation Warning",
+            content=DEPRECATION_STRING,
+            doc=DEPRECATION_STRING,
         )
         self.object_name = cps.subscriber.LabelSubscriber(
             "Select the input objects",
@@ -76,10 +80,12 @@ class Deprecated_RescaleObjects(cpm.Module):
         return [self.object_name, self.output_object_name, self.operation, self.scaling]
 
     def visible_settings(self):
-        result = [self.deprecation_warning,
-                  self.object_name,
-                  self.output_object_name,
-                  self.operation]
+        result = [
+            self.deprecation_warning,
+            self.object_name,
+            self.output_object_name,
+            self.operation,
+        ]
         # if self.operation in (O_SHRINK, O_EXPAND, O_SPUR):
         #     result += [self.iterations]
         # if self.operation in (O_SHRINK, O_SHRINK_INF):

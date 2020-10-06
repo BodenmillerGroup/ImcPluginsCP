@@ -132,9 +132,7 @@ class SaveObjectCrops(cpm.Module):
     category = "File Processing"
 
     def create_settings(self):
-        self.input_type = Choice(
-            "Select the type of input", [IF_IMAGE], IF_IMAGE
-        )
+        self.input_type = Choice("Select the type of input", [IF_IMAGE], IF_IMAGE)
 
         self.image_name = cps.subscriber.ImageSubscriber(
             "Select the image to save",
@@ -595,13 +593,19 @@ class SaveObjectCrops(cpm.Module):
             pn, fn = os.path.split(filename)
             url = cellprofiler_core.utilities.pathname.pathname2url(filename)
             workspace.measurements.add_measurement(
-                "Image", self.file_name_feature, fn,
+                "Image",
+                self.file_name_feature,
+                fn,
             )
             workspace.measurements.add_measurement(
-                "Image", self.path_name_feature, pn,
+                "Image",
+                self.path_name_feature,
+                pn,
             )
             workspace.measurements.add_measurement(
-                "Image", self.url_feature, url,
+                "Image",
+                self.url_feature,
+                url,
             )
 
     @property
@@ -624,7 +628,10 @@ class SaveObjectCrops(cpm.Module):
     def source_path(self, workspace):
         """The path for the image data, or its first parent with a path"""
         if self.file_name_method.value == FN_FROM_IMAGE:
-            path_feature = "%s_%s" % (C_PATH_NAME, self.file_image_name.value,)
+            path_feature = "%s_%s" % (
+                C_PATH_NAME,
+                self.file_image_name.value,
+            )
             assert workspace.measurements.has_feature("Image", path_feature), (
                 "Image %s does not have a path!" % self.file_image_name.value
             )
@@ -642,8 +649,16 @@ class SaveObjectCrops(cpm.Module):
     def get_measurement_columns(self, pipeline):
         if self.update_file_names.value:
             return [
-                ("Image", self.file_name_feature, COLTYPE_VARCHAR_FILE_NAME,),
-                ("Image", self.path_name_feature, COLTYPE_VARCHAR_PATH_NAME,),
+                (
+                    "Image",
+                    self.file_name_feature,
+                    COLTYPE_VARCHAR_FILE_NAME,
+                ),
+                (
+                    "Image",
+                    self.path_name_feature,
+                    COLTYPE_VARCHAR_PATH_NAME,
+                ),
             ]
         else:
             return []
@@ -737,7 +752,6 @@ class SaveObjectCrops(cpm.Module):
         pass
 
 
-
 class SaveImagesDirectoryPath(Directory):
     """A specialized version of Directory to handle saving in the image dir"""
 
@@ -777,7 +791,7 @@ class SaveImagesDirectoryPath(Directory):
 
 
 def save_h5(path, pixels, volumetric):
-    """ Saves an image to an hdf5 with zyxc axistag
+    """Saves an image to an hdf5 with zyxc axistag
     This format should be good for ilastik pixel classification for multiplexed images
     This is adapted from: https://github.com/ilastik/ilastik/blob/master/bin/combine_channels_as_h5.py
     path - path to file image

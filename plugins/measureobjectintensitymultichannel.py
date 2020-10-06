@@ -179,12 +179,12 @@ class MeasureObjectIntensityMultichannel(Module):
         if variable_revision_number <= 3:
             num_imgs = int(setting_values[0])
             images_list = setting_values[1 : num_imgs + 1]
-            nchannels_list = setting_values[num_imgs +1 : 2*num_imgs + 1]
-            objects_list = setting_values[2*num_imgs + 1 :]
+            nchannels_list = setting_values[num_imgs + 1 : 2 * num_imgs + 1]
+            objects_list = setting_values[2 * num_imgs + 1 :]
             setting_values = [
                 ", ".join(map(str, images_list)),
                 ", ".join(map(str, objects_list)),
-                nchannels_list[0]
+                nchannels_list[0],
             ]
             variable_revision_number = 4
         return setting_values, variable_revision_number
@@ -219,13 +219,17 @@ class MeasureObjectIntensityMultichannel(Module):
                 for object_name in self.objects_list.value:
                     for category, features in (
                         (INTENSITY, ALL_MEASUREMENTS),
-                        (C_LOCATION, ALL_LOCATION_MEASUREMENTS,),
+                        (
+                            C_LOCATION,
+                            ALL_LOCATION_MEASUREMENTS,
+                        ),
                     ):
                         for feature in features:
                             columns.append(
                                 (
                                     object_name,
-                                    "%s_%s_%s_c%s" % (category, feature, image_name, channel+1),
+                                    "%s_%s_%s_c%s"
+                                    % (category, feature, image_name, channel + 1),
                                     COLTYPE_FLOAT,
                                 )
                             )
@@ -291,7 +295,9 @@ class MeasureObjectIntensityMultichannel(Module):
         nchannels = self.nchannels.value
         for channel in range(nchannels):
             for image_name in self.images_list.value:
-                image = workspace.image_set.get_image(image_name, must_be_grayscale=False)
+                image = workspace.image_set.get_image(
+                    image_name, must_be_grayscale=False
+                )
                 img = image.pixel_data
 
                 if img.ndim == 2:
@@ -301,7 +307,7 @@ class MeasureObjectIntensityMultichannel(Module):
 
                 if img_channels != nchannels:
                     raise ValueError(
-                    f"""
+                        f"""
                     The module configuration suggests the image should have {nchannels} channels\n
                     but the image "{image_name}" has only {img_channels} channels. \n
                     Are you sure the image is set as color and not set as grayscale in NamesAndTypes?\n
@@ -311,7 +317,8 @@ class MeasureObjectIntensityMultichannel(Module):
                 for object_name in self.objects_list.value:
                     if object_name not in workspace.object_set.object_names:
                         raise ValueError(
-                            "The %s objects are missing from the pipeline." % object_name
+                            "The %s objects are missing from the pipeline."
+                            % object_name
                         )
                     # Need to refresh image after each iteration...
                     if nchannels == 1:
@@ -377,7 +384,9 @@ class MeasureObjectIntensityMultichannel(Module):
                             masked_labels = labels
                             masked_outlines = outlines
 
-                        lmask = masked_labels > 0 & numpy.isfinite(img)  # Ignore NaNs, Infs
+                        lmask = masked_labels > 0 & numpy.isfinite(
+                            img
+                        )  # Ignore NaNs, Infs
                         has_objects = numpy.any(lmask)
                         if has_objects:
                             limg = img[lmask]
@@ -395,7 +404,9 @@ class MeasureObjectIntensityMultichannel(Module):
                             mesh_z = mesh_z[lmask]
 
                             lcount = centrosome.cpmorphology.fixup_scipy_ndimage_result(
-                                scipy.ndimage.sum(numpy.ones(len(limg)), llabels, lindexes)
+                                scipy.ndimage.sum(
+                                    numpy.ones(len(limg)), llabels, lindexes
+                                )
                             )
 
                             integrated_intensity[
@@ -433,7 +444,9 @@ class MeasureObjectIntensityMultichannel(Module):
                             # Compute the position of the intensity maximum
                             max_position = numpy.array(
                                 centrosome.cpmorphology.fixup_scipy_ndimage_result(
-                                    scipy.ndimage.maximum_position(limg, llabels, lindexes)
+                                    scipy.ndimage.maximum_position(
+                                        limg, llabels, lindexes
+                                    )
                                 ),
                                 dtype=int,
                             )
@@ -469,9 +482,15 @@ class MeasureObjectIntensityMultichannel(Module):
                                 scipy.ndimage.sum(mesh_z * limg, llabels, lindexes)
                             )
 
-                            cmi_x[lindexes - 1] = i_x / integrated_intensity[lindexes - 1]
-                            cmi_y[lindexes - 1] = i_y / integrated_intensity[lindexes - 1]
-                            cmi_z[lindexes - 1] = i_z / integrated_intensity[lindexes - 1]
+                            cmi_x[lindexes - 1] = (
+                                i_x / integrated_intensity[lindexes - 1]
+                            )
+                            cmi_y[lindexes - 1] = (
+                                i_y / integrated_intensity[lindexes - 1]
+                            )
+                            cmi_z[lindexes - 1] = (
+                                i_z / integrated_intensity[lindexes - 1]
+                            )
 
                             diff_x = cm_x - cmi_x[lindexes - 1]
                             diff_y = cm_y - cmi_y[lindexes - 1]
@@ -502,7 +521,8 @@ class MeasureObjectIntensityMultichannel(Module):
                                 qi = qindex[qmask]
                                 qf = qfraction[qmask]
                                 dest[lindexes[qmask] - 1] = (
-                                    limg[order[qi]] * (1 - qf) + limg[order[qi + 1]] * qf
+                                    limg[order[qi]] * (1 - qf)
+                                    + limg[order[qi + 1]] * qf
                                 )
 
                                 #
@@ -524,7 +544,8 @@ class MeasureObjectIntensityMultichannel(Module):
                             qi = qindex[qmask]
                             qf = qfraction[qmask]
                             mad_intensity[lindexes[qmask] - 1] = (
-                                madimg[order[qi]] * (1 - qf) + madimg[order[qi + 1]] * qf
+                                madimg[order[qi]] * (1 - qf)
+                                + madimg[order[qi + 1]] * qf
                             )
                             qmask = (~qmask) & (areas > 0)
                             mad_intensity[lindexes[qmask] - 1] = madimg[
@@ -538,7 +559,9 @@ class MeasureObjectIntensityMultichannel(Module):
 
                         if has_edge:
                             ecount = centrosome.cpmorphology.fixup_scipy_ndimage_result(
-                                scipy.ndimage.sum(numpy.ones(len(eimg)), elabels, lindexes)
+                                scipy.ndimage.sum(
+                                    numpy.ones(len(eimg)), elabels, lindexes
+                                )
                             )
 
                             integrated_intensity_edge[
@@ -581,7 +604,11 @@ class MeasureObjectIntensityMultichannel(Module):
                         (INTENSITY, STD_INTENSITY, std_intensity),
                         (INTENSITY, MIN_INTENSITY, min_intensity),
                         (INTENSITY, MAX_INTENSITY, max_intensity),
-                        (INTENSITY, INTEGRATED_INTENSITY_EDGE, integrated_intensity_edge),
+                        (
+                            INTENSITY,
+                            INTEGRATED_INTENSITY_EDGE,
+                            integrated_intensity_edge,
+                        ),
                         (INTENSITY, MEAN_INTENSITY_EDGE, mean_intensity_edge),
                         (INTENSITY, STD_INTENSITY_EDGE, std_intensity_edge),
                         (INTENSITY, MIN_INTENSITY_EDGE, min_intensity_edge),
@@ -599,7 +626,7 @@ class MeasureObjectIntensityMultichannel(Module):
                         (C_LOCATION, LOC_MAX_Z, max_z),
                     ):
                         measurement_name = "{}_{}_{}_c{}".format(
-                            category, feature_name, image_name, channel+1
+                            category, feature_name, image_name, channel + 1
                         )
                         m.add_measurement(object_name, measurement_name, measurement)
                         if self.show_window and len(measurement) > 0:
