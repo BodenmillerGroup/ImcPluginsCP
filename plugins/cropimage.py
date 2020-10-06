@@ -32,7 +32,7 @@ S_ADDITIONAL_IMAGE_COUNT = 8
 class CropImage(cpm.Module):
     category = "Image Processing"
     variable_revision_number = 4
-    module_name = "Crop bb"
+    module_name = "CropImage"
 
     def create_settings(self):
         self.image_name = cps.subscriber.ImageSubscriber(
