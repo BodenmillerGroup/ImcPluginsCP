@@ -52,7 +52,7 @@ def test_01_03_load_v02():
     ModuleCount:1
     HasImagePlaneDetails:False
 
-    Smooth Multichannel:[module_num:1|svn_version:\'Unknown\'|variable_revision_number:2|show_window:False|notes:\x5B\x5D|batch_state:array(\x5B\x5D, dtype=uint8)|enabled:True]
+    SmoothMultichannel:[module_num:1|svn_version:\'Unknown\'|variable_revision_number:2|show_window:False|notes:\x5B\x5D|batch_state:array(\x5B\x5D, dtype=uint8)|enabled:True]
     Select the input image:InputImage
     Name the output image:OutputImage
     Select smoothing method:Median Filter
