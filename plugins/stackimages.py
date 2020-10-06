@@ -134,7 +134,7 @@ Select the input image to add to the stacked image.
                         self.stack_channels[0].image_name.value,
                         self.stack_channels[idx].image_name.value,
                         source_channels[0].shape[:2],
-                        pd.pixel_data.shape[:2],
+                        pd.shape[:2],
                     )
                 )
         stack_pixel_data = np.dstack(source_channels)
