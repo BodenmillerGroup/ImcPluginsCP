@@ -122,15 +122,17 @@ class MaskToBinstack(cpm.Module):
         """
         if self.input_type == IF_IMAGE:
             image = workspace.image_set.get_image(self.image_name.value)
-            objmask = np.round(image.pixel_data.copy() * image.scale)
+            objmask = np.round(image.pixel_data.copy() * image.scale).astype(np.int64)
         else:
             objmask = workspace.object_set.get_objects(
                 self.objects_name.value
-            ).get_segmented()
+            ).segmented
 
-        if self.main_object_def == SEL_PROVIDED:
+        if np.count_nonzero(objmask) == 0:
+            main_id = 1
+        elif self.main_object_def == SEL_PROVIDED:
             main_id = int(
-                workspace.measurements.apply_metadata(self.main_object_id.value)
+                workspace.measurements.apply_metadata(str(self.main_object_id.value))
             )
         elif self.main_object_def == SEL_MAXAREA:
             main_id = np.argmax(np.bincount(objmask[objmask > 0]))
