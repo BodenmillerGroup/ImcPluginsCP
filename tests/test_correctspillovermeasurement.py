@@ -2,6 +2,8 @@ import numpy as np
 import pytest
 import io
 
+from dataclasses import dataclass
+
 import cellprofiler_core.image
 import cellprofiler_core.measurement
 
@@ -14,9 +16,9 @@ from cellprofiler_core.utilities.core import modules as cpmodules
 IMAGE_NAME = "image"
 SM_IMAGE_NAME = "smimage"
 OUTPUT_IMAGE_F = "outputimage%d"
-MEASUREMENT_NAME = 'testmeasurement'
-OBJECT_NAME = 'tstobject'
-COMP_SUFFIX = 'Comp'
+MEASUREMENT_NAME = "testmeasurement"
+OBJECT_NAME = "tstobject"
+COMP_SUFFIX = "Comp"
 
 N_CHANNEL = 2
 
@@ -35,10 +37,12 @@ def module():
     cpm.spill_correct_function_image_name.value = SM_IMAGE_NAME
     return module
 
+
 @pytest.fixture(scope="function")
 def meas_module():
     module = moimc.MeasureObjectIntensityMultichannel()
     return module
+
 
 @pytest.fixture(scope="function")
 def image():
@@ -49,9 +53,11 @@ def image():
 def sm_image():
     return cellprofiler_core.image.Image()
 
+
 @pytest.fixture(scope="function")
 def objects():
     return cellprofiler_core.object.Objects()
+
 
 @pytest.fixture(scope="function")
 def measurements():
@@ -59,8 +65,7 @@ def measurements():
 
 
 @pytest.fixture(scope="function")
-def workspace(image, sm_image, objects, measurements, module,
-              meas_module):
+def workspace(image, sm_image, objects, measurements, module, meas_module):
     image_set_list = cellprofiler_core.image.ImageSetList()
 
     image_set = image_set_list.get_image_set(0)
@@ -80,26 +85,106 @@ def workspace(image, sm_image, objects, measurements, module,
         image_set_list,
     )
 
+
+@pytest.fixture(
+    params=[
+        correctspillovermeasurements.METHOD_LS,
+        correctspillovermeasurements.METHOD_NNLS,
+    ]
+)
+def method(request):
+    return request.param
+
+
+@dataclass
+class TestCase:
+    """
+    Simple testcase
+    """
+
+    name: str
+    method: str
+    data: np.ndarray
+    sm: np.ndarray
+    expected: np.ndarray
+
+
+@pytest.fixture(params=["test_simple", "test_nnls", "test_zeros"])
+def testcase(request, method):
+    case = request.param
+    if case == "test_simple":
+        return TestCase(
+            name=case,
+            method=method,
+            data=[[1, 0.1], [0, 1], [1, 0.1], [0, 1], [1, 0.1], [0.5, 0.05]],
+            sm=[[1, 0.1], [0, 1]],
+            expected=[
+                [1.0, 0.0],
+                [0.0, 1.0],
+                [1.0, 0.0],
+                [0.0, 1.0],
+                [1.0, 0.0],
+                [0.5, 0.0],
+            ],
+        )
+    elif case == "test_nnls":
+        expected = [
+            [1.0, -0.1],
+            [0.0, 0.0],
+            [0.0, 0.0],
+            [0.0, 0.0],
+            [0.0, 0.0],
+            [0.0, 0.0],
+        ]
+        if method == correctspillovermeasurements.METHOD_NNLS:
+            expected[0][1] = 0
+            expected[0][0] = 0.990099
+
+        return TestCase(
+            name=case,
+            method=method,
+            data=[[1, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0.0]],
+            sm=[[1, 0.1], [0, 1]],
+            expected=expected,
+        )
+
+    elif case == "test_zeros":
+        return TestCase(
+            name=case,
+            method=method,
+            data=[[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0.0]],
+            sm=[[1, 0.1], [0, 1]],
+            expected=[
+                [0.0, 0.0],
+                [0.0, 0.0],
+                [0.0, 0.0],
+                [0.0, 0.0],
+                [0.0, 0.0],
+                [0.0, 0.0],
+            ],
+        )
+    else:
+        raise ValueError(f'Unexpected testname "{case}"')
+
+
 def test_init(module):
     module
 
-def test_compensation(sm_image, module, workspace):
-    vals = list(zip(*[[1, 0.1], [0, 1], [1, 0.1], [0, 1], [1, 0.1], [0.5, 0.05]]))
+
+def test_compensation(testcase, sm_image, module, workspace):
+    vals = list(zip(*testcase.data))
     nchan = len(vals)
     m = workspace.measurements
     for i, v in enumerate(vals):
-        m.add_measurement(OBJECT_NAME,
-                          f"{MEASUREMENT_NAME}_c{i+1}",
-                          v
-                          )
+        m.add_measurement(OBJECT_NAME, f"{MEASUREMENT_NAME}_c{i+1}", v)
     cpm = module.compmeasurements[0]
 
-    sm_image.pixel_data = [[1, 0.1], [0, 1]]
-    cpm.spill_correct_method.value = correctspillovermeasurements.METHOD_LS
+    sm_image.pixel_data = testcase.sm
+    cpm.spill_correct_method.value = testcase.method
     module.run(workspace)
-    results = [m.get_measurement(OBJECT_NAME,
-                                  f"{MEASUREMENT_NAME}{COMP_SUFFIX}_c{i+1}")
-                for i in range(nchan)]
-    expected = [[1.0, 0.0], [0.0, 1.0], [1.0, 0.0],
-                [0.0, 1.0], [1.0, 0.0], [0.5, 0.0]]
+    results = [
+        m.get_measurement(OBJECT_NAME, f"{MEASUREMENT_NAME}{COMP_SUFFIX}_c{i+1}")
+        for i in range(nchan)
+    ]
+    expected = testcase.expected
     np.testing.assert_almost_equal(results, list(zip(*expected)))
