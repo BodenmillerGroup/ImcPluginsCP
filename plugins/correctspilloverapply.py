@@ -216,7 +216,7 @@ class CorrectSpilloverApply(cpm.Module):
         dat = np.ravel(img, order="C")
         dat = np.reshape(dat, (x * y, c), order="C")
         if method == METHOD_LS:
-            compdat = np.linalg.lstsq(sm.T, dat.T)[0]
+            compdat = np.linalg.lstsq(sm.T, dat.T, rcond=None)[0]
             compdat = compdat.T
         if method == METHOD_NNLS:
             nnls = lambda x: spo.nnls(sm.T, x)[0]
