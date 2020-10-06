@@ -169,7 +169,7 @@ class CorrectSpilloverMeasurements(cpm.Module):
         # Figure out how many measurements there are based on the number of setting_values
         #
         assert len(setting_values) % SETTINGS_PER_IMAGE == 0
-        compmeasurement_count = len(setting_values) / SETTINGS_PER_IMAGE
+        compmeasurement_count = int(len(setting_values) / SETTINGS_PER_IMAGE)
         del self.compmeasurements[compmeasurement_count:]
         while len(self.compmeasurements) < compmeasurement_count:
             self.add_compmeasurement()
