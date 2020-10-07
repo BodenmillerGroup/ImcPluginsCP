@@ -53,33 +53,33 @@ class CropImage(cpm.Module):
             "Crop random or specified section?", [C_RANDOM, C_SPECIFIC, C_SEED_METADATA]
         )
 
-        self.crop_x = cps.text.number.integer.Integer(
+        self.crop_x = cps.text.Text(
             "X of upper left corner",
-            0,
+            "0",
             doc="""
             X position.""",
             metadata=True,
         )
 
-        self.crop_y = cps.text.number.integer.Integer(
+        self.crop_y = cps.text.Text(
             "Y of upper left corner",
-            0,
+            "0",
             doc="""
             Y position.""",
             metadata=True,
         )
 
-        self.crop_w = cps.text.number.integer.Integer(
+        self.crop_w = cps.text.Text(
             "W width",
-            100,
+            "100",
             doc="""
             Width of cut.""",
             metadata=True,
         )
 
-        self.crop_h = cps.text.number.integer.Integer(
+        self.crop_h = cps.text.Text(
             "H height",
-            100,
+            "100",
             doc="""
             Height of cut.""",
             metadata=True,
@@ -224,8 +224,8 @@ class CropImage(cpm.Module):
         image = workspace.image_set.get_image(input_image_name)
         image_pixels = image.pixel_data
         if self.crop_random == C_SPECIFIC:
-            x = int(workspace.measurements.apply_metadata(str(self.crop_x.value)))
-            y = int(workspace.measurements.apply_metadata(str(self.crop_y.value)))
+            x = int(workspace.measurements.apply_metadata(self.crop_x.value))
+            y = int(workspace.measurements.apply_metadata(self.crop_y.value))
         else:
             x = None
             y = None
@@ -233,14 +233,14 @@ class CropImage(cpm.Module):
         if self.crop_random == C_RANDOM:
             random_seed = None
         else:
-            val = workspace.measurements.apply_metadata(str(self.seed_metadata.value))
+            val = workspace.measurements.apply_metadata(self.seed_metadata.value)
             random_seed = hashlib.md5(val.encode())
             random_seed = int(random_seed.hexdigest(), 16) % 2 ** 32
 
         crop_slice = self.crop_slice(
             image_pixels.shape[:2],
-            w=int(workspace.measurements.apply_metadata(str(self.crop_w.value))),
-            h=int(workspace.measurements.apply_metadata(str(self.crop_h.value))),
+            w=int(workspace.measurements.apply_metadata(self.crop_w.value)),
+            h=int(workspace.measurements.apply_metadata(self.crop_h.value)),
             x=x,
             y=y,
             flipped_axis=True,
