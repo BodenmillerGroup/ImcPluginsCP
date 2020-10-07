@@ -297,8 +297,8 @@ class CorrectSpilloverMeasurements(cpm.Module):
             raise ValueError(
                 f"""
                     Measurement: {compmeasurement.compmeasurement_name.value}
-                    was measured with {nchan_pipeline} which is incompatible
-w                   with a spillover matrix with {sm_nchannels_input} channels!
+                    was measured with {nchan_pipeline} channels which is incompatible
+                    with a spillover matrix with {sm_nchannels_input} channels!
                             """
             )
 
