@@ -132,7 +132,7 @@ def test_maskimg_max(data, conf_module, workspace):
 def test_maskimg_provided(data, conf_module, workspace):
     module = conf_module
     module.main_object_def.value = masktobinstack.SEL_PROVIDED
-    module.main_object_id.value = 1
+    module.main_object_id.value = "1"
 
     module.run(workspace)
     result = workspace.image_set.get_image(OUTPUT_IMAGE).pixel_data

@@ -70,9 +70,9 @@ class MaskToBinstack(cpm.Module):
             % globals(),
         )
 
-        self.main_object_id = cps.text.number.integer.Integer(
+        self.main_object_id = cps.text.Text(
             "Indicate the object id",
-            1,
+            "1",
             doc="""
                 Indicates the id from the main object.
                 Rightclick to choose a metadata value.
@@ -132,7 +132,7 @@ class MaskToBinstack(cpm.Module):
             main_id = 1
         elif self.main_object_def == SEL_PROVIDED:
             main_id = int(
-                workspace.measurements.apply_metadata(str(self.main_object_id.value))
+                workspace.measurements.apply_metadata(self.main_object_id.value)
             )
         elif self.main_object_def == SEL_MAXAREA:
             main_id = np.argmax(np.bincount(objmask[objmask > 0]))
