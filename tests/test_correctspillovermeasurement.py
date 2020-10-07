@@ -12,6 +12,8 @@ import cellprofiler_core.object
 import cellprofiler_core.pipeline
 import cellprofiler_core.workspace
 from cellprofiler_core.utilities.core import modules as cpmodules
+from cellprofiler_core.module import Module
+from cellprofiler_core.constants.measurement import C_LOCATION, COLTYPE_FLOAT
 
 IMAGE_NAME = "image"
 SM_IMAGE_NAME = "smimage"
@@ -27,6 +29,31 @@ import plugins.correctspillovermeasurements as correctspillovermeasurements
 import plugins.measureobjectintensitymultichannel as moimc
 
 
+class DummyMeasurementModule(Module):
+    """
+    This is a dummy measurement module that fakes
+    to generate a number of multichannel measurements
+    based on it's nchannels attribute.
+    """
+    def __init__(self, *args, **kwargs):
+        self.nchannels = 2
+        super().__init__(*args, **kwargs)
+
+    def get_measurement_columns(self, pipeline):
+        outcols = []
+        for i in range(self.nchannels):
+            outcols.append(
+                (OBJECT_NAME,
+                f"{MEASUREMENT_NAME}_c{i+1}",
+                 COLTYPE_FLOAT
+                 )
+            )
+        return outcols
+
+@pytest.fixture(scope="function")
+def meas_module():
+    return DummyMeasurementModule()
+
 @pytest.fixture(scope="function")
 def module():
     module = correctspillovermeasurements.CorrectSpilloverMeasurements()
@@ -35,12 +62,10 @@ def module():
     cpm.compmeasurement_name.value = MEASUREMENT_NAME
     cpm.corrected_compmeasurement_suffix.value = COMP_SUFFIX
     cpm.spill_correct_function_image_name.value = SM_IMAGE_NAME
-    return module
 
-
-@pytest.fixture(scope="function")
-def meas_module():
-    module = moimc.MeasureObjectIntensityMultichannel()
+    # This needs to have an excessive module number such that it correctly
+    # to indicate that it comes last in the pipeline.
+    module.module_num = 99
     return module
 
 
@@ -75,9 +100,11 @@ def workspace(image, sm_image, objects, measurements, module, meas_module):
 
     object_set = cellprofiler_core.object.ObjectSet()
     object_set.add_objects(objects, OBJECT_NAME)
+    pipeline = cellprofiler_core.pipeline.Pipeline()
+    pipeline.add_module(meas_module)
 
     return cellprofiler_core.workspace.Workspace(
-        cellprofiler_core.pipeline.Pipeline(),
+        pipeline,
         module,
         image_set,
         object_set,
@@ -174,6 +201,10 @@ def test_init(module):
 def test_compensation(testcase, sm_image, module, workspace):
     vals = list(zip(*testcase.data))
     nchan = len(vals)
+
+    meas_module = workspace.pipeline.modules()[0]
+    meas_module.nchannels = nchan
+
     m = workspace.measurements
     for i, v in enumerate(vals):
         m.add_measurement(OBJECT_NAME, f"{MEASUREMENT_NAME}_c{i+1}", v)
