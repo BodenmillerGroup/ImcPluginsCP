@@ -23,7 +23,7 @@ HELP_ON_PIXEL_INTENSITIES = NOTDEFINEDYET
 
 
 class TransformBinary(cpm.Module):
-    module_name = "Transform Binary"
+    module_name = "TransformBinary"
     category = "Image Processing"
     variable_revision_number = 1
 
