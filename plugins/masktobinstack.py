@@ -159,8 +159,7 @@ class MaskToBinstack(cpm.Module):
         is_other = (is_bg == False) & (is_main == False)
         imgs = [is_main, is_other, is_bg]
         bin_stack = np.stack(imgs, axis=2)
-        bin_stack = bin_stack.astype(np.uint8)
-        workspace.image_set.add(name, cpi.Image(bin_stack, convert=False))
+        workspace.image_set.add(name, cpi.Image(bin_stack, convert=True))
         disp_collection = [
             [img, tit] for img, tit in zip(imgs, ["is main", "is other", "is bg"])
         ]
