@@ -15,7 +15,7 @@ DEPRECATION_STRING = """
 
 class Deprecated_TransformBinary(TransformBinary):
     module_name = "Transform Binary"
-    category = ["Deprecated", "ImcPluginsCP"]
+    category = ["Deprecated"]
     variable_revision_number = 0
 
     deprecation_warning = HTMLText(

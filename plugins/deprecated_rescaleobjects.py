@@ -46,6 +46,7 @@ class Deprecated_RescaleObjects(cpm.Module):
             text="Deprecation Warning",
             content=DEPRECATION_STRING,
             doc=DEPRECATION_STRING,
+            size=(10, 5),
         )
         self.object_name = cps.subscriber.LabelSubscriber(
             "Select the input objects",

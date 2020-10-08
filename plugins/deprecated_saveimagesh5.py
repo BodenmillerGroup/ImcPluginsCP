@@ -100,7 +100,8 @@ class Deprecated_SaveImagesH5(cellprofiler_core.module.Module):
 
     def create_settings(self):
         self.deprecation_warning = HTMLText(
-            text="Deprecation Warning", content=DEPRECATION_STRING, doc=DEPRECATION_STRING
+            text="Deprecation Warning", content=DEPRECATION_STRING, doc=DEPRECATION_STRING,
+            size=(10, 5),
         )
 
         self.save_image_or_figure = cellprofiler_core.setting.choice.Choice(

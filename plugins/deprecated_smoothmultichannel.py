@@ -19,7 +19,8 @@ class Deprecated_SmoothMultiChannel(SmoothMultichannel):
     variable_revision_number = 3
 
     deprecation_warning = HTMLText(
-        text="Deprecation Warning", content=DEPRECATION_STRING, doc=DEPRECATION_STRING
+        text="Deprecation Warning", content=DEPRECATION_STRING, doc=DEPRECATION_STRING,
+        size=(10, 5),
     )
 
     def visible_settings(self):
