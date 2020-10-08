@@ -129,7 +129,7 @@ class SaveObjectCrops(cpm.Module):
 
     module_name = "SaveObjectCrops"
     variable_revision_number = 3
-    category = "File Processing"
+    category = ["ImcPluginsCP", "File Processing"]
 
     def create_settings(self):
         self.input_type = Choice("Select the type of input", [IF_IMAGE], IF_IMAGE)

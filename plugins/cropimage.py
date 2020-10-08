@@ -30,7 +30,7 @@ S_ADDITIONAL_IMAGE_COUNT = 8
 
 
 class CropImage(cpm.Module):
-    category = "Image Processing"
+    category = ["ImcPluginsCP", "Image Processing"]
     variable_revision_number = 4
     module_name = "CropImage"
 

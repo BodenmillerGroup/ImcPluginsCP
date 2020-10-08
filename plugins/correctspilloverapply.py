@@ -24,7 +24,7 @@ METHOD_NNLS = "NonNegativeLeastSquares"
 
 
 class CorrectSpilloverApply(cpm.Module):
-    category = "Image Processing"
+    category = ["ImcPluginsCP", "Image Processing"]
     variable_revision_number = 1
     module_name = "CorrectSpilloverApply"
 

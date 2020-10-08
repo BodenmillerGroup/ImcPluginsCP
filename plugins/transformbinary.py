@@ -24,7 +24,7 @@ HELP_ON_PIXEL_INTENSITIES = NOTDEFINEDYET
 
 class TransformBinary(cpm.Module):
     module_name = "TransformBinary"
-    category = "Image Processing"
+    category = ["ImcPluginsCP", "Image Processing"]
     variable_revision_number = 1
 
     def create_settings(self):

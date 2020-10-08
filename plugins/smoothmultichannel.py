@@ -57,7 +57,7 @@ YES, NO, NONE = "yes", "no", "None"
 
 class SmoothMultichannel(cpm.Module):
     module_name = "SmoothMultichannel"
-    category = "Image Processing"
+    category = ["ImcPluginsCP", "Image Processing"]
     variable_revision_number = 6
 
     def create_settings(self):

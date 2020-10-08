@@ -32,7 +32,7 @@ class PatchedMeasurementSetting(cps.Measurement):
 
 
 class CorrectSpilloverMeasurements(cpm.Module):
-    category = "Measurement"
+    category = ["ImcPluginsCP", "Measurement"]
     variable_revision_number = 3
     module_name = "CorrectSpilloverMeasurements"
 

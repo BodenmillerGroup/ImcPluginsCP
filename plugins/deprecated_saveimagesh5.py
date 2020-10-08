@@ -46,8 +46,6 @@ from cellprofiler_core.preferences import DEFAULT_OUTPUT_FOLDER_NAME
 from cellprofiler_core.preferences import DEFAULT_OUTPUT_SUBFOLDER_NAME
 from cellprofiler_core.setting.text import Text, Integer, Directory
 
-category = ""
-
 IF_IMAGE = "Image"
 IF_MASK = "Mask"
 IF_CROPPING = "Cropping"

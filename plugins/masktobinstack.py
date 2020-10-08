@@ -29,7 +29,7 @@ class MaskToBinstack(cpm.Module):
 
     module_name = "MaskToBinstack"
     variable_revision_number = 1
-    category = "Object Processing"
+    category = ["ImcPluginsCP", "Object Processing"]
 
     def create_settings(self):
         self.input_type = cps.choice.Choice(

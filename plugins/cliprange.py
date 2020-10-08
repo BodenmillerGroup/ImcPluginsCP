@@ -103,6 +103,7 @@ class ClipRange(cellprofiler_core.module.ImageProcessing):
 
     variable_revision_number = 1
 
+    category = ["ImcPluginsCP", "Image Processing"]
     #
     # "create_settings" is where you declare the user interface elements
     # (the "settings") which the user will use to customize your module.

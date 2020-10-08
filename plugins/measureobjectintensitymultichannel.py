@@ -142,7 +142,7 @@ ALL_LOCATION_MEASUREMENTS = [
 class MeasureObjectIntensityMultichannel(Module):
     module_name = "MeasureObjectIntensityMultichannel"
     variable_revision_number = 4
-    category = "Measurement"
+    category = ["ImcPluginsCP", "Measurement"]
 
     def create_settings(self):
         self.images_list = ImageListSubscriber(

@@ -120,7 +120,7 @@ ALL_MEASUREMENTS = [
 
 class MeasureImageIntensityMultiChannel(Module):
     module_name = "MeasureImageIntensityMultichannel"
-    category = "Measurement"
+    category = ["ImcPluginsCP", "Measurement"]
     variable_revision_number = 3
 
     def create_settings(self):

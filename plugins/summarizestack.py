@@ -25,7 +25,7 @@ SLOT_CHANNEL_CHOICE = 0
 class SummarizeStack(cpm.Module):
     module_name = "SummarizeStack"
     variable_revision_number = 1
-    category = "Image Processing"
+    category = ["ImcPluginsCP", "Image Processing"]
 
     def create_settings(self):
         self.image_name = cps.subscriber.ImageSubscriber(

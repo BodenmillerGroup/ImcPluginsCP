@@ -32,7 +32,7 @@ NONE = "None"
 class StackImages(cpm.Module):
     module_name = "StackImages"
     variable_revision_number = 2
-    category = "Image Processing"
+    category = ["ImcPluginsCP", "Image Processing"]
 
     def create_settings(self):
 
