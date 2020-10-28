@@ -280,15 +280,13 @@ class MeasureImageIntensityMultiChannel(Module):
             if mask is not None:
                 pixel_plane = pixel_plane[mask]
             cur_measurement_name = f"{measurement_name}_c{chan+1}"
-            measurements += (
-                self.measure_plane(
-                    pixel_plane,
-                    image_name,
-                    object_name,
-                    cur_measurement_name,
-                    chan,
-                    workspace,
-                )
+            measurements += self.measure_plane(
+                pixel_plane,
+                image_name,
+                object_name,
+                cur_measurement_name,
+                chan,
+                workspace,
             )
         return measurements
 
@@ -353,7 +351,7 @@ class MeasureImageIntensityMultiChannel(Module):
                 object_name if self.wants_objects.value else "",
                 f"Channel {channel+1}",
                 feature_name,
-                numpy.round(value,2),
+                numpy.round(value, 2),
             ]
             for feature_name, value in (
                 ("Total intensity", pixel_sum),

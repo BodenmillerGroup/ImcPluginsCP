@@ -634,7 +634,7 @@ class MeasureObjectIntensityMultichannel(Module):
                                 (
                                     image_name,
                                     object_name,
-                                    channel+1,
+                                    channel + 1,
                                     feature_name,
                                     numpy.round(numpy.mean(measurement), 3),
                                     numpy.round(numpy.median(measurement), 3),
