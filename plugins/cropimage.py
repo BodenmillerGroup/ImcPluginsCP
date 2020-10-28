@@ -1,7 +1,14 @@
-"""<b>Crop</b> crops an imag.
+"""<b>CropImage</b> Generates a crop of defined size.
 <hr>
-Allows cropping of sections of images, either by providing coordinates or by randomly choosing
-crops of a given size.
+Allows cropping of sections of images with defined size.
+Cropping coordinates can be chosen manually (e.g. also from Metadata) or randomly.
+
+This modules allows to provide metadata fields (e.g. Filename) as random seeds to make the 'random'
+cropping reproducible.
+
+A common use case is to reduce image size for a machine learning dataset.
+
+This is very similar to the Cellprofiler module: <b>Crop</b>.
 """
 
 import logging

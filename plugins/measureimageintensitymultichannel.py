@@ -13,11 +13,13 @@ from cellprofiler_core.setting.text import Integer
 from cellprofiler.modules import _help
 
 __doc__ = """
-MeasureImageIntensity Multichannel
-=====================
+MeasureImageIntensityMultichannel
+=================================
 
 **MeasureImageIntensity Multichannel ** measures several intensity features across an
 entire image over multiple channels (excluding masked pixels).
+
+The name of the measurements will have a suffix `_c{channelnr}` where channelnr is 1 based index of the plane.
 
 For example, this module will sum all pixel values to measure the total image
 intensity. You can choose to measure all pixels in the image or restrict

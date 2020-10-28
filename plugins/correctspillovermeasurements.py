@@ -1,9 +1,23 @@
-"""<b>CorrectSpillover - Apply</b> applies an spillover matrix, usually created by
-the R Bioconductor package CATALYST to a multichannel measurement
+"""<b>CorrectSpillover - Apply</b> applies an spillover matrix to measurments multichannel image to account for channel crosstalk (spillover)
 <hr>
 
-This module applies a previously calculate spillover matrix,
-loaded by <b>LoadSingleImage</b> to single cell measurements.
+This module applies a previously calculate spillover matrix, loaded as a normal image.
+The spillover matrix is a float image with dimensions p*p (p=number of color channels).
+The diagonal is usually 1 and the off-diagonal values indicate what fraction of the main signal
+is detected in other channels.
+
+The order of the channels in the measured image and in the matrix need to match.
+
+For Imaging Mass Cytometry please check the example scripts in this repository how to generate such a matrix:
+https://github.com/BodenmillerGroup/cyTOFcompensation
+
+For more conceptual information, check our paper: https://doi.org/10.1016/j.cels.2018.02.010
+
+Note that this compensation is only valid for measurements that perform identical operations of linear combinations of pixel values
+in all channels (e.g. MeanIntensity) but not others (e.g. MedianIntensity, MaxIntensity, StdIntensity...).
+For measurements where this applies, applying the compensation to *Measurements* is usually more accurate than compensating an image
+and then measuring.
+For measurments where this does not apply, please measure the image compensated with Module: *CorrectSpilloverApply*.
 """
 
 import numpy as np

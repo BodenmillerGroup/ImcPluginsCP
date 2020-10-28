@@ -1,7 +1,12 @@
-"""<b>TransformBinary</b> Applys transforms to a binary image.
+"""<b>TransformBinary</b> Applies a distance transforms to a binary image.
 <h>
-This modules allows you to apply distance transforms to the image. This can be
-usefull to quantify the distance of objects to a mask.
+This modules allows you to apply distance transforms to the image.
+Converts a boolean image (or stack of boolean images) to the 'distance to the border' between regions.
+
+Negative values indicate that a pixel is inside the object, positive that it is outside.
+
+Helpful to quantify distance to segmented region borders (e.g. after identifying 'tumor' regions, this could be used
+to quantify the distance to the tumor border).
 """
 
 import numpy as np

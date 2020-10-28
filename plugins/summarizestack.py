@@ -1,5 +1,5 @@
 """
-<b>Summarize Stack</b> converts an image with multiple channels to one image by averaging over the pixel values.
+<b>SummarizeStack</b> converts an image with multiple channels to one image by averaging/summing/... over the pixel values.
 """
 
 import re
@@ -49,8 +49,7 @@ class SummarizeStack(cpm.Module):
             "Input a Python function",
             "np.mean",
             doc="""
-        Can be a simple function as "np.max" (without ") or complicated as "functools.partial(np.percentile,q=80, axis=2)".
-        functools is imported as convenience.
+        Can be a simple function as "np.max" (without ") or complicated as "lambda x, axis: np.percentile(x,q=80, axis=axis)".
         """,
         )
         # The following settings are used for the combine option

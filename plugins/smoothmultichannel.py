@@ -4,13 +4,12 @@
 SmoothMultichannel
 ======
 
-**SmoothMultichannel** smooths (i.e., blurs) images.
+**SmoothMultichannel** smooths (i.e., blurs) images with multiple channels.
 
 This module allows you to smooth (blur) images, which can be helpful to
 remove small artifacts. Note that smoothing can be a time-consuming process
 and that all channels of the image are smoothed individually.
 
-|
 
 ============ ============ ===============
 Supports 2D? Supports 3D? Respects masks?

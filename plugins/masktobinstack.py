@@ -4,7 +4,7 @@
 This module is thought for cropped out masks that contain one main object.
 The main object id should be provided by metadata or manually. The module will
 then create a stack of 3 binary mask layers: the main object, other objects,
-background
+background.
 <br>
 """
 

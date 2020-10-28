@@ -1,11 +1,23 @@
-"""<b>CorrectSpillover - Apply</b> applies an spillover matrix, usually created by
-the R Bioconductor package CATALYST, to an image in order to correct for uneven
-illumination (uneven shading).
+"""<b>CorrectSpillover - Apply</b> applies an spillover matrix to a multichannel image to account for channel crosstalk (spillover)
 <hr>
 
-This module applies a previously calculate spillover matrix,
-loaded as a normal image or via <b>LoadSingleImage</b>.
-This module corrects each image in the pipeline using the function specified.
+This module applies a previously calculate spillover matrix, loaded as a normal image.
+The spillover matrix is a float image with dimensions p*p (p=number of color channels).
+The diagonal is usually 1 and the off-diagonal values indicate what fraction of the main signal
+is detected in other channels.
+
+The order of the channels in the image and in the matrix need to match.
+
+For Imaging Mass Cytometry please check the example scripts in this repository how to generate such a matrix:
+https://github.com/BodenmillerGroup/cyTOFcompensation
+
+For more conceptual information, check our paper: https://doi.org/10.1016/j.cels.2018.02.010
+
+In general compensated images are mainly for visual purposes or to assess intensity distributions.
+If you do single cell MeanIntensity quantification, applying the compensation to *Measurements* is usually more accurate
+as pixels are more noisy than averaged intensities.
+Module: *CorrectSpilloverMeasurements*.
+
 
 """
 

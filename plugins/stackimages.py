@@ -1,10 +1,9 @@
 # coding=utf-8
 
 """
-Stackimages
+StackImages
 ===========
-TODO: Improve documentation
-**StackImages** takes a grayscale or color images and stacks them.
+**StackImages** takes multiple grayscale or color images and stacks them to a new multichannel image.
 
 ============ ============ ===============
 Supports 2D? Supports 3D? Respects masks?

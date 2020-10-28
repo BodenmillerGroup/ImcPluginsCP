@@ -1,17 +1,15 @@
-"""<b>Save Croped Objects </b> Crops objects from an image and saves the croped
-images.
+"""<b>SaveObjectCrops </b> Crops object regions out of an image. One region per object.
 <hr>
-In order to process large images it can be benefitial to crop regions of
-interest out. This module will crop out segmented images from an object and
-save the cropped images as well as the masks used.
-<p>You can choose from many different image formats for saving your files. This
-allows you to use the module as a file format converter, by loading files
-in their original format and then saving them in an alternate format.</p>
+In order to process large images it can be beneficial to crop segmented regions of
+interest out. This module will crop out segmented images from an object masks.
 
-<p>Note that saving images in 12-bit format is not supported, and 16-bit format
-is supported for TIFF only.</p>
+The crops will be saved using the provided naming scheme with the following suffix:
+'_l{ObjectNumber}_x{x coordinate of top left corner}_y{y coordinate of top left corner}'
 
-See also <b>NamesAndTypes</b>, <b>ConserveMemory</b>.
+To save cropped object masks convert it first to an image using *ConvertObjectToImage*.
+
+This is similar to *SaveCroppedObjects* which will export full sized images where all pixels except the ones
+from the current objects are masked.
 """
 
 import logging
