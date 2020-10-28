@@ -2,7 +2,17 @@
    :target: https://zenodo.org/badge/latestdoi/69028464
 ImcPluginsCP
 ========================
-For a description of the associated image segmentation pipline, please visit: https://github.com/BodenmillerGroup/ImcSegmentationPipeline
+
+This repository contains CellProfiler plugins developed to facilitate working with highly multiplexed images
+(>40 channels).
+
+When produced through Imaging Mass Cytometry, these images are 'intrinsically' aligned, e.g. pixels across all color planes
+come from the same measurement and could affect each other (e.g. channel crosstalk). To represent this, we prefer
+to work with mutlichannel image instead of working with individual planes (similar to 3D images that are also not
+analyzed plane-by-plane but as a stack). This modules help Cellprofiler to better work with such stacks.
+
+Their main use have been the associated multiplexed image segmentation pipeline (https://github.com/BodenmillerGroup/ImcSegmentationPipeline)
+and projects using this workflow.
 
 Changenotes:
 -----------
