@@ -1,6 +1,5 @@
 import nox
 
-
 nox.options.sessions = "lint", "tests"
 
 
@@ -8,7 +7,7 @@ nox.options.sessions = "lint", "tests"
 def tests(session):
     args = session.posargs or []
     session.run("poetry", "install", external=True)
-    session.run("pytest", *args)
+    session.run("poetry", "run", "pytest", "--cov")
 
 
 locations = "plugins", "noxfile.py", "tests"
