@@ -7,7 +7,6 @@
 #################################
 
 import numpy as np
-import scipy.ndimage
 
 #################################
 #
@@ -15,9 +14,9 @@ import scipy.ndimage
 #
 ##################################
 
-import cellprofiler.image
-import cellprofiler.module
-import cellprofiler.setting
+import cellprofiler_core.image
+import cellprofiler_core.module
+import cellprofiler_core.setting
 
 __doc__ = """\
 ClipRange
@@ -71,26 +70,26 @@ References
 #
 # The module class.
 #
-# Your module should "inherit" from cellprofiler.module.Module, or a
-# subclass of cellprofiler.module.Module. This module inherits from
-# cellprofiler.module.ImageProcessing, which is the base class for
+# Your module should "inherit" from cellprofiler_core.module.Module, or a
+# subclass of cellprofiler_core.module.Module. This module inherits from
+# cellprofiler_core.module.ImageProcessing, which is the base class for
 # image processing modules. Image processing modules take an image as
 # input and output an image.
 #
-# This module will use the methods from cellprofiler.module.ImageProcessing
-# unless you re-implement them. You can let cellprofiler.module.ImageProcessing
+# This module will use the methods from cellprofiler_core.module.ImageProcessing
+# unless you re-implement them. You can let cellprofiler_core.module.ImageProcessing
 # do most of the work and implement only what you need.
 #
 # Other classes you can inherit from are:
 #
-# -  cellprofiler.module.ImageSegmentation: modules which take an image
+# -  cellprofiler_core.module.ImageSegmentation: modules which take an image
 #    as input and output a segmentation (objects) should inherit from this
 #    class.
-# -  cellprofiler.module.ObjectProcessing: modules which operate on objects
+# -  cellprofiler_core.module.ObjectProcessing: modules which operate on objects
 #    should inherit from this class. These are modules that take objects as
 #    input and output new objects.
 #
-class ClipRange(cellprofiler.module.ImageProcessing):
+class ClipRange(cellprofiler_core.module.ImageProcessing):
     #
     # The module starts by declaring the name that's used for display,
     # the category under which it is stored and the variable revision
@@ -104,16 +103,17 @@ class ClipRange(cellprofiler.module.ImageProcessing):
 
     variable_revision_number = 1
 
+    category = ["ImcPluginsCP", "Image Processing"]
     #
     # "create_settings" is where you declare the user interface elements
     # (the "settings") which the user will use to customize your module.
     #
-    # You can look at other modules and in cellprofiler.settings for
+    # You can look at other modules and in cellprofiler_core.settings for
     # settings you can use.
     #
     def create_settings(self):
         #
-        # The superclass (cellprofiler.module.ImageProcessing) defines two
+        # The superclass (cellprofiler_core.module.ImageProcessing) defines two
         # settings for image input and output:
         #
         # -  x_name: an ImageNameSubscriber which "subscribes" to all
@@ -140,14 +140,14 @@ that is made available by a prior module.
 **ClipRange** will clip the range of this image.
 """
         #
-        self.outlier_percentile = cellprofiler.setting.Float(
+        self.outlier_percentile = cellprofiler_core.setting.text.Float(
             text="Outlier Percentile",
             value=0.999,  # The default value is 1 - a short-range scale
             minval=0,  # We don't let the user type in really small values
             maxval=1,  # or large values
             doc="""\
                 This sets the percentile that will be clipd. E.g. if 0.99 is set, all pixel values that are higher than the value of the pixel at the 99th percentiles will be set to the value at the 99th percentile. In other words, the highest percent of pixel will be clipd.
-"""
+""",
         )
 
     #
@@ -164,9 +164,7 @@ that is made available by a prior module.
         settings = super(ClipRange, self).settings()
 
         # Append additional settings here.
-        return settings + [
-            self.outlier_percentile
-        ]
+        return settings + [self.outlier_percentile]
 
     #
     # "visible_settings" tells CellProfiler which settings should be
@@ -184,15 +182,16 @@ that is made available by a prior module.
         visible_settings = super(ClipRange, self).visible_settings()
 
         # Configure the visibility of additional settings below.
-        visible_settings += [
-            self.outlier_percentile
-        ]
+        visible_settings += [self.outlier_percentile]
 
         #
         # Show the user the scale only if self.wants_smoothing is checked
         #
 
         return visible_settings
+
+    def upgrade_settings(self, setting_values, variable_revision_number, module_name):
+        return setting_values, variable_revision_number
 
     #
     # CellProfiler calls "run" on each image set in your pipeline.
@@ -219,11 +218,10 @@ that is made available by a prior module.
     # The "gradient_image" function is inherently 2D, and we've noted this
     # in the documentation for the module. Explicitly return False here
     # to indicate that 3D images are not supported.
-# The first parameter must be the input image data. The remaining parameters are
+    # The first parameter must be the input image data. The remaining parameters are
     #
     def volumetric(self):
         return False
-
 
     def display(self, workspace, figure, cmap=["gray", "gray"]):
         """
@@ -234,8 +232,7 @@ that is made available by a prior module.
             layout = (2, 1)
 
             figure.set_subplots(
-                dimensions=workspace.display_data.dimensions,
-                subplots=layout
+                dimensions=workspace.display_data.dimensions, subplots=layout
             )
 
             figure.subplot_imshow_color(
@@ -243,7 +240,7 @@ that is made available by a prior module.
                 title=self.x_name.value,
                 normalize=True,
                 x=0,
-                y=0
+                y=0,
             )
 
             figure.subplot_imshow_color(
@@ -252,7 +249,7 @@ that is made available by a prior module.
                 title=self.y_name.value,
                 normalize=True,
                 x=1,
-                y=0
+                y=0,
             )
         else:
             super(ClipRange, self).display(workspace, figure, cmap)
@@ -268,12 +265,13 @@ def clip_percentile(pixels, outlier_percentile):
         output_pixels = pixels.copy()
         for channel in range(pixels.shape[2]):
             output_pixels[:, :, channel] = _clip_percentile_plane(
-                    pixels[:,:,channel], outlier_percentile)
+                pixels[:, :, channel], outlier_percentile
+            )
     else:
         output_pixels = _clip_percentile_plane(pixels, outlier_percentile)
     return output_pixels
 
-def _clip_percentile_plane(img, percentile):
-    tresh = np.percentile(img[:],percentile*100, interpolation='nearest')
-    return np.clip(img, a_min=None, a_max=tresh)
 
+def _clip_percentile_plane(img, percentile):
+    tresh = np.percentile(img[:], percentile * 100, interpolation="nearest")
+    return np.clip(img, a_min=None, a_max=tresh)

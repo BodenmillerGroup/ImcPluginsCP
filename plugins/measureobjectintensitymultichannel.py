@@ -6,20 +6,26 @@ import centrosome.outline
 import numpy
 import scipy.ndimage
 import skimage.segmentation
+from cellprofiler_core.constants.measurement import C_LOCATION, COLTYPE_FLOAT
+from cellprofiler_core.module import Module
+from cellprofiler_core.setting import Divider, ValidationError
+from cellprofiler_core.setting.subscriber import (
+    ImageListSubscriber,
+    LabelListSubscriber,
+)
+from cellprofiler_core.setting.text import Integer
+from cellprofiler_core.utilities.core.object import crop_labels_and_image
 
-import cellprofiler.measurement
-import cellprofiler.module
-import cellprofiler.object
-import cellprofiler.setting
-from cellprofiler.modules import identify
 from cellprofiler.modules import _help
 
 __doc__ = """
-MeasureObjectIntensity
-======================
+MeasureObjectIntensityMultichannel
+==================================
 
 **MeasureObjectIntensity** measures several intensity features for
-identified objects.
+identified objects for each plane of an entire image over multiple channels (excluding masked pixels).
+
+The name of the measurements will have a suffix `_c{channelnr}` where channelnr is 1 based index of the plane.
 
 Given an image with objects identified (e.g., nuclei or cells), this
 module extracts intensity features for each object based on one or more
@@ -38,7 +44,7 @@ measurements desired.
 ============ ============ ===============
 Supports 2D? Supports 3D? Respects masks?
 ============ ============ ===============
-YES          YES          YES
+YES          NO           YES
 ============ ============ ===============
 
 See also
@@ -81,191 +87,154 @@ Measurements made by this module
    (X,Y) coordinates of the pixel with the maximum intensity within the
    object.
 
-""".format(**{
-    "HELP_ON_MEASURING_INTENSITIES": _help.HELP_ON_MEASURING_INTENSITIES
-})
+""".format(
+    **{"HELP_ON_MEASURING_INTENSITIES": _help.HELP_ON_MEASURING_INTENSITIES}
+)
 
-INTENSITY = 'Intensity'
-INTEGRATED_INTENSITY = 'IntegratedIntensity'
-MEAN_INTENSITY = 'MeanIntensity'
-STD_INTENSITY = 'StdIntensity'
-MIN_INTENSITY = 'MinIntensity'
-MAX_INTENSITY = 'MaxIntensity'
-INTEGRATED_INTENSITY_EDGE = 'IntegratedIntensityEdge'
-MEAN_INTENSITY_EDGE = 'MeanIntensityEdge'
-STD_INTENSITY_EDGE = 'StdIntensityEdge'
-MIN_INTENSITY_EDGE = 'MinIntensityEdge'
-MAX_INTENSITY_EDGE = 'MaxIntensityEdge'
-MASS_DISPLACEMENT = 'MassDisplacement'
-LOWER_QUARTILE_INTENSITY = 'LowerQuartileIntensity'
-MEDIAN_INTENSITY = 'MedianIntensity'
-MAD_INTENSITY = 'MADIntensity'
-UPPER_QUARTILE_INTENSITY = 'UpperQuartileIntensity'
-LOC_CMI_X = 'CenterMassIntensity_X'
-LOC_CMI_Y = 'CenterMassIntensity_Y'
-LOC_CMI_Z = 'CenterMassIntensity_Z'
-LOC_MAX_X = 'MaxIntensity_X'
-LOC_MAX_Y = 'MaxIntensity_Y'
-LOC_MAX_Z = 'MaxIntensity_Z'
+INTENSITY = "Intensity"
+INTEGRATED_INTENSITY = "IntegratedIntensity"
+MEAN_INTENSITY = "MeanIntensity"
+STD_INTENSITY = "StdIntensity"
+MIN_INTENSITY = "MinIntensity"
+MAX_INTENSITY = "MaxIntensity"
+INTEGRATED_INTENSITY_EDGE = "IntegratedIntensityEdge"
+MEAN_INTENSITY_EDGE = "MeanIntensityEdge"
+STD_INTENSITY_EDGE = "StdIntensityEdge"
+MIN_INTENSITY_EDGE = "MinIntensityEdge"
+MAX_INTENSITY_EDGE = "MaxIntensityEdge"
+MASS_DISPLACEMENT = "MassDisplacement"
+LOWER_QUARTILE_INTENSITY = "LowerQuartileIntensity"
+MEDIAN_INTENSITY = "MedianIntensity"
+MAD_INTENSITY = "MADIntensity"
+UPPER_QUARTILE_INTENSITY = "UpperQuartileIntensity"
+LOC_CMI_X = "CenterMassIntensity_X"
+LOC_CMI_Y = "CenterMassIntensity_Y"
+LOC_CMI_Z = "CenterMassIntensity_Z"
+LOC_MAX_X = "MaxIntensity_X"
+LOC_MAX_Y = "MaxIntensity_Y"
+LOC_MAX_Z = "MaxIntensity_Z"
 
-ALL_MEASUREMENTS = [INTEGRATED_INTENSITY, MEAN_INTENSITY, STD_INTENSITY,
-                    MIN_INTENSITY, MAX_INTENSITY, INTEGRATED_INTENSITY_EDGE,
-                    MEAN_INTENSITY_EDGE, STD_INTENSITY_EDGE,
-                    MIN_INTENSITY_EDGE, MAX_INTENSITY_EDGE,
-                    MASS_DISPLACEMENT, LOWER_QUARTILE_INTENSITY,
-                    MEDIAN_INTENSITY, MAD_INTENSITY, UPPER_QUARTILE_INTENSITY]
-ALL_LOCATION_MEASUREMENTS = [LOC_CMI_X, LOC_CMI_Y, LOC_CMI_Z, LOC_MAX_X, LOC_MAX_Y, LOC_MAX_Z]
+ALL_MEASUREMENTS = [
+    INTEGRATED_INTENSITY,
+    MEAN_INTENSITY,
+    STD_INTENSITY,
+    MIN_INTENSITY,
+    MAX_INTENSITY,
+    INTEGRATED_INTENSITY_EDGE,
+    MEAN_INTENSITY_EDGE,
+    STD_INTENSITY_EDGE,
+    MIN_INTENSITY_EDGE,
+    MAX_INTENSITY_EDGE,
+    MASS_DISPLACEMENT,
+    LOWER_QUARTILE_INTENSITY,
+    MEDIAN_INTENSITY,
+    MAD_INTENSITY,
+    UPPER_QUARTILE_INTENSITY,
+]
+ALL_LOCATION_MEASUREMENTS = [
+    LOC_CMI_X,
+    LOC_CMI_Y,
+    LOC_CMI_Z,
+    LOC_MAX_X,
+    LOC_MAX_Y,
+    LOC_MAX_Z,
+]
 
 
-class MeasureObjectIntensity(cellprofiler.module.Module):
-    module_name = "MeasureObjectIntensity Multichannel"
-    variable_revision_number = 1
-    category = "Measurement"
+class MeasureObjectIntensityMultichannel(Module):
+    module_name = "MeasureObjectIntensityMultichannel"
+    variable_revision_number = 4
+    category = ["ImcPluginsCP", "Measurement"]
 
     def create_settings(self):
-        self.images = []
-        self.add_image(can_remove=False)
-        self.image_count = cellprofiler.setting.HiddenCount(self.images)
-        self.add_image_button = cellprofiler.setting.DoSomething("", "Add another image", self.add_image)
-        self.divider = cellprofiler.setting.Divider()
-        self.objects = []
-        self.add_object(can_remove=False)
-        self.add_object_button = cellprofiler.setting.DoSomething("", "Add another object", self.add_object)
+        self.images_list = ImageListSubscriber(
+            "Select images to measure",
+            [],
+            doc="""Select the grayscale images whose intensity you want to measure.""",
+        )
+        self.divider = Divider()
+        self.objects_list = LabelListSubscriber(
+            "Select objects to measure",
+            [],
+            doc="""Select the object sets whose intensity you want to measure.""",
+        )
 
-    def add_image(self, can_remove=True):
-        '''Add an image to the image_groups collection
-
-        can_delete - set this to False to keep from showing the "remove"
-                     button for images that must be present.
-        '''
-        group = cellprofiler.setting.SettingsGroup()
-        if can_remove:
-            group.append("divider", cellprofiler.setting.Divider(line=False))
-        group.append("name", cellprofiler.setting.ImageNameSubscriber(
-                "Select an image to measure", cellprofiler.setting.NONE, doc="""\
-Select the grayscale images whose intensity you want to measure."""))
-        group.append("nchannels",cellprofiler.setting.Integer(
-            "Number of channels", 1, minval=1, doc="""
-                    Indicate the number of channels of the image stack""" ))
-        if can_remove:
-            group.append("remover", cellprofiler.setting.RemoveSettingButton("", "Remove this image", self.images, group))
-        self.images.append(group)
-
-    def add_object(self, can_remove=True):
-        '''Add an object to the object_groups collection
-
-        can_delete - set this to False to keep from showing the "remove"
-                     button for images that must be present.
-        '''
-        group = cellprofiler.setting.SettingsGroup()
-        if can_remove:
-            group.append("divider", cellprofiler.setting.Divider(line=False))
-        group.append("name", cellprofiler.setting.ObjectNameSubscriber(
-                "Select objects to measure", cellprofiler.setting.NONE, doc="""\
-Select the objects whose intensities you want to measure."""))
-
-        if can_remove:
-            group.append("remover", cellprofiler.setting.RemoveSettingButton("", "Remove this object", self.objects, group))
-        self.objects.append(group)
+        self.nchannels = Integer(
+            "How many channels does the image have?",
+            1,
+            doc="""
+            Indicate how many planes this image have. This is needed as
+            the cellprofiler pipeline needs to be independent of the actuall
+            image data.
+            """,
+        )
 
     def settings(self):
-        result = [self.image_count]
-        result += [im.name for im in self.images]
-        result += [im.nchannels for im in self.images]
-        result += [obj.name for obj in self.objects]
+        result = [self.images_list, self.objects_list, self.nchannels]
         return result
 
     def visible_settings(self):
-        result = []
-        for im in self.images:
-            result += im.visible_settings()
-        result += [self.add_image_button, self.divider]
-        for im in self.objects:
-            result += im.visible_settings()
-        result += [self.add_object_button]
+        result = [self.images_list, self.nchannels, self.divider, self.objects_list]
         return result
 
-    def upgrade_settings(self, setting_values, variable_revision_number,
-                         module_name, from_matlab):
-        '''Adjust setting values if they came from a previous revision
-
-        setting_values - a sequence of strings representing the settings
-                         for the module as stored in the pipeline
-        variable_revision_number - the variable revision number of the
-                         module at the time the pipeline was saved. Use this
-                         to determine how the incoming setting values map
-                         to those of the current module version.
-        module_name - the name of the module that did the saving. This can be
-                      used to import the settings from another module if
-                      that module was merged into the current module
-        from_matlab - True if the settings came from a Matlab pipeline, False
-                      if the settings are from a CellProfiler 2.0 pipeline.
-
-        Overriding modules should return a tuple of setting_values,
-        variable_revision_number and True if upgraded to CP 2.0, otherwise
-        they should leave things as-is so that the caller can report
-        an error.
-        '''
-        return setting_values, variable_revision_number, from_matlab
-
-    def prepare_settings(self, setting_values):
-        """Do any sort of adjustment to the settings required for the given values
-
-        setting_values - the values for the settings
-
-        This method allows a module to specialize itself according to
-        the number of settings and their value. For instance, a module that
-        takes a variable number of images or objects can increase or decrease
-        the number of relevant settings so they map correctly to the values.
-
-        See cellprofiler.modules.measureobjectsizeshape for an example.
-        """
-        #
-        # The settings have two parts - images, then objects
-        # The parts are divided by the string, cps.DO_NOT_USE
-        #
-        image_count = int(setting_values[0])
-        object_count = len(setting_values) - 2*image_count - 1
-        del self.images[image_count:]
-        while len(self.images) < image_count:
-            self.add_image()
-        del self.objects[object_count:]
-        while len(self.objects) < object_count:
-            self.add_object()
+    def upgrade_settings(self, setting_values, variable_revision_number, module_name):
+        if variable_revision_number <= 3:
+            num_imgs = int(setting_values[0])
+            images_list = setting_values[1 : num_imgs + 1]
+            nchannels_list = setting_values[num_imgs + 1 : 2 * num_imgs + 1]
+            objects_list = setting_values[2 * num_imgs + 1 :]
+            setting_values = [
+                ", ".join(map(str, images_list)),
+                ", ".join(map(str, objects_list)),
+                nchannels_list[0],
+            ]
+            variable_revision_number = 4
+        return setting_values, variable_revision_number
 
     def validate_module(self, pipeline):
         """Make sure chosen objects and images are selected only once"""
         images = set()
-        for group in self.images:
-            if group.name.value in images:
-                raise cellprofiler.setting.ValidationError(
-                        "%s has already been selected" % group.name.value,
-                        group.name)
-            images.add(group.name.value)
+        if len(self.images_list.value) == 0:
+            raise ValidationError("No images selected", self.images_list)
+        elif len(self.objects_list.value) == 0:
+            raise ValidationError("No objects selected", self.objects_list)
+        for image_name in self.images_list.value:
+            if image_name in images:
+                raise ValidationError(
+                    "%s has already been selected" % image_name, image_name
+                )
+            images.add(image_name)
 
         objects = set()
-        for group in self.objects:
-            if group.name.value in objects:
-                raise cellprofiler.setting.ValidationError(
-                        "%s has already been selected" % group.name.value,
-                        group.name)
-            objects.add(group.name.value)
+        for object_name in self.objects_list.value:
+            if object_name in objects:
+                raise ValidationError(
+                    "%s has already been selected" % object_name, object_name
+                )
+            objects.add(object_name)
 
     def get_measurement_columns(self, pipeline):
-        '''Return the column definitions for measurements made by this module'''
+        """Return the column definitions for measurements made by this module"""
         columns = []
-        for im in self.images:
-            image_name = im.name
-            for channel in range(im.nchannels.value):
-                for object_name in [obj.name for obj in self.objects]:
+        for image_name in self.images_list.value:
+            for channel in range(self.nchannels.value):
+                for object_name in self.objects_list.value:
                     for category, features in (
-                            (INTENSITY, ALL_MEASUREMENTS),
-                            (cellprofiler.measurement.C_LOCATION, ALL_LOCATION_MEASUREMENTS)):
+                        (INTENSITY, ALL_MEASUREMENTS),
+                        (
+                            C_LOCATION,
+                            ALL_LOCATION_MEASUREMENTS,
+                        ),
+                    ):
                         for feature in features:
-                            columns.append((object_name.value,
-                                            "%s_%s_%s_c%s" % (category, feature,
-                                                          image_name.value, str(channel+1)),
-                                            cellprofiler.measurement.COLTYPE_FLOAT))
+                            columns.append(
+                                (
+                                    object_name,
+                                    "%s_%s_%s_c%s"
+                                    % (category, feature, image_name, channel + 1),
+                                    COLTYPE_FLOAT,
+                                )
+                            )
 
         return columns
 
@@ -276,21 +245,21 @@ Select the objects whose intensities you want to measure."""))
         object_name - name of labels in question (or 'Images')
         returns a list of category names
         """
-        for object_name_variable in [obj.name for obj in self.objects]:
-            if object_name_variable.value == object_name:
-                return [INTENSITY, cellprofiler.measurement.C_LOCATION]
+        for object_set in self.objects_list.value:
+            if object_set == object_name:
+                return [INTENSITY, C_LOCATION]
         return []
 
     def get_measurements(self, pipeline, object_name, category):
         """Get the measurements made on the given object in the given category"""
-        if category == cellprofiler.measurement.C_LOCATION:
+        if category == C_LOCATION:
             all_measurements = ALL_LOCATION_MEASUREMENTS
         elif category == INTENSITY:
             all_measurements = ALL_MEASUREMENTS
         else:
             return []
-        for object_name_variable in [obj.name for obj in self.objects]:
-            if object_name_variable.value == object_name:
+        for object_set in self.objects_list.value:
+            if object_set == object_name:
                 return all_measurements
         return []
 
@@ -299,33 +268,66 @@ Select the objects whose intensities you want to measure."""))
         if category == INTENSITY:
             if measurement not in ALL_MEASUREMENTS:
                 return []
-        elif category == cellprofiler.measurement.C_LOCATION:
+        elif category == C_LOCATION:
             if measurement not in ALL_LOCATION_MEASUREMENTS:
                 return []
         else:
             return []
-        for object_name_variable in [obj.name for obj in self.objects]:
-            if object_name_variable == object_name:
-                return [image.name.value for image in self.images]
+        for object_set in self.objects_list.value:
+            if object_set == object_name:
+                return self.images_list.value
         return []
 
     def run(self, workspace):
         if self.show_window:
             workspace.display_data.col_labels = (
-                "Image", "channel", "Object", "Feature", "Mean", "Median", "STD")
+                "Image",
+                "Object",
+                "Channel",
+                "Feature",
+                "Mean",
+                "Median",
+                "STD",
+            )
             workspace.display_data.statistics = statistics = []
-        for im in self.images:
-            image_name = im.name
-            image = workspace.image_set.get_image(image_name.value,
-                                                  must_be_grayscale=False)
-            nchan = im.nchannels.value
-            for channel in range(nchan):
-                for object_name in [obj.name for obj in self.objects]:
+        if len(self.images_list.value) == 0 or len(self.objects_list.value) == 0:
+            raise ValueError(
+                "This module needs at least 1 image and object set selected"
+            )
+        nchannels = self.nchannels.value
+        for channel in range(nchannels):
+            for image_name in self.images_list.value:
+                image = workspace.image_set.get_image(
+                    image_name, must_be_grayscale=False
+                )
+                img = image.pixel_data
+
+                if img.ndim == 2:
+                    img_channels = 1
+                else:
+                    img_channels = img.shape[2]
+
+                if img_channels != nchannels:
+                    raise ValueError(
+                        f"""
+                    The module configuration suggests the image should have {nchannels} channels\n
+                    but the image "{image_name}" has only {img_channels} channels. \n
+                    Are you sure the image is set as color and not set as grayscale in NamesAndTypes?\n
+                    Did you adapt the number of channels to the actual number of channels?
+                    """
+                    )
+                for object_name in self.objects_list.value:
+                    if object_name not in workspace.object_set.object_names:
+                        raise ValueError(
+                            "The %s objects are missing from the pipeline."
+                            % object_name
+                        )
                     # Need to refresh image after each iteration...
-                    if nchan == 1:
-                        img = image.pixel_data
+                    if nchannels == 1:
+                        img = img.squeeze()
                     else:
-                        img = image.pixel_data[:,:,channel].squeeze()
+                        img = img[:, :, channel].squeeze()
+
                     if image.has_mask:
                         masked_image = img.copy()
                         masked_image[~image.mask] = 0
@@ -339,7 +341,7 @@ Select the objects whose intensities you want to measure."""))
                         masked_image = masked_image.reshape(1, *masked_image.shape)
                         image_mask = image_mask.reshape(1, *image_mask.shape)
 
-                    objects = workspace.object_set.get_objects(object_name.value)
+                    objects = workspace.object_set.get_objects(object_name)
                     nobjects = objects.count
                     integrated_intensity = numpy.zeros((nobjects,))
                     integrated_intensity_edge = numpy.zeros((nobjects,))
@@ -368,12 +370,14 @@ Select the objects whose intensities you want to measure."""))
                         if image.dimensions == 2:
                             labels = labels.reshape(1, *labels.shape)
 
-                        labels, img = cellprofiler.object.crop_labels_and_image(labels, img)
-                        _, masked_image = cellprofiler.object.crop_labels_and_image(labels, masked_image)
-                        outlines = skimage.segmentation.find_boundaries(labels, mode='inner')
+                        labels, img = crop_labels_and_image(labels, img)
+                        _, masked_image = crop_labels_and_image(labels, masked_image)
+                        outlines = skimage.segmentation.find_boundaries(
+                            labels, mode="inner"
+                        )
 
                         if image.has_mask:
-                            _, mask = cellprofiler.object.crop_labels_and_image(labels, image_mask)
+                            _, mask = crop_labels_and_image(labels, image_mask)
                             masked_labels = labels.copy()
                             masked_labels[~mask] = 0
                             masked_outlines = outlines.copy()
@@ -382,38 +386,75 @@ Select the objects whose intensities you want to measure."""))
                             masked_labels = labels
                             masked_outlines = outlines
 
-                        lmask = masked_labels > 0 & numpy.isfinite(img)  # Ignore NaNs, Infs
+                        lmask = masked_labels > 0 & numpy.isfinite(
+                            img
+                        )  # Ignore NaNs, Infs
                         has_objects = numpy.any(lmask)
                         if has_objects:
                             limg = img[lmask]
 
                             llabels = labels[lmask]
 
-                            mesh_z,\
-                                mesh_y, \
-                                mesh_x = numpy.mgrid[0:masked_image.shape[0], 0:masked_image.shape[1], 0:masked_image.shape[2]]
+                            mesh_z, mesh_y, mesh_x = numpy.mgrid[
+                                0 : masked_image.shape[0],
+                                0 : masked_image.shape[1],
+                                0 : masked_image.shape[2],
+                            ]
 
                             mesh_x = mesh_x[lmask]
                             mesh_y = mesh_y[lmask]
                             mesh_z = mesh_z[lmask]
 
-                            lcount = centrosome.cpmorphology.fixup_scipy_ndimage_result(scipy.ndimage.sum(numpy.ones(len(limg)), llabels, lindexes))
-
-                            integrated_intensity[lindexes - 1] = centrosome.cpmorphology.fixup_scipy_ndimage_result(scipy.ndimage.sum(limg, llabels, lindexes))
-
-                            mean_intensity[lindexes - 1] = integrated_intensity[lindexes - 1] / lcount
-
-                            std_intensity[lindexes - 1] = numpy.sqrt(
-                                centrosome.cpmorphology.fixup_scipy_ndimage_result(scipy.ndimage.mean((limg - mean_intensity[llabels - 1]) ** 2, llabels, lindexes))
+                            lcount = centrosome.cpmorphology.fixup_scipy_ndimage_result(
+                                scipy.ndimage.sum(
+                                    numpy.ones(len(limg)), llabels, lindexes
+                                )
                             )
 
-                            min_intensity[lindexes - 1] = centrosome.cpmorphology.fixup_scipy_ndimage_result(scipy.ndimage.minimum(limg, llabels, lindexes))
+                            integrated_intensity[
+                                lindexes - 1
+                            ] = centrosome.cpmorphology.fixup_scipy_ndimage_result(
+                                scipy.ndimage.sum(limg, llabels, lindexes)
+                            )
 
-                            max_intensity[lindexes - 1] = centrosome.cpmorphology.fixup_scipy_ndimage_result(scipy.ndimage.maximum(limg, llabels, lindexes))
+                            mean_intensity[lindexes - 1] = (
+                                integrated_intensity[lindexes - 1] / lcount
+                            )
+
+                            std_intensity[lindexes - 1] = numpy.sqrt(
+                                centrosome.cpmorphology.fixup_scipy_ndimage_result(
+                                    scipy.ndimage.mean(
+                                        (limg - mean_intensity[llabels - 1]) ** 2,
+                                        llabels,
+                                        lindexes,
+                                    )
+                                )
+                            )
+
+                            min_intensity[
+                                lindexes - 1
+                            ] = centrosome.cpmorphology.fixup_scipy_ndimage_result(
+                                scipy.ndimage.minimum(limg, llabels, lindexes)
+                            )
+
+                            max_intensity[
+                                lindexes - 1
+                            ] = centrosome.cpmorphology.fixup_scipy_ndimage_result(
+                                scipy.ndimage.maximum(limg, llabels, lindexes)
+                            )
 
                             # Compute the position of the intensity maximum
-                            max_position = numpy.array(centrosome.cpmorphology.fixup_scipy_ndimage_result(scipy.ndimage.maximum_position(limg, llabels, lindexes)), dtype=int)
-                            max_position = numpy.reshape(max_position, (max_position.shape[0],))
+                            max_position = numpy.array(
+                                centrosome.cpmorphology.fixup_scipy_ndimage_result(
+                                    scipy.ndimage.maximum_position(
+                                        limg, llabels, lindexes
+                                    )
+                                ),
+                                dtype=int,
+                            )
+                            max_position = numpy.reshape(
+                                max_position, (max_position.shape[0],)
+                            )
 
                             max_x[lindexes - 1] = mesh_x[max_position]
                             max_y[lindexes - 1] = mesh_y[max_position]
@@ -423,23 +464,43 @@ Select the objects whose intensities you want to measure."""))
                             # of mass of the binary image and of the intensity image. The
                             # center of mass is the average X or Y for the binary image
                             # and the sum of X or Y * intensity / integrated intensity
-                            cm_x = centrosome.cpmorphology.fixup_scipy_ndimage_result(scipy.ndimage.mean(mesh_x, llabels, lindexes))
-                            cm_y = centrosome.cpmorphology.fixup_scipy_ndimage_result(scipy.ndimage.mean(mesh_y, llabels, lindexes))
-                            cm_z = centrosome.cpmorphology.fixup_scipy_ndimage_result(scipy.ndimage.mean(mesh_z, llabels, lindexes))
+                            cm_x = centrosome.cpmorphology.fixup_scipy_ndimage_result(
+                                scipy.ndimage.mean(mesh_x, llabels, lindexes)
+                            )
+                            cm_y = centrosome.cpmorphology.fixup_scipy_ndimage_result(
+                                scipy.ndimage.mean(mesh_y, llabels, lindexes)
+                            )
+                            cm_z = centrosome.cpmorphology.fixup_scipy_ndimage_result(
+                                scipy.ndimage.mean(mesh_z, llabels, lindexes)
+                            )
 
-                            i_x = centrosome.cpmorphology.fixup_scipy_ndimage_result(scipy.ndimage.sum(mesh_x * limg, llabels, lindexes))
-                            i_y = centrosome.cpmorphology.fixup_scipy_ndimage_result(scipy.ndimage.sum(mesh_y * limg, llabels, lindexes))
-                            i_z = centrosome.cpmorphology.fixup_scipy_ndimage_result(scipy.ndimage.sum(mesh_z * limg, llabels, lindexes))
+                            i_x = centrosome.cpmorphology.fixup_scipy_ndimage_result(
+                                scipy.ndimage.sum(mesh_x * limg, llabels, lindexes)
+                            )
+                            i_y = centrosome.cpmorphology.fixup_scipy_ndimage_result(
+                                scipy.ndimage.sum(mesh_y * limg, llabels, lindexes)
+                            )
+                            i_z = centrosome.cpmorphology.fixup_scipy_ndimage_result(
+                                scipy.ndimage.sum(mesh_z * limg, llabels, lindexes)
+                            )
 
-                            cmi_x[lindexes - 1] = i_x / integrated_intensity[lindexes - 1]
-                            cmi_y[lindexes - 1] = i_y / integrated_intensity[lindexes - 1]
-                            cmi_z[lindexes - 1] = i_z / integrated_intensity[lindexes - 1]
+                            cmi_x[lindexes - 1] = (
+                                i_x / integrated_intensity[lindexes - 1]
+                            )
+                            cmi_y[lindexes - 1] = (
+                                i_y / integrated_intensity[lindexes - 1]
+                            )
+                            cmi_z[lindexes - 1] = (
+                                i_z / integrated_intensity[lindexes - 1]
+                            )
 
                             diff_x = cm_x - cmi_x[lindexes - 1]
                             diff_y = cm_y - cmi_y[lindexes - 1]
                             diff_z = cm_z - cmi_z[lindexes - 1]
 
-                            mass_displacement[lindexes - 1] = numpy.sqrt(diff_x * diff_x + diff_y * diff_y + diff_z * diff_z)
+                            mass_displacement[lindexes - 1] = numpy.sqrt(
+                                diff_x * diff_x + diff_y * diff_y + diff_z * diff_z
+                            )
 
                             #
                             # Sort the intensities by label, then intensity.
@@ -451,9 +512,9 @@ Select the objects whose intensities you want to measure."""))
                             areas = lcount.astype(int)
                             indices = numpy.cumsum(areas) - areas
                             for dest, fraction in (
-                                    (lower_quartile_intensity, 1.0 / 4.0),
-                                    (median_intensity, 1.0 / 2.0),
-                                    (upper_quartile_intensity, 3.0 / 4.0)
+                                (lower_quartile_intensity, 1.0 / 4.0),
+                                (median_intensity, 1.0 / 2.0),
+                                (upper_quartile_intensity, 3.0 / 4.0),
                             ):
                                 qindex = indices.astype(float) + areas * fraction
                                 qfraction = qindex - numpy.floor(qindex)
@@ -461,7 +522,10 @@ Select the objects whose intensities you want to measure."""))
                                 qmask = qindex < indices + areas - 1
                                 qi = qindex[qmask]
                                 qf = qfraction[qmask]
-                                dest[lindexes[qmask] - 1] = (limg[order[qi]] * (1 - qf) + limg[order[qi + 1]] * qf)
+                                dest[lindexes[qmask] - 1] = (
+                                    limg[order[qi]] * (1 - qf)
+                                    + limg[order[qi + 1]] * qf
+                                )
 
                                 #
                                 # In some situations (e.g., only 3 points), there may
@@ -481,9 +545,14 @@ Select the objects whose intensities you want to measure."""))
                             qmask = qindex < indices + areas - 1
                             qi = qindex[qmask]
                             qf = qfraction[qmask]
-                            mad_intensity[lindexes[qmask] - 1] = (madimg[order[qi]] * (1 - qf) + madimg[order[qi + 1]] * qf)
+                            mad_intensity[lindexes[qmask] - 1] = (
+                                madimg[order[qi]] * (1 - qf)
+                                + madimg[order[qi + 1]] * qf
+                            )
                             qmask = (~qmask) & (areas > 0)
-                            mad_intensity[lindexes[qmask] - 1] = madimg[order[qindex[qmask]]]
+                            mad_intensity[lindexes[qmask] - 1] = madimg[
+                                order[qindex[qmask]]
+                            ]
 
                         emask = masked_outlines > 0
                         eimg = img[emask]
@@ -491,66 +560,99 @@ Select the objects whose intensities you want to measure."""))
                         has_edge = len(eimg) > 0
 
                         if has_edge:
-                            ecount = centrosome.cpmorphology.fixup_scipy_ndimage_result(scipy.ndimage.sum(numpy.ones(len(eimg)), elabels, lindexes))
-
-                            integrated_intensity_edge[lindexes - 1] = centrosome.cpmorphology.fixup_scipy_ndimage_result(scipy.ndimage.sum(eimg, elabels, lindexes))
-
-                            mean_intensity_edge[lindexes - 1] = integrated_intensity_edge[lindexes - 1] / ecount
-
-                            std_intensity_edge[lindexes - 1] = numpy.sqrt(
-                                centrosome.cpmorphology.fixup_scipy_ndimage_result(scipy.ndimage.mean((eimg - mean_intensity_edge[elabels - 1]) ** 2, elabels, lindexes))
+                            ecount = centrosome.cpmorphology.fixup_scipy_ndimage_result(
+                                scipy.ndimage.sum(
+                                    numpy.ones(len(eimg)), elabels, lindexes
+                                )
                             )
 
-                            min_intensity_edge[lindexes - 1] = centrosome.cpmorphology.fixup_scipy_ndimage_result(scipy.ndimage.minimum(eimg, elabels, lindexes))
+                            integrated_intensity_edge[
+                                lindexes - 1
+                            ] = centrosome.cpmorphology.fixup_scipy_ndimage_result(
+                                scipy.ndimage.sum(eimg, elabels, lindexes)
+                            )
 
-                            max_intensity_edge[lindexes - 1] = centrosome.cpmorphology.fixup_scipy_ndimage_result(scipy.ndimage.maximum(eimg, elabels, lindexes))
+                            mean_intensity_edge[lindexes - 1] = (
+                                integrated_intensity_edge[lindexes - 1] / ecount
+                            )
+
+                            std_intensity_edge[lindexes - 1] = numpy.sqrt(
+                                centrosome.cpmorphology.fixup_scipy_ndimage_result(
+                                    scipy.ndimage.mean(
+                                        (eimg - mean_intensity_edge[elabels - 1]) ** 2,
+                                        elabels,
+                                        lindexes,
+                                    )
+                                )
+                            )
+
+                            min_intensity_edge[
+                                lindexes - 1
+                            ] = centrosome.cpmorphology.fixup_scipy_ndimage_result(
+                                scipy.ndimage.minimum(eimg, elabels, lindexes)
+                            )
+
+                            max_intensity_edge[
+                                lindexes - 1
+                            ] = centrosome.cpmorphology.fixup_scipy_ndimage_result(
+                                scipy.ndimage.maximum(eimg, elabels, lindexes)
+                            )
 
                     m = workspace.measurements
 
                     for category, feature_name, measurement in (
-                            (INTENSITY, INTEGRATED_INTENSITY, integrated_intensity),
-                            (INTENSITY, MEAN_INTENSITY, mean_intensity),
-                            (INTENSITY, STD_INTENSITY, std_intensity),
-                            (INTENSITY, MIN_INTENSITY, min_intensity),
-                            (INTENSITY, MAX_INTENSITY, max_intensity),
-                            (INTENSITY, INTEGRATED_INTENSITY_EDGE, integrated_intensity_edge),
-                            (INTENSITY, MEAN_INTENSITY_EDGE, mean_intensity_edge),
-                            (INTENSITY, STD_INTENSITY_EDGE, std_intensity_edge),
-                            (INTENSITY, MIN_INTENSITY_EDGE, min_intensity_edge),
-                            (INTENSITY, MAX_INTENSITY_EDGE, max_intensity_edge),
-                            (INTENSITY, MASS_DISPLACEMENT, mass_displacement),
-                            (INTENSITY, LOWER_QUARTILE_INTENSITY, lower_quartile_intensity),
-                            (INTENSITY, MEDIAN_INTENSITY, median_intensity),
-                            (INTENSITY, MAD_INTENSITY, mad_intensity),
-                            (INTENSITY, UPPER_QUARTILE_INTENSITY, upper_quartile_intensity),
-                            (cellprofiler.measurement.C_LOCATION, LOC_CMI_X, cmi_x),
-                            (cellprofiler.measurement.C_LOCATION, LOC_CMI_Y, cmi_y),
-                            (cellprofiler.measurement.C_LOCATION, LOC_CMI_Z, cmi_z),
-                            (cellprofiler.measurement.C_LOCATION, LOC_MAX_X, max_x),
-                            (cellprofiler.measurement.C_LOCATION, LOC_MAX_Y, max_y),
-                            (cellprofiler.measurement.C_LOCATION, LOC_MAX_Z, max_z)
+                        (INTENSITY, INTEGRATED_INTENSITY, integrated_intensity),
+                        (INTENSITY, MEAN_INTENSITY, mean_intensity),
+                        (INTENSITY, STD_INTENSITY, std_intensity),
+                        (INTENSITY, MIN_INTENSITY, min_intensity),
+                        (INTENSITY, MAX_INTENSITY, max_intensity),
+                        (
+                            INTENSITY,
+                            INTEGRATED_INTENSITY_EDGE,
+                            integrated_intensity_edge,
+                        ),
+                        (INTENSITY, MEAN_INTENSITY_EDGE, mean_intensity_edge),
+                        (INTENSITY, STD_INTENSITY_EDGE, std_intensity_edge),
+                        (INTENSITY, MIN_INTENSITY_EDGE, min_intensity_edge),
+                        (INTENSITY, MAX_INTENSITY_EDGE, max_intensity_edge),
+                        (INTENSITY, MASS_DISPLACEMENT, mass_displacement),
+                        (INTENSITY, LOWER_QUARTILE_INTENSITY, lower_quartile_intensity),
+                        (INTENSITY, MEDIAN_INTENSITY, median_intensity),
+                        (INTENSITY, MAD_INTENSITY, mad_intensity),
+                        (INTENSITY, UPPER_QUARTILE_INTENSITY, upper_quartile_intensity),
+                        (C_LOCATION, LOC_CMI_X, cmi_x),
+                        (C_LOCATION, LOC_CMI_Y, cmi_y),
+                        (C_LOCATION, LOC_CMI_Z, cmi_z),
+                        (C_LOCATION, LOC_MAX_X, max_x),
+                        (C_LOCATION, LOC_MAX_Y, max_y),
+                        (C_LOCATION, LOC_MAX_Z, max_z),
                     ):
-                        measurement_name = "%s_%s_%s_c%s" % (category, feature_name,
-                                                              image_name.value, str(channel+1))
-                        m.add_measurement(object_name.value, measurement_name, measurement)
+                        measurement_name = "{}_{}_{}_c{}".format(
+                            category, feature_name, image_name, channel + 1
+                        )
+                        m.add_measurement(object_name, measurement_name, measurement)
                         if self.show_window and len(measurement) > 0:
                             statistics.append(
                                 (
-                                    image_name.value,
-                                    'c'+str(channel+1),
-                                    object_name.value,
+                                    image_name,
+                                    object_name,
+                                    channel + 1,
                                     feature_name,
                                     numpy.round(numpy.mean(measurement), 3),
                                     numpy.round(numpy.median(measurement), 3),
-                                    numpy.round(numpy.std(measurement), 3)
+                                    numpy.round(numpy.std(measurement), 3),
                                 )
                             )
 
     def display(self, workspace, figure):
         figure.set_subplots((1, 1))
-        figure.subplot_table(0, 0,
-                             workspace.display_data.statistics,
-                             col_labels=workspace.display_data.col_labels)
+        figure.subplot_table(
+            0,
+            0,
+            workspace.display_data.statistics,
+            col_labels=workspace.display_data.col_labels,
+            title="default",
+        )
 
     def volumetric(self):
-        return True
+        return False
