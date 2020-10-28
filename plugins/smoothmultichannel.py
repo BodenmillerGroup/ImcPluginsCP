@@ -2,7 +2,7 @@
 
 """
 SmoothMultichannel
-======
+==================
 
 **SmoothMultichannel** smooths (i.e., blurs) images with multiple channels.
 
