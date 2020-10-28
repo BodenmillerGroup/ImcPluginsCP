@@ -35,6 +35,7 @@ class DummyMeasurementModule(Module):
     to generate a number of multichannel measurements
     based on it's nchannels attribute.
     """
+
     def __init__(self, *args, **kwargs):
         self.nchannels = 2
         super().__init__(*args, **kwargs)
@@ -42,17 +43,14 @@ class DummyMeasurementModule(Module):
     def get_measurement_columns(self, pipeline):
         outcols = []
         for i in range(self.nchannels):
-            outcols.append(
-                (OBJECT_NAME,
-                f"{MEASUREMENT_NAME}_c{i+1}",
-                 COLTYPE_FLOAT
-                 )
-            )
+            outcols.append((OBJECT_NAME, f"{MEASUREMENT_NAME}_c{i+1}", COLTYPE_FLOAT))
         return outcols
+
 
 @pytest.fixture(scope="function")
 def meas_module():
     return DummyMeasurementModule()
+
 
 @pytest.fixture(scope="function")
 def module():
