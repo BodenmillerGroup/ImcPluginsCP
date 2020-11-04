@@ -25,7 +25,7 @@ MeasureObjectIntensityMultichannel
 **MeasureObjectIntensity** measures several intensity features for
 identified objects for each plane of an entire image over multiple channels (excluding masked pixels).
 
-The name of the measurements will have a suffix `_c{channelnr}` where channelnr is 1 based index of the plane.
+The name of the measurements will have a suffix `_c[channelnr] ` where channelnr is 1 based index of the plane.
 
 Given an image with objects identified (e.g., nuclei or cells), this
 module extracts intensity features for each object based on one or more
