@@ -240,7 +240,7 @@ class ExportVarCsv(cpm.Module):
         )
 
         feature_meta = self.get_var_meta(object_name, workspace)
-        fd = open(file_name, "w", newline="")
+        fd = open(file_name, "w", newline="", encoding='utf-8')
         try:
             writer = csv.writer(fd, delimiter=DELEMITER)
             # Write the header
