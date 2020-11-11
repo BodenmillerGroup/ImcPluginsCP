@@ -218,7 +218,7 @@ class ExportVarCsv(cpm.Module):
         ]
 
         feature_meta = [{**DEFAULT_VARMETA,
-                         **parse_colname(feature),
+                         **parse_column_name(feature),
                          'datatype': coltype}
             for col_object, feature, coltype in features
         ]
@@ -297,43 +297,46 @@ class ExportVarCsv(cpm.Module):
 
 def parse_intensity_col(col):
     re_exp = ('(?P<category>[a-zA-Z0-9]+)_'
-              '(?P<featurename>[a-zA-Z0-9]+(_[XYZ]+)?)'
-              '(_(?P<imagename>[a-zA-Z0-9]+))?'
+              '(?P<feature_name>[a-zA-Z0-9]+(_[XYZ]+)?)'
+              '(_(?P<image_name>[a-zA-Z0-9]+))?'
               '(_(?P<parameters>[0-9of]+))?'
               '(_c(?P<channel>[0-9]+))?')
-    return {'colname': col, **re.match(re_exp, col).groupdict()}
+    return {'column_name': col, **re.match(re_exp, col).groupdict()}
 
 def parse_areashape_col(col):
     re_exp = ('(?P<category>[a-zA-Z0-9]+)_'
-              '(?P<featurename>.*)')
-    return {'colname': col, **re.match(re_exp, col).groupdict()}
+              '(?P<feature_name>.*)')
+    return {'column_name': col, **re.match(re_exp, col).groupdict()}
 
 def parse_id_col(col):
-    return {'colname': col, 'category': 'ID', 'featurename': col}
+    return {'column_name': col, 'category': 'ID', 'feature_name': col}
 
 def parse_neighbors_col(col):
     re_exp = ('(?P<category>[a-zA-Z0-9]+)_'
-              '(?P<featurename>[a-zA-Z0-9]+)'
-             '(_(?P<parameters>[0-9_]+))?')
-    outdict = {'colname': col,
+              '(?P<feature_name>[a-zA-Z0-9]+)'
+              '(_(?P<parameters>[0-9_]+))?')
+    outdict = {'column_name': col,
             **re.match(re_exp, col).groupdict()}
     return outdict
 
 def parse_parent_col(col):
     re_exp = ('(?P<category>[a-zA-Z0-9]+)'
-              '_(?P<objectname>[a-zA-Z0-9]+)'
-              '(_(?P<featurename>[a-zA-Z0-9]+))?'
+              '_(?P<object_name>[a-zA-Z0-9]+)'
+              '(_(?P<feature_name>[a-zA-Z0-9]+))?'
               '(_(?P<parameters>[0-9_]+))?')
-    outdict = {'colname': col,
+    outdict = {'column_name': col,
                **re.match(re_exp, col).groupdict()}
+
+    if outdict['feature_name'] is None:
+        outdict['feature_name'] = outdict['category']
     return outdict
 
 def parse_distance_col(col):
     re_exp = ('(?P<category>[a-zA-Z0-9]+)_'
-              '(?P<featurename>[a-zA-Z0-9]+)'
-              '_(?P<objectname>[a-zA-Z0-9]+)'
+              '(?P<feature_name>[a-zA-Z0-9]+)'
+              '_(?P<object_name>[a-zA-Z0-9]+)'
              '(_(?P<parameters>[0-9_]+))?')
-    outdict = {'colname': col,
+    outdict = {'column_name': col,
             **re.match(re_exp, col).groupdict()}
     return outdict
 
@@ -352,45 +355,45 @@ category_parsers = {k: fkt for ks, fkt in
                         for k in ks
                         }
 
-def parse_colname(colname):
+def parse_column_name(column_name):
     """
-    Cellprofiler nomenclature: MeasurementType_Category_SpecificFeatureName_Parameters
+    Cellprofiler nomenclature: MeasurementType_Category_Specificfeature_name_Parameters
     http://cellprofiler-manual.s3.amazonaws.com/CellProfiler-3.0.0/help/output_measurements.html
 
     Parses a Cellprofiler column name into a dictionary containing:
     {
-    'colname': the original column name,
+    'column_name': the original column name,
     'category': the measurement category: Intensity, AreaShape, ...
-    'feature_name': The 'SpecificFeatureName' measured: MeanIntensity,
+    'feature_name': The 'Specificfeature_name' measured: MeanIntensity,
     MaxIntensity, ...
     'channel': numeric, 1 if no channels
     'parameters': other measurement parameters
     }
 
-    Colname classes:
-    - ObjectNumber, ImageNumber: special, only colname will be filed
-    - AreaShape, Math, Location: have format: CATEGORY_SPECIFICFEATURENAME
-        -> SPECIFICFEATURENAME can also contain '_'
+    column_name classes:
+    - ObjectNumber, ImageNumber: special, only column_name will be filed
+    - AreaShape, Math, Location: have format: CATEGORY_SPECIFICfeature_name
+        -> SPECIFICfeature_name can also contain '_'
     - Intensity, Granularity, Children, RadialDistribution, Parent,
     AreaOccupied:
-        Have format: CATEGORY_SPECIFICFEATURENAME(_IMAGENAME)(_cCHANNEL)
+        Have format: CATEGORY_SPECIFICfeature_name(_image_name)(_cCHANNEL)
     - Neighbors and Texture:
         Have format: CATEGORY_SPECIFICFEATUERNAME_PARAMETERS
         (PARAMETERS can be more than one, _ separated)
     - Texture & RadialDistribution:
-        CATEGORY_SPECIFICFEATURENAME_IMAGENAME_PARAMETERS
+        CATEGORY_SPECIFICfeature_name_image_name_PARAMETERS
 
     """
-    category = colname.split('_')[0]
+    category = column_name.split('_')[0]
     fkt = category_parsers.get(category, parse_intensity_col)
-    return fkt(colname)
+    return fkt(column_name)
 
 DEFAULT_VARMETA = {
-               'colname': '',
+               'column_name': '',
                'category': '',
-               'imagename': '',
-               'objectname': '',
-               'featurename': '',
-               'channel': 1,
+               'image_name': '',
+               'object_name': '',
+               'feature_name': '',
+               'channel': '',
                'parameters': ''
                }
