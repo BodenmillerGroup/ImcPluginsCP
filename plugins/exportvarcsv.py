@@ -1,11 +1,31 @@
-"""
-<b> Export Var CSV </b>
-<hr>
+"""\
+Export Var CSV
+==============
+
 This modules exports for each object a csv file containing metadata
 for each measurement column in the object table.
 This should greatly facilitate converting Cellprofiler output into
 an anndata or SingleCellExperiment.
-<br>
+
+The columns are:
+
+-  column_name: the column name in the object measurements
+
+-  category: Feature category
+
+-  image_name: Name of image used to calculate this feature
+
+-  object_name: Name of addiitonal object used for this feature
+
+-  feature_name: Name of calculated feature
+
+-  channel: color plane in image used to calculate this feature
+
+-  parameters: Additional parameters used to calculate this feature
+   (meaning dependes on feature e.g. often scale, number of pixels,...)
+
+-  datatype: datatype of feature
+
 """
 
 import base64
