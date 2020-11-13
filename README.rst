@@ -1,5 +1,6 @@
 .. image:: https://zenodo.org/badge/69028464.svg
    :target: https://zenodo.org/badge/latestdoi/69028464
+
 ImcPluginsCP
 ========================
 
@@ -53,6 +54,12 @@ Measurement modules:
     Allows to measure all the image planes of a multicolor image by applying 'MeasureImageIntensity' to each plane.
     The number of planes in the stack needs to be known and indicated beforehand.
     The name of the measurements will have a suffix `_c{channelnr}` where channelnr is 1 based index of the plane.
+
+* ExportVarCsv:
+    Exports a CSV containing metadata for measurements akin to the .var table
+    in anndata objects: https://anndata.readthedocs.io/en/latest/anndata.AnnData.html
+    This should greatly facilitate the conversion of cellprofiler output to
+    anndata objects.
 
 Image processing modules:
 
