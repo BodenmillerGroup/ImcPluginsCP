@@ -16,7 +16,7 @@ Their main use have been the associated multiplexed image segmentation pipeline 
 and projects using this workflow.
 
 Changenotes:
------------
+------------
 The modules have been updated to work with *CellProfiler 4* instead of *CellProfiler 3 or 2*!
 The CP2 and CP3 modules are still available at the branch:
 - https://github.com/BodenmillerGroup/ImcPluginsCP/tree/master-cp2
@@ -63,11 +63,14 @@ Measurement modules:
 
 Image processing modules:
 
-* Smooth Multichannel: allows to apply image filters to all stacks of a multichannel image
+* Smooth Multichannel:
+    allows to apply image filters to all stacks of a multichannel image
     Very similar to the normal *Smooth* module.
     Additionally provides filters:
-        - "Remove single hot pixels" (good for single, strong outliers)
-        - "Median Filter Scipy": Fixes a bug of the normal Median filter when small footprints are used.
+
+    - "Remove single hot pixels" (good for single, strong outliers)
+
+    - "Median Filter Scipy": Fixes a bug of the normal Median filter when small footprints are used.
 
 * ClipRange:
     Clips the maximum of an image by setting all values higher than an user defined percentile to the value of said percentile.
@@ -163,11 +166,16 @@ Deprecated modules:
 ___________________
 This will be removed in the next version of ImcPluginsCP.
 
-* ColorToGray bb: a slight modification of the 'ColorToGray' CP module to support up to 60 channels per image
+* ColorToGray bb:
+    a slight modification of the 'ColorToGray' CP module to support up to 60 channels per image
     -> Can be replaced by default *ColorToGray* module
 
-* Rescale objects: Rescales object segmentation masks
+* Rescale objects:
+    Rescales object segmentation masks
     -> Can be replaced by the default *ResizeObjects* module
 
-* Save images ilastik: a helper module to save images as `.tiff` in a way that ilastik 1.2.1 will recognize it as xyc image
-  -> This will  is deprecated. I recommend to use the *saveimages_h5` module for this task and use `hdf5` instead of tiff
+* Save images ilastik:
+    a helper module to save images as `.tiff` in a way that ilastik 1.2.1 will recognize it as xyc image
+    -> This will  is deprecated. I recommend to use the *saveimages_h5* module
+    for this task and use `hdf5` instead of tiff
+
