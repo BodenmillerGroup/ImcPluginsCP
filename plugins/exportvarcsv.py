@@ -145,7 +145,14 @@ class ExportVarCsv(cpm.Module):
         self.image_meta_count = HiddenCount(self.image_metas, "Extraction method count")
 
         self.add_image_meta_method_button = DoSomething(
-            "", "Add image channel identifiers", self.add_image_meta
+            "", "Add image channel identifiers", self.add_image_meta,
+            doc=f"""\
+                This allows to add a '{CHANNEL_ID}' to the output that
+                should be a unique identifier for the image plane (e.g. 
+                fluophor, waveflength or metal name for mass cytometry).
+                The annotation should be provided with a text file without
+                header that has the an id on each new-line.
+                """
         )
 
     def add_image_meta(self, can_remove=True):
@@ -157,10 +164,10 @@ class ExportVarCsv(cpm.Module):
         group.append(
             "input_image_names",
             ImageListSubscriber(
-                "Select Images where this channel annotation applies",
+                "Select Images where this channel identifier applies",
                 "None",
                 doc="""\
-                    The image that this channel annotation belongs to.
+                    The image that this channel identifier belongs to.
                     """,
             ),
         )
@@ -173,6 +180,8 @@ class ExportVarCsv(cpm.Module):
                     Location for a txt file without header
                     that contains on each new line a channel identifier for a 
                     multichannel image.
+                    Must have exactly the same number of rows than
+                    the multichannel image has channels.
                     """,
             ),
         )
@@ -183,7 +192,8 @@ class ExportVarCsv(cpm.Module):
                 "Metadata file name",
                 "None",
                 browse_msg="Choose txt/csv file",
-                exts=[("Data file (*.txt)", "*.txt"), ("Data file (*.csv)", "*.csv")],
+                exts=[("Data file (*.csv)", "*.csv"),
+                      ("Data file (*.txt)", "*.txt")],
                 doc="Provide the file name of the CSV file containing the metadata you want to load.",
                 get_directory_fn=group.csv_location.get_absolute_path,
                 set_directory_fn=lambda path: group.csv_location.join_parts(
@@ -208,6 +218,7 @@ class ExportVarCsv(cpm.Module):
 
         for group in self.image_metas:
             result += [
+                group.divider,
                 group.input_image_names,
                 group.csv_location,
                 group.csv_filename,
