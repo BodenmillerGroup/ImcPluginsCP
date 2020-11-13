@@ -341,7 +341,6 @@ class ExportVarCsv(cpm.Module):
         annotation_dict = {}
         for group in image_meta_groups:
             fn = self.csv_path(group)
-            annotations = []
             with open(fn, "r") as f:
                 annotations = f.read().split("\n")
             for img in group.input_image_names.value:

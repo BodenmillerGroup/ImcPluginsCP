@@ -27,10 +27,16 @@ DATATYPE = "data_type"
 CHANNEL_ID = "channel_id"
 PATTERN = "pattern"
 
+
+#
+TEST_OBJECT = "test_object"
+
 import plugins.exportvarcsv as exportvarcsv
 
 DIR_SCRIPT = os.path.dirname(__file__)
-PATH_TESTFILE = os.path.join(DIR_SCRIPT, "testdata/var_test.csv")
+DIR_TESTFILES = os.path.join(DIR_SCRIPT, "testdata")
+PATH_TESTFILE = os.path.join(DIR_TESTFILES, "var_test.csv")
+FN_IMAGEMETA = "imagemeta_full.csv"
 
 
 class FakePipeline:
@@ -70,6 +76,23 @@ def testdata():
     return testdata
 
 
+def get_measurement_columns(testdata):
+    measurement_columns = []
+    for case in testdata:
+        pattern = case.pop(PATTERN)
+        column_name = pattern.format(**case)
+        assert column_name == case[COLUMN_NAME], (
+            f"Pattern {pattern}"
+            f"in testdata not "
+            "valid."
+            f"{column_name} != "
+            f"{case[COLUMN_NAME]}"
+        )
+        measurement_columns.append((TEST_OBJECT, column_name, case[DATATYPE]))
+
+    return measurement_columns
+
+
 def test_init(module):
     pass
 
@@ -93,28 +116,38 @@ def test_parsing(module, testdata):
     Test parsing based on a testset of manually validated parsing
     results.
     """
-    test_object = "test_object"
 
-    measurement_columns = []
-    for case in testdata:
-        pattern = case.pop(PATTERN)
-        column_name = pattern.format(**case)
-        assert column_name == case[COLUMN_NAME], (
-            f"Pattern {pattern}"
-            f"in testdata not "
-            "valid."
-            f"{column_name} != "
-            f"{case[COLUMN_NAME]}"
-        )
-        measurement_columns.append((test_object, column_name, case[DATATYPE]))
+    measurement_columns = get_measurement_columns(testdata)
 
     # remove channel id for this test as no channel id matching was performed.
     for case in testdata:
         case[CHANNEL_ID] = None
 
     workspace = FakeWorkspace(measurement_columns)
-    meta = module.get_var_meta(test_object, workspace)
+    meta = module.get_var_meta(TEST_OBJECT, workspace)
 
     assert meta == testdata, "Parsed metadata doesnt fit test metadata"
     for m, t in zip(meta, testdata):
         assert m.keys() == t.keys(), "Key order doesnt match"
+
+
+def test_channel_id(module, testdata):
+    """
+    Test parsing based on a testset of manually validated parsing
+    results.
+    """
+
+    measurement_columns = get_measurement_columns(testdata)
+
+    module.add_image_meta()
+    group = module.image_metas[0]
+    group.input_image_names.value = "FullStackFiltered"
+    group.csv_location.value = group.csv_location.join_string(custom_path=DIR_TESTFILES)
+    group.csv_filename.value = FN_IMAGEMETA
+
+    workspace = FakeWorkspace(measurement_columns)
+    meta = module.get_var_meta(TEST_OBJECT, workspace)
+
+    annotations = module.get_channel_annotations(module.image_metas)
+    module.add_channel_annotations(meta, annotations)
+    assert meta == testdata, "Parsed metadata doesnt fit test metadata"
