@@ -70,7 +70,7 @@ OBJECT_NAME = "object_name"
 FEATURE_NAME = "feature_name"
 CHANNEL = "channel"
 PARAMETERS = "parameters"
-DATATYPE = 'data_type'
+DATATYPE = "data_type"
 
 CHANNEL_ID = "channel_id"
 
@@ -123,12 +123,10 @@ class ExportVarCsv(cpm.Module):
 
         self.prefix = Text(
             "Filename prefix",
-            "MyExpt_",
+            "var_",
             doc="""\
-        (*Used only if “Add a prefix to file names?” is "Yes"*)
-        The text you enter here is prepended to the names of each file produced by
-        **ExportToSpreadsheet**.
-                    """
+                The text you enter here is prepended to the names of each file produced by
+                """
             % globals(),
         )
 
@@ -149,14 +147,16 @@ class ExportVarCsv(cpm.Module):
         self.image_meta_count = HiddenCount(self.image_metas, "Extraction method count")
 
         self.add_image_meta_method_button = DoSomething(
-            "", "Add image channel identifiers", self.add_image_meta,
+            "",
+            "Add image channel identifiers",
+            self.add_image_meta,
             doc=f"""\
                 This allows to add a '{CHANNEL_ID}' to the output that
                 should be a unique identifier for the image plane (e.g. 
                 fluophor, waveflength or metal name for mass cytometry).
                 The annotation should be provided with a text file without
                 header that has the an id on each new-line.
-                """
+                """,
         )
 
     def add_image_meta(self, can_remove=True):
@@ -196,8 +196,7 @@ class ExportVarCsv(cpm.Module):
                 "Metadata file name",
                 "None",
                 browse_msg="Choose txt/csv file",
-                exts=[("Data file (*.csv)", "*.csv"),
-                      ("Data file (*.txt)", "*.txt")],
+                exts=[("Data file (*.csv)", "*.csv"), ("Data file (*.txt)", "*.txt")],
                 doc="Provide the file name of the CSV file containing the metadata you want to load.",
                 get_directory_fn=group.csv_location.get_absolute_path,
                 set_directory_fn=lambda path: group.csv_location.join_parts(
@@ -333,8 +332,7 @@ class ExportVarCsv(cpm.Module):
         ]
 
         feature_meta = [
-            {**DEFAULT_VARMETA, **parse_column_name(feature), DATATYPE:
-                coltype}
+            {**DEFAULT_VARMETA, **parse_column_name(feature), DATATYPE: coltype}
             for col_object, feature, coltype in features
         ]
 
@@ -395,7 +393,7 @@ class ExportVarCsv(cpm.Module):
                             saved (or IMAGES or EXPERIMENT)
         :param workspace: the current workspace
         """
-        filename = "var_%s.%s" % (object_name, "csv")
+        filename = "%s.%s" % (object_name, "csv")
         filename = self.make_full_filename(filename, workspace)
         return filename
 
@@ -409,7 +407,10 @@ class ExportVarCsv(cpm.Module):
         measurements = None if workspace is None else workspace.measurements
         path_name = self.directory.get_absolute_path(measurements, image_set_number)
         if self.wants_prefix:
-            file_name = self.prefix.value + file_name
+            prefix = self.prefix.value
+        else:
+            prefix = "var_"
+        file_name = prefix + file_name
         file_name = os.path.join(path_name, file_name)
         path, file = os.path.split(file_name)
         if not os.path.isdir(path):
@@ -542,5 +543,5 @@ DEFAULT_VARMETA = {
     FEATURE_NAME: None,
     CHANNEL: None,
     PARAMETERS: None,
-    CHANNEL_ID: None
+    CHANNEL_ID: None,
 }
