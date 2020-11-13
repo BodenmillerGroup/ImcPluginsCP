@@ -71,7 +71,6 @@ FEATURE_NAME = "feature_name"
 CHANNEL = "channel"
 PARAMETERS = "parameters"
 DATATYPE = "data_type"
-
 CHANNEL_ID = "channel_id"
 
 """Output format"""
@@ -439,7 +438,7 @@ def parse_intensity_col(col):
         f"(?P<{CATEGORY}>[a-zA-Z0-9]+)_"
         f"(?P<{FEATURE_NAME}>[a-zA-Z0-9]+(_[XYZ]+)?)"
         f"(_(?P<{IMAGE_NAME}>[a-zA-Z0-9]+))?"
-        f"(_(?P<{PARAMETERS}>[0-9of]+))?"
+        f"(_(?P<{PARAMETERS}>[0-9of_]+))?"
         f"(_c(?P<{CHANNEL}>[0-9]+))?"
     )
     return {COLUMN_NAME: col, **re.match(re_exp, col).groupdict()}
