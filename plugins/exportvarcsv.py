@@ -24,7 +24,10 @@ The columns are:
 -  parameters: Additional parameters used to calculate this feature
    (meaning dependes on feature e.g. often scale, number of pixels,...)
 
--  datatype: datatype of feature
+-  data_type: datatype of feature
+
+-  channel_id: additional identifier for color plane (provided via additional
+    file)
 
 """
 
@@ -67,6 +70,7 @@ OBJECT_NAME = "object_name"
 FEATURE_NAME = "feature_name"
 CHANNEL = "channel"
 PARAMETERS = "parameters"
+DATATYPE = 'data_type'
 
 CHANNEL_ID = "channel_id"
 
@@ -329,7 +333,8 @@ class ExportVarCsv(cpm.Module):
         ]
 
         feature_meta = [
-            {**DEFAULT_VARMETA, **parse_column_name(feature), "datatype": coltype}
+            {**DEFAULT_VARMETA, **parse_column_name(feature), DATATYPE:
+                coltype}
             for col_object, feature, coltype in features
         ]
 
@@ -347,10 +352,6 @@ class ExportVarCsv(cpm.Module):
         return annotation_dict
 
     def add_channel_annotations(self, feature_meta, channel_annotations):
-        for meta in feature_meta:
-            # add channel name to each dictionary
-            meta["channel_id"] = meta[CHANNEL]
-
         for meta in feature_meta:
             image_name = meta[IMAGE_NAME]
             annotation = channel_annotations.get(image_name, None)
@@ -541,4 +542,5 @@ DEFAULT_VARMETA = {
     FEATURE_NAME: None,
     CHANNEL: None,
     PARAMETERS: None,
+    CHANNEL_ID: None
 }
