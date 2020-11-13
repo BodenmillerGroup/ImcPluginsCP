@@ -28,53 +28,60 @@ The columns are:
 
 """
 
-import base64
 import csv
-import logging
 import os
 import re
 
 import cellprofiler_core.module as cpm
-import cellprofiler_core.setting as cps
-
 from cellprofiler_core.constants.measurement import (
     EXPERIMENT,
     IMAGE,
-    AGG_STD_DEV,
-    C_PATH_NAME,
-    R_SECOND_IMAGE_NUMBER,
-    R_FIRST_OBJECT_NUMBER,
 )
 from cellprofiler_core.constants.module import (
     IO_FOLDER_CHOICE_HELP_TEXT,
     IO_WITH_METADATA_HELP_TEXT,
 )
-from cellprofiler_core.constants.pipeline import EXIT_STATUS
-from cellprofiler_core.module import Module
 from cellprofiler_core.preferences import ABSOLUTE_FOLDER_NAME
 from cellprofiler_core.preferences import DEFAULT_INPUT_FOLDER_NAME
 from cellprofiler_core.preferences import DEFAULT_INPUT_SUBFOLDER_NAME
 from cellprofiler_core.preferences import DEFAULT_OUTPUT_FOLDER_NAME
 from cellprofiler_core.preferences import DEFAULT_OUTPUT_SUBFOLDER_NAME
-from cellprofiler_core.setting import Binary
+from cellprofiler_core.setting import Binary, Divider, SettingsGroup, HiddenCount
 from cellprofiler_core.setting import ValidationError
-from cellprofiler_core.setting.text import Directory, Text
+from cellprofiler_core.setting.do_something import DoSomething
+from cellprofiler_core.setting.do_something import RemoveSettingButton
+from cellprofiler_core.setting.subscriber import ImageListSubscriber
+from cellprofiler_core.setting.text import Text, Filename, Directory
 
 """The caption for the image set number"""
 IMAGE_NUMBER = "ImageNumber"
 
-"""The caption for the object # within an image set"""
 OBJECT_NUMBER = "ObjectNumber"
-
 OBJECT_RELATIONSHIPS = "Object relationships"
 
-DELEMITER = ','
-EXTENSION = '.csv'
+"""Output columns"""
+COLUMN_NAME = "column_name"
+CATEGORY = "category"
+IMAGE_NAME = "image_name"
+OBJECT_NAME = "object_name"
+FEATURE_NAME = "feature_name"
+CHANNEL = "channel"
+PARAMETERS = "parameters"
+
+CHANNEL_ID = "channel_id"
+
+"""Output format"""
+DELEMITER = ","
+EXTENSION = ".csv"
+
+"""Settings offsets"""
+IDX_IMAGE_META_COUNT = 4
+
 
 class ExportVarCsv(cpm.Module):
-    module_name = 'ExportVarCsv'
+    module_name = "ExportVarCsv"
     variable_revision_number = 1
-    category = ['ImcPluginsCP', 'File Processing']
+    category = ["ImcPluginsCP", "File Processing"]
 
     def create_settings(self):
         self.directory = Directory(
@@ -107,7 +114,7 @@ class ExportVarCsv(cpm.Module):
         *"Yes"* to add a prefix to each file name (e.g., “MyExpt\_Images.csv”).
         Select *"No"* to use filenames without prefixes (e.g., “Images.csv”).
                     """
-                % globals(),
+            % globals(),
         )
 
         self.prefix = Text(
@@ -118,7 +125,7 @@ class ExportVarCsv(cpm.Module):
         The text you enter here is prepended to the names of each file produced by
         **ExportToSpreadsheet**.
                     """
-                % globals(),
+            % globals(),
         )
 
         self.wants_overwrite_without_warning = Binary(
@@ -130,8 +137,68 @@ class ExportVarCsv(cpm.Module):
         overwrite without warning any .CSV file that already exists. Select
         *"No"* to prompt before overwriting when running CellProfiler in the
         GUI and to fail when running headless."""
-                % globals(),
+            % globals(),
         )
+
+        self.image_metas = []
+
+        self.image_meta_count = HiddenCount(self.image_metas, "Extraction method count")
+
+        self.add_image_meta_method_button = DoSomething(
+            "", "Add image channel identifiers", self.add_image_meta
+        )
+
+    def add_image_meta(self, can_remove=True):
+        group = SettingsGroup()
+
+        if can_remove:
+            group.append("divider", Divider())
+
+        group.append(
+            "input_image_names",
+            ImageListSubscriber(
+                "Select Images where this channel annotation applies",
+                "None",
+                doc="""\
+                    The image that this channel annotation belongs to.
+                    """,
+            ),
+        )
+        group.append(
+            "csv_location",
+            Directory(
+                "Metadata file location",
+                support_urls=True,
+                doc="""\
+                    Location for a txt file without header
+                    that contains on each new line a channel identifier for a 
+                    multichannel image.
+                    """,
+            ),
+        )
+
+        group.append(
+            "csv_filename",
+            Filename(
+                "Metadata file name",
+                "None",
+                browse_msg="Choose txt/csv file",
+                exts=[("Data file (*.txt)", "*.txt"), ("Data file (*.csv)", "*.csv")],
+                doc="Provide the file name of the CSV file containing the metadata you want to load.",
+                get_directory_fn=group.csv_location.get_absolute_path,
+                set_directory_fn=lambda path: group.csv_location.join_parts(
+                    *group.csv_location.get_parts_from_path(path)
+                ),
+            ),
+        )
+        if can_remove:
+            group.append(
+                "remover",
+                RemoveSettingButton(
+                    "", "Remove this image_meta", self.image_metas, group
+                ),
+            )
+        self.image_metas.append(group)
 
     def visible_settings(self):
         """Return the settings as seen by the user"""
@@ -139,8 +206,16 @@ class ExportVarCsv(cpm.Module):
         if self.wants_prefix:
             result += [self.prefix]
 
+        for group in self.image_metas:
+            result += [
+                group.input_image_names,
+                group.csv_location,
+                group.csv_filename,
+                group.remover,
+            ]
         result += [
-            self.wants_overwrite_without_warning
+            # self.wants_overwrite_without_warning,
+            self.add_image_meta_method_button
         ]
 
         return result
@@ -151,9 +226,19 @@ class ExportVarCsv(cpm.Module):
             self.directory,
             self.wants_prefix,
             self.prefix,
-            self.wants_overwrite_without_warning
+            self.wants_overwrite_without_warning,
+            self.image_meta_count,
         ]
+        for group in self.image_metas:
+            result += [group.input_image_names, group.csv_location, group.csv_filename]
         return result
+
+    def prepare_settings(self, setting_values):
+        n_image_metas = int(setting_values[IDX_IMAGE_META_COUNT])
+        if len(self.image_metas) > n_image_metas:
+            del self.image_metas[n_image_metas:]
+        while len(self.image_metas) < n_image_metas:
+            self.add_image_meta()
 
     def validate_module_warnings(self, pipeline):
         """Warn user re: Test mode """
@@ -205,31 +290,26 @@ class ExportVarCsv(cpm.Module):
         # Export all measurements if requested
         #
         for object_name in workspace.measurements.get_object_names():
-            self.run_object(object_name, workspace)
+            self.run_object(object_name, workspace, self.image_metas)
 
-    def run_object(self, object_name, workspace, settings_group=None):
+    def run_object(self, object_name, workspace, image_meta_groups):
         """Create a file (or files if there's metadata) based on the object names
         object_names - a sequence of object names (or Image or Experiment)
                        which tell us which objects get piled into each file
         workspace - get the images from here.
         settings_group - if present, use the settings group for naming.
         """
-        if object_name in [
-            EXPERIMENT,
-            IMAGE,
-            OBJECT_RELATIONSHIPS
-        ]:
+        if object_name in [EXPERIMENT, IMAGE, OBJECT_RELATIONSHIPS]:
             return
         self.save_var_file(
             object_name,
             workspace,
-            settings_group,
+            image_meta_groups,
         )
 
     @staticmethod
     def get_var_meta(object_name, workspace):
-        columns = [c[:3] for c in
-            workspace.pipeline.get_measurement_columns()]
+        columns = [c[:3] for c in workspace.pipeline.get_measurement_columns()]
 
         features = [
             (col_object, feature, coltype)
@@ -237,15 +317,39 @@ class ExportVarCsv(cpm.Module):
             if col_object == object_name
         ]
 
-        feature_meta = [{**DEFAULT_VARMETA,
-                         **parse_column_name(feature),
-                         'datatype': coltype}
+        feature_meta = [
+            {**DEFAULT_VARMETA, **parse_column_name(feature), "datatype": coltype}
             for col_object, feature, coltype in features
         ]
 
         return feature_meta
 
-    def save_var_file(self, object_name, workspace, settings_group):
+    def get_channel_annotations(self, image_meta_groups):
+        annotation_dict = {}
+        for group in image_meta_groups:
+            fn = self.csv_path(group)
+            annotations = []
+            with open(fn, "r") as f:
+                annotations = f.read().split("\n")
+            for img in group.input_image_names.value:
+                annotation_dict[img] = annotations
+        return annotation_dict
+
+    def add_channel_annotations(self, feature_meta, channel_annotations):
+        for meta in feature_meta:
+            # add channel name to each dictionary
+            meta["channel_id"] = meta[CHANNEL]
+
+        for meta in feature_meta:
+            image_name = meta[IMAGE_NAME]
+            annotation = channel_annotations.get(image_name, None)
+            if annotation is None:
+                continue
+            channel_nr = meta["channel"]
+            if channel_nr is not None:
+                meta["channel_id"] = annotation[int(channel_nr) - 1]
+
+    def save_var_file(self, object_name, workspace, image_meta_groups):
         """Make a file containing object measurements
         object_names - sequence of names of the objects whose measurements
                        will be included
@@ -255,12 +359,15 @@ class ExportVarCsv(cpm.Module):
                          None if wants_everything
         """
 
-        file_name = self.make_objects_file_name(
-            object_name, workspace
-        )
+        file_name = self.make_objects_file_name(object_name, workspace)
 
         feature_meta = self.get_var_meta(object_name, workspace)
-        fd = open(file_name, "w", newline="", encoding='utf-8')
+
+        if len(image_meta_groups) > 0:
+            image_meta = self.get_channel_annotations(image_meta_groups)
+            self.add_channel_annotations(feature_meta, image_meta)
+
+        fd = open(file_name, "w", newline="", encoding="utf-8")
         try:
             writer = csv.writer(fd, delimiter=DELEMITER)
             # Write the header
@@ -270,20 +377,17 @@ class ExportVarCsv(cpm.Module):
         finally:
             fd.close()
 
-    def make_objects_file_name(
-        self, object_name, workspace
-    ):
+    def make_objects_file_name(self, object_name, workspace):
         """Concoct the .CSV filename for some object category
         :param object_name: name of the objects whose measurements are to be
                             saved (or IMAGES or EXPERIMENT)
         :param workspace: the current workspace
         """
-        filename = "var_%s.%s" % (object_name, 'csv')
+        filename = "var_%s.%s" % (object_name, "csv")
         filename = self.make_full_filename(filename, workspace)
         return filename
 
-    def make_full_filename(self, file_name, workspace=None,
-                           image_set_number=None):
+    def make_full_filename(self, file_name, workspace=None, image_set_number=None):
         """Convert a file name into an absolute path
         We do a few things here:
         * change the relative path into an absolute one using the "." and "&"
@@ -291,8 +395,7 @@ class ExportVarCsv(cpm.Module):
         * Create any directories along the path
         """
         measurements = None if workspace is None else workspace.measurements
-        path_name = self.directory.get_absolute_path(measurements,
-                                                     image_set_number)
+        path_name = self.directory.get_absolute_path(measurements, image_set_number)
         if self.wants_prefix:
             file_name = self.prefix.value + file_name
         file_name = os.path.join(path_name, file_name)
@@ -307,73 +410,95 @@ class ExportVarCsv(cpm.Module):
         """
         return True
 
-    def upgrade_settings(self, setting_values, variable_revision_number,
-                         module_name):
-        """Adjust the setting values based on the version that saved them
-        """
+    @staticmethod
+    def csv_path(group):
+        return os.path.join(
+            group.csv_location.get_absolute_path(), group.csv_filename.value
+        )
+
+    def upgrade_settings(self, setting_values, variable_revision_number, module_name):
+        """Adjust the setting values based on the version that saved them"""
         return setting_values, variable_revision_number
 
 
-
 def parse_intensity_col(col):
-    re_exp = ('(?P<category>[a-zA-Z0-9]+)_'
-              '(?P<feature_name>[a-zA-Z0-9]+(_[XYZ]+)?)'
-              '(_(?P<image_name>[a-zA-Z0-9]+))?'
-              '(_(?P<parameters>[0-9of]+))?'
-              '(_c(?P<channel>[0-9]+))?')
-    return {'column_name': col, **re.match(re_exp, col).groupdict()}
+    re_exp = (
+        f"(?P<{CATEGORY}>[a-zA-Z0-9]+)_"
+        f"(?P<{FEATURE_NAME}>[a-zA-Z0-9]+(_[XYZ]+)?)"
+        f"(_(?P<{IMAGE_NAME}>[a-zA-Z0-9]+))?"
+        f"(_(?P<{PARAMETERS}>[0-9of]+))?"
+        f"(_c(?P<{CHANNEL}>[0-9]+))?"
+    )
+    return {COLUMN_NAME: col, **re.match(re_exp, col).groupdict()}
+
 
 def parse_areashape_col(col):
-    re_exp = ('(?P<category>[a-zA-Z0-9]+)_'
-              '(?P<feature_name>.*)')
-    return {'column_name': col, **re.match(re_exp, col).groupdict()}
+    re_exp = f"(?P<{CATEGORY}>[a-zA-Z0-9]+)_" f"(?P<{FEATURE_NAME}>.*)"
+    return {COLUMN_NAME: col, **re.match(re_exp, col).groupdict()}
+
 
 def parse_id_col(col):
-    return {'column_name': col, 'category': 'ID', 'feature_name': col}
+    return {COLUMN_NAME: col, CATEGORY: "ID", FEATURE_NAME: col}
+
 
 def parse_neighbors_col(col):
-    re_exp = ('(?P<category>[a-zA-Z0-9]+)_'
-              '(?P<feature_name>[a-zA-Z0-9]+)'
-              '(_(?P<parameters>[0-9_]+))?')
-    outdict = {'column_name': col,
-            **re.match(re_exp, col).groupdict()}
+    re_exp = (
+        f"(?P<{CATEGORY}>[a-zA-Z0-9]+)_"
+        f"(?P<{FEATURE_NAME}>[a-zA-Z0-9]+)"
+        f"(_(?P<{PARAMETERS}>[0-9_]+))?"
+    )
+    outdict = {COLUMN_NAME: col, **re.match(re_exp, col).groupdict()}
     return outdict
+
 
 def parse_parent_col(col):
-    re_exp = ('(?P<category>[a-zA-Z0-9]+)'
-              '_(?P<object_name>[a-zA-Z0-9]+)'
-              '(_(?P<feature_name>[a-zA-Z0-9]+))?'
-              '(_(?P<parameters>[0-9_]+))?')
-    outdict = {'column_name': col,
-               **re.match(re_exp, col).groupdict()}
+    re_exp = (
+        f"(?P<{CATEGORY}>[a-zA-Z0-9]+)"
+        f"_(?P<{OBJECT_NAME}>[a-zA-Z0-9]+)"
+        f"(_(?P<{FEATURE_NAME}>[a-zA-Z0-9]+))?"
+        f"(_(?P<{PARAMETERS}>[0-9_]+))?"
+    )
+    outdict = {COLUMN_NAME: col, **re.match(re_exp, col).groupdict()}
 
-    if outdict['feature_name'] is None:
-        outdict['feature_name'] = outdict['category']
+    if outdict[FEATURE_NAME] is None:
+        outdict[FEATURE_NAME] = outdict[CATEGORY]
     return outdict
+
 
 def parse_distance_col(col):
-    re_exp = ('(?P<category>[a-zA-Z0-9]+)_'
-              '(?P<feature_name>[a-zA-Z0-9]+)'
-              '_(?P<object_name>[a-zA-Z0-9]+)'
-             '(_(?P<parameters>[0-9_]+))?')
-    outdict = {'column_name': col,
-            **re.match(re_exp, col).groupdict()}
+    re_exp = (
+        f"(?P<{CATEGORY}>[a-zA-Z0-9]+)_"
+        f"(?P<{FEATURE_NAME}>[a-zA-Z0-9]+)"
+        f"_(?P<{OBJECT_NAME}>[a-zA-Z0-9]+)"
+        f"(_(?P<{PARAMETERS}>[0-9_]+))?"
+    )
+    outdict = {COLUMN_NAME: col, **re.match(re_exp, col).groupdict()}
     return outdict
 
-category_parsers = {k: fkt for ks, fkt in
-                        [[('Intensity', 'Granulairty',
-                        'RadialDistribution', 'AreaOccupied',
-                        'Location', 'Texture'), parse_intensity_col],
-                       [('ObjectNumber', 'ImageNumber', 'Number'), parse_id_col],
-                        [ ('AreaShape', 'Math'),
-                          parse_areashape_col],
-                        [['Neighbors'], parse_neighbors_col],
-                        [['Children', 'Parent'], parse_parent_col],
-                        [['Distance'], parse_distance_col]
 
-                          ]
-                        for k in ks
-                        }
+category_parsers = {
+    k: fkt
+    for ks, fkt in [
+        [
+            (
+                "Intensity",
+                "Granularity",
+                "RadialDistribution",
+                "AreaOccupied",
+                "Location",
+                "Texture",
+            ),
+            parse_intensity_col,
+        ],
+        [("ObjectNumber", "ImageNumber", "Number"), parse_id_col],
+        [("AreaShape", "Math"), parse_areashape_col],
+        [["Neighbors"], parse_neighbors_col],
+        [["Children", "Parent"], parse_parent_col],
+        [["Distance"], parse_distance_col],
+    ]
+    for k in ks
+}
+
 
 def parse_column_name(column_name):
     """
@@ -386,34 +511,23 @@ def parse_column_name(column_name):
     'category': the measurement category: Intensity, AreaShape, ...
     'feature_name': The 'Specificfeature_name' measured: MeanIntensity,
     MaxIntensity, ...
+    'image_name': Image name of measured image
+    'object_name': object name of additionally measured object
     'channel': numeric, 1 if no channels
     'parameters': other measurement parameters
     }
-
-    column_name classes:
-    - ObjectNumber, ImageNumber: special, only column_name will be filed
-    - AreaShape, Math, Location: have format: CATEGORY_SPECIFICfeature_name
-        -> SPECIFICfeature_name can also contain '_'
-    - Intensity, Granularity, Children, RadialDistribution, Parent,
-    AreaOccupied:
-        Have format: CATEGORY_SPECIFICfeature_name(_image_name)(_cCHANNEL)
-    - Neighbors and Texture:
-        Have format: CATEGORY_SPECIFICFEATUERNAME_PARAMETERS
-        (PARAMETERS can be more than one, _ separated)
-    - Texture & RadialDistribution:
-        CATEGORY_SPECIFICfeature_name_image_name_PARAMETERS
-
     """
-    category = column_name.split('_')[0]
+    category = column_name.split("_")[0]
     fkt = category_parsers.get(category, parse_intensity_col)
     return fkt(column_name)
 
+
 DEFAULT_VARMETA = {
-               'column_name': '',
-               'category': '',
-               'image_name': '',
-               'object_name': '',
-               'feature_name': '',
-               'channel': '',
-               'parameters': ''
-               }
+    COLUMN_NAME: None,
+    CATEGORY: None,
+    IMAGE_NAME: None,
+    OBJECT_NAME: None,
+    FEATURE_NAME: None,
+    CHANNEL: None,
+    PARAMETERS: None,
+}
