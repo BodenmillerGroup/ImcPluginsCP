@@ -83,7 +83,7 @@ IDX_IMAGE_META_COUNT = 4
 
 class ExportVarCsv(cpm.Module):
     module_name = "ExportVarCsv"
-    variable_revision_number = 1
+    variable_revision_number = 2
     category = ["ImcPluginsCP", "File Processing"]
 
     def create_settings(self):
