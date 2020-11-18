@@ -15,9 +15,10 @@ analyzed plane-by-plane but as a stack). This modules help Cellprofiler to bette
 Their main use have been the associated multiplexed image segmentation pipeline (https://github.com/BodenmillerGroup/ImcSegmentationPipeline)
 and projects using this workflow.
 
-Changenotes:
+Changelog:
 ------------
-2020-11-13: Adds new ExportVarcsv module has been added that
+2020-11-18: ExportVarCsv now also adds column metadata for the Image table.
+2020-11-13: Adds new ExportVarCsv module has been added that
             parses measurement names into a clean metadata folder.
 2020-10-30:
 The modules have been updated to work with *CellProfiler 4* instead of *CellProfiler 3 or 2*!
