@@ -17,17 +17,21 @@ and projects using this workflow.
 
 Changelog:
 ------------
-2020-11-18: ExportVarCsv now also adds column metadata for the Image table.
-2020-11-13: Adds new ExportVarCsv module has been added that
-            parses measurement names into a clean metadata folder.
-2020-10-30:
-The modules have been updated to work with *CellProfiler 4* instead of *CellProfiler 3 or 2*!
-The CP2 and CP3 modules are still available at the branch:
-- https://github.com/BodenmillerGroup/ImcPluginsCP/tree/master-cp2
-- https://github.com/BodenmillerGroup/ImcPluginsCP/tree/master-cp3
+- 2020-11-18: ExportVarCsv now also adds column metadata for the Image table.
 
-Several modules have been deprecated or changed names. Please read the 'deprecation' notes displayed when
-loading these modules to see if and how you need to adapt your pipeline.
+- 2020-11-13: Adds new ExportVarCsv module
+    This module parses measurement names from output tables into a
+    clean metadata file that should facilitate the import of cellprofiler
+    output into anndata.
+
+- 2020-10-30:
+    The modules have been updated to work with *CellProfiler 4* instead of *CellProfiler 3 or 2*!
+    The CP2 and CP3 modules are still available at the branch:
+    - https://github.com/BodenmillerGroup/ImcPluginsCP/tree/master-cp2
+    - https://github.com/BodenmillerGroup/ImcPluginsCP/tree/master-cp3
+
+    Several modules have been deprecated or changed names. Please read the 'deprecation' notes displayed when
+    loading these modules to see if and how you need to adapt your pipeline.
 
 General Information
 -------------------
