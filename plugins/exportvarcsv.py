@@ -83,7 +83,7 @@ IDX_IMAGE_META_COUNT = 4
 
 class ExportVarCsv(cpm.Module):
     module_name = "ExportVarCsv"
-    variable_revision_number = 1
+    variable_revision_number = 2
     category = ["ImcPluginsCP", "File Processing"]
 
     def create_settings(self):
@@ -312,7 +312,7 @@ class ExportVarCsv(cpm.Module):
         workspace - get the images from here.
         settings_group - if present, use the settings group for naming.
         """
-        if object_name in [EXPERIMENT, IMAGE, OBJECT_RELATIONSHIPS]:
+        if object_name in [EXPERIMENT, OBJECT_RELATIONSHIPS]:
             return
         self.save_var_file(
             object_name,
@@ -462,7 +462,7 @@ def parse_neighbors_col(col):
     return outdict
 
 
-def parse_parent_col(col):
+def parse_objectmeta_col(col):
     re_exp = (
         f"(?P<{CATEGORY}>[a-zA-Z0-9]+)"
         f"_(?P<{OBJECT_NAME}>[a-zA-Z0-9]+)"
@@ -487,6 +487,33 @@ def parse_distance_col(col):
     return outdict
 
 
+def parse_imgmeta_col(col):
+    re_exp = f"(?P<{FEATURE_NAME}>[a-zA-Z0-9]+)_(?P<{IMAGE_NAME}>[a-zA-Z0-9]+)"
+
+    outdict = {
+        COLUMN_NAME: col,
+        **re.match(re_exp, col).groupdict(),
+        CATEGORY: "Image",
+    }
+    return outdict
+
+
+def parse_metadata_col(col):
+    re_exp = f"(?P<{CATEGORY}>[a-zA-Z0-9]+)_(?P<{FEATURE_NAME}>.*)"
+    outdict = {COLUMN_NAME: col, **re.match(re_exp, col).groupdict()}
+    return outdict
+
+
+def parse_runtimemetadata_col(col):
+    re_exp = f"(?P<{FEATURE_NAME}>[a-zA-Z0-9]+)_(?P<{PARAMETERS}>.*)"
+    outdict = {
+        COLUMN_NAME: col,
+        **re.match(re_exp, col).groupdict(),
+        CATEGORY: "Execution",
+    }
+    return outdict
+
+
 category_parsers = {
     k: fkt
     for ks, fkt in [
@@ -501,11 +528,40 @@ category_parsers = {
             ),
             parse_intensity_col,
         ],
-        [("ObjectNumber", "ImageNumber", "Number"), parse_id_col],
+        [("ObjectNumber", "ImageNumber", "Number", "Group", "ImageSet"), parse_id_col],
         [("AreaShape", "Math"), parse_areashape_col],
         [["Neighbors"], parse_neighbors_col],
-        [["Children", "Parent"], parse_parent_col],
+        [["Children", "Parent", "Count"], parse_objectmeta_col],
         [["Distance"], parse_distance_col],
+        # Image table specific parsers
+        [
+            [
+                "FileName",
+                "Channel",
+                "Frame",
+                "Height",
+                "MD5Digest",
+                "PathName",
+                "Scaling",
+                "Series",
+                "URL",
+                "Width",
+            ],
+            parse_imgmeta_col,
+        ],
+        [
+            [
+                "Metadata",
+            ],
+            parse_metadata_col,
+        ],
+        [
+            [
+                "ExecutionTime",
+                "ModuleError",
+            ],
+            parse_runtimemetadata_col,
+        ],
     ]
     for k in ks
 }
@@ -542,4 +598,5 @@ DEFAULT_VARMETA = {
     CHANNEL: None,
     PARAMETERS: None,
     CHANNEL_ID: None,
+    DATATYPE: None
 }
