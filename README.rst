@@ -17,6 +17,9 @@ and projects using this workflow.
 
 Changenotes:
 ------------
+2020-11-13: Adds new ExportVarcsv module has been added that
+            parses measurement names into a clean metadata folder.
+2020-10-30:
 The modules have been updated to work with *CellProfiler 4* instead of *CellProfiler 3 or 2*!
 The CP2 and CP3 modules are still available at the branch:
 - https://github.com/BodenmillerGroup/ImcPluginsCP/tree/master-cp2
@@ -38,7 +41,7 @@ For installation copy the folder to a local directory,
 modify the CellProfiler `Preferences` in the GUI to the plugin folder (`PATHTO/ImcPluginsCP/plugins`) and **restart** cellprofiler.
 
 For command line usage use the command line flag:  `--plugins-directory=PATHTO/ImcPluginsCP/plugins`
-  
+
 The modules
 -------------------
 
