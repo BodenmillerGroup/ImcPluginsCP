@@ -598,4 +598,5 @@ DEFAULT_VARMETA = {
     CHANNEL: None,
     PARAMETERS: None,
     CHANNEL_ID: None,
+    DATATYPE: None
 }
