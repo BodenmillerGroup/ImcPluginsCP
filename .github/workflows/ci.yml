@@ -32,5 +32,7 @@ jobs:
 
     - uses: actions/checkout@1.0.0
     - uses: excitedleigh/setup-nox@1.0.0
+      env:
+         ACTIONS_ALLOW_UNSECURE_COMMANDS: true
     - name: Test with nox
       run: nox
