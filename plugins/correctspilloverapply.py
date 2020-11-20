@@ -76,7 +76,7 @@ class CorrectSpilloverApply(cpm.Module):
         )
         spill_correct_method = cps.choice.Choice(
             "Spillover correction method",
-            [METHOD_LS, METHOD_NNLS],
+            [METHOD_NNLS, METHOD_LS],
             doc="""
             Select the spillover correction method.
             <ul>
