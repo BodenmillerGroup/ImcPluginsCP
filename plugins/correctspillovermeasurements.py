@@ -32,7 +32,7 @@ import cellprofiler_core.measurement as cpmeas
 from cellprofiler_core.constants.measurement import COLTYPE_FLOAT
 
 
-SETTINGS_PER_IMAGE = 6
+SETTINGS_PER_IMAGE = 5
 METHOD_LS = "LeastSquares"
 METHOD_NNLS = "NonNegativeLeastSquares"
 
@@ -47,7 +47,7 @@ class PatchedMeasurementSetting(cps.Measurement):
 
 class CorrectSpilloverMeasurements(cpm.Module):
     category = ["ImcPluginsCP", "Measurement"]
-    variable_revision_number = 3
+    variable_revision_number = 4
     module_name = "CorrectSpilloverMeasurements"
 
     def create_settings(self):
