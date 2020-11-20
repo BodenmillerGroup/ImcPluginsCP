@@ -32,7 +32,7 @@ import cellprofiler_core.measurement as cpmeas
 from cellprofiler_core.constants.measurement import COLTYPE_FLOAT
 
 
-SETTINGS_PER_IMAGE = 5
+SETTINGS_PER_IMAGE = 6
 METHOD_LS = "LeastSquares"
 METHOD_NNLS = "NonNegativeLeastSquares"
 
@@ -223,10 +223,11 @@ class CorrectSpilloverMeasurements(cpm.Module):
         return outcols
 
     def _generate_outcolname(self, colname, suffix):
-        colfrag = colname.split("_c")
-        colfrag[-2] += suffix
-        outcol = "_c".join(colfrag)
+        colfrag = colname.split('_')
+        colfrag[0] += suffix
+        outcol = '_'.join(colfrag)
         return outcol
+
 
     def get_measurement_columns(self, pipeline):
         """Return column definitions for compmeasurements made by this module"""
