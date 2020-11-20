@@ -47,7 +47,7 @@ class PatchedMeasurementSetting(cps.Measurement):
 
 class CorrectSpilloverMeasurements(cpm.Module):
     category = ["ImcPluginsCP", "Measurement"]
-    variable_revision_number = 4
+    variable_revision_number = 5
     module_name = "CorrectSpilloverMeasurements"
 
     def create_settings(self):
@@ -224,7 +224,7 @@ class CorrectSpilloverMeasurements(cpm.Module):
 
     def _generate_outcolname(self, colname, suffix):
         colfrag = colname.split('_')
-        colfrag[0] += suffix
+        colfrag[1] += suffix
         outcol = '_'.join(colfrag)
         return outcol
 
