@@ -1,5 +1,6 @@
 .. image:: https://zenodo.org/badge/69028464.svg
    :target: https://zenodo.org/badge/latestdoi/69028464
+
 ImcPluginsCP
 ========================
 
@@ -14,15 +15,27 @@ analyzed plane-by-plane but as a stack). This modules help Cellprofiler to bette
 Their main use have been the associated multiplexed image segmentation pipeline (https://github.com/BodenmillerGroup/ImcSegmentationPipeline)
 and projects using this workflow.
 
-Changenotes:
------------
-The modules have been updated to work with *CellProfiler 4* instead of *CellProfiler 3 or 2*!
-The CP2 and CP3 modules are still available at the branch:
-- https://github.com/BodenmillerGroup/ImcPluginsCP/tree/master-cp2
-- https://github.com/BodenmillerGroup/ImcPluginsCP/tree/master-cp3
+Changelog:
+------------
+- 2020-11-20: Fixes a bug in CorrectSpilloverMeasurements introduced by the
+    CP3 -> CP4 transition that caused the the name suffix to be appended
+    to the image instead of the measurement name.
 
-Several modules have been deprecated or changed names. Please read the 'deprecation' notes displayed when
-loading these modules to see if and how you need to adapt your pipeline.
+- 2020-11-18: ExportVarCsv now also adds column metadata for the Image table.
+
+- 2020-11-13: Adds new ExportVarCsv module
+    This module parses measurement names from output tables into a
+    clean metadata file that should facilitate the import of cellprofiler
+    output into anndata.
+
+- 2020-10-30:
+    The modules have been updated to work with *CellProfiler 4* instead of *CellProfiler 3 or 2*!
+    The CP2 and CP3 modules are still available at the branch:
+    - https://github.com/BodenmillerGroup/ImcPluginsCP/tree/master-cp2
+    - https://github.com/BodenmillerGroup/ImcPluginsCP/tree/master-cp3
+
+    Several modules have been deprecated or changed names. Please read the 'deprecation' notes displayed when
+    loading these modules to see if and how you need to adapt your pipeline.
 
 General Information
 -------------------
@@ -37,7 +50,7 @@ For installation copy the folder to a local directory,
 modify the CellProfiler `Preferences` in the GUI to the plugin folder (`PATHTO/ImcPluginsCP/plugins`) and **restart** cellprofiler.
 
 For command line usage use the command line flag:  `--plugins-directory=PATHTO/ImcPluginsCP/plugins`
-  
+
 The modules
 -------------------
 
@@ -54,13 +67,22 @@ Measurement modules:
     The number of planes in the stack needs to be known and indicated beforehand.
     The name of the measurements will have a suffix `_c{channelnr}` where channelnr is 1 based index of the plane.
 
+* ExportVarCsv:
+    Exports a CSV containing metadata for measurements akin to the .var table
+    in anndata objects: https://anndata.readthedocs.io/en/latest/anndata.AnnData.html
+    This should greatly facilitate the conversion of cellprofiler output to
+    anndata objects.
+
 Image processing modules:
 
-* Smooth Multichannel: allows to apply image filters to all stacks of a multichannel image
+* Smooth Multichannel:
+    allows to apply image filters to all stacks of a multichannel image
     Very similar to the normal *Smooth* module.
     Additionally provides filters:
-        - "Remove single hot pixels" (good for single, strong outliers)
-        - "Median Filter Scipy": Fixes a bug of the normal Median filter when small footprints are used.
+
+    - "Remove single hot pixels" (good for single, strong outliers)
+
+    - "Median Filter Scipy": Fixes a bug of the normal Median filter when small footprints are used.
 
 * ClipRange:
     Clips the maximum of an image by setting all values higher than an user defined percentile to the value of said percentile.
@@ -129,7 +151,7 @@ Spillover related modules:
     Module: *CorrectSpilloverMeasurements*.
 
 * CorrectSpilloverMeasurements:
-    applies an spillover matrix to measurments multichannel image to account for channel crosstalk (spillover)
+    applies an spillover matrix to measurements multichannel image to account for channel crosstalk (spillover)
 
     This module applies a previously calculate spillover matrix, loaded as a normal image.
     The spillover matrix is a float image with dimensions p*p (p=number of color channels).
@@ -147,20 +169,25 @@ Spillover related modules:
     in all channels (e.g. MeanIntensity) but not others (e.g. MedianIntensity, MaxIntensity, StdIntensity...).
     For measurements where this applies, applying the compensation to *Measurements* is usually more accurate than compensating an image
     and then measuring.
-    For measurments where this does not apply, please measure the image compensated with Module: *CorrectSpilloverApply*.
+    For measurements where this does not apply, please measure the image compensated with Module: *CorrectSpilloverApply*.
 
 
-Pleas read also the documetation within CellProfiler for more hints how to use these modules!
+Pleas read also the documentation within CellProfiler for more hints how to use these modules!
 
 Deprecated modules:
 ___________________
 This will be removed in the next version of ImcPluginsCP.
 
-* ColorToGray bb: a slight modification of the 'ColorToGray' CP module to support up to 60 channels per image
+* ColorToGray bb:
+    a slight modification of the 'ColorToGray' CP module to support up to 60 channels per image
     -> Can be replaced by default *ColorToGray* module
 
-* Rescale objects: Rescales object segmentation masks
+* Rescale objects:
+    Rescales object segmentation masks
     -> Can be replaced by the default *ResizeObjects* module
 
-* Save images ilastik: a helper module to save images as `.tiff` in a way that ilastik 1.2.1 will recognize it as xyc image
-  -> This will  is deprecated. I recommend to use the *saveimages_h5` module for this task and use `hdf5` instead of tiff
+* Save images ilastik:
+    a helper module to save images as `.tiff` in a way that ilastik 1.2.1 will recognize it as xyc image
+    -> This will  is deprecated. I recommend to use the *saveimages_h5* module
+    for this task and use `hdf5` instead of tiff
+

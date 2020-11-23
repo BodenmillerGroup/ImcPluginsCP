@@ -47,7 +47,7 @@ class PatchedMeasurementSetting(cps.Measurement):
 
 class CorrectSpilloverMeasurements(cpm.Module):
     category = ["ImcPluginsCP", "Measurement"]
-    variable_revision_number = 3
+    variable_revision_number = 5
     module_name = "CorrectSpilloverMeasurements"
 
     def create_settings(self):
@@ -91,7 +91,7 @@ class CorrectSpilloverMeasurements(cpm.Module):
         )
         spill_correct_method = cps.choice.Choice(
             "Spillover correction method",
-            [METHOD_LS, METHOD_NNLS],
+            [METHOD_NNLS, METHOD_LS],
             doc="""
             Select the spillover correction method.
             <ul>
@@ -223,10 +223,11 @@ class CorrectSpilloverMeasurements(cpm.Module):
         return outcols
 
     def _generate_outcolname(self, colname, suffix):
-        colfrag = colname.split("_c")
-        colfrag[-2] += suffix
-        outcol = "_c".join(colfrag)
+        colfrag = colname.split('_')
+        colfrag[1] += suffix
+        outcol = '_'.join(colfrag)
         return outcol
+
 
     def get_measurement_columns(self, pipeline):
         """Return column definitions for compmeasurements made by this module"""

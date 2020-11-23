@@ -18,7 +18,10 @@ from cellprofiler_core.constants.measurement import C_LOCATION, COLTYPE_FLOAT
 IMAGE_NAME = "image"
 SM_IMAGE_NAME = "smimage"
 OUTPUT_IMAGE_F = "outputimage%d"
-MEASUREMENT_NAME = "testmeasurement"
+TEST_CATEGORY = "testcategory"
+TEST_MEASUREMENT = "testmeasurement"
+TEST_IMAGE = "testimage"
+MEASUREMENT_NAME = f"{TEST_CATEGORY}_{TEST_MEASUREMENT}_{TEST_IMAGE}"
 OBJECT_NAME = "tstobject"
 COMP_SUFFIX = "Comp"
 
@@ -43,7 +46,7 @@ class DummyMeasurementModule(Module):
     def get_measurement_columns(self, pipeline):
         outcols = []
         for i in range(self.nchannels):
-            outcols.append((OBJECT_NAME, f"{MEASUREMENT_NAME}_c{i+1}", COLTYPE_FLOAT))
+            outcols.append((OBJECT_NAME, f"{MEASUREMENT_NAME}_c{i+1}"))
         return outcols
 
 
@@ -212,7 +215,7 @@ def test_compensation(testcase, sm_image, module, workspace):
     cpm.spill_correct_method.value = testcase.method
     module.run(workspace)
     results = [
-        m.get_measurement(OBJECT_NAME, f"{MEASUREMENT_NAME}{COMP_SUFFIX}_c{i+1}")
+        m.get_measurement(OBJECT_NAME, f"{TEST_CATEGORY}_{TEST_MEASUREMENT}{COMP_SUFFIX}_{TEST_IMAGE}_c{i+1}")
         for i in range(nchan)
     ]
     expected = testcase.expected
