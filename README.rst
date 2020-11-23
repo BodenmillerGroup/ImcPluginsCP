@@ -17,6 +17,10 @@ and projects using this workflow.
 
 Changelog:
 ------------
+- 2020-11-20: Fixes a bug in CorrectSpilloverMeasurements introduced by the
+    CP3 -> CP4 transition that caused the the name suffix to be appended
+    to the image instead of the measurement name.
+
 - 2020-11-18: ExportVarCsv now also adds column metadata for the Image table.
 
 - 2020-11-13: Adds new ExportVarCsv module
@@ -147,7 +151,7 @@ Spillover related modules:
     Module: *CorrectSpilloverMeasurements*.
 
 * CorrectSpilloverMeasurements:
-    applies an spillover matrix to measurments multichannel image to account for channel crosstalk (spillover)
+    applies an spillover matrix to measurements multichannel image to account for channel crosstalk (spillover)
 
     This module applies a previously calculate spillover matrix, loaded as a normal image.
     The spillover matrix is a float image with dimensions p*p (p=number of color channels).
@@ -165,10 +169,10 @@ Spillover related modules:
     in all channels (e.g. MeanIntensity) but not others (e.g. MedianIntensity, MaxIntensity, StdIntensity...).
     For measurements where this applies, applying the compensation to *Measurements* is usually more accurate than compensating an image
     and then measuring.
-    For measurments where this does not apply, please measure the image compensated with Module: *CorrectSpilloverApply*.
+    For measurements where this does not apply, please measure the image compensated with Module: *CorrectSpilloverApply*.
 
 
-Pleas read also the documetation within CellProfiler for more hints how to use these modules!
+Pleas read also the documentation within CellProfiler for more hints how to use these modules!
 
 Deprecated modules:
 ___________________
